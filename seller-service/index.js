@@ -37,7 +37,7 @@ const upload = multer({ storage });
 const authDb = mysql.createConnection({
   host: "localhost",
   user: "root",
-  password: "",
+  password: "12345",
   database: "seller_auth_db",
   port: 3306,
 });
@@ -49,7 +49,7 @@ authDb.connect((err) => {
 const adminDb = mysql.createConnection({
   host: "localhost",
   user: "root",
-  password: "",
+  password: "12345",
   database: "admin_db",
   port: 3306,
 });
@@ -821,7 +821,7 @@ app.post("/api/orders", async (req, res) => {
         const [buyerInfo] = await mysql.createPool({
             host: "localhost",
             user: "root",
-            password: "",
+            password: "12345",
             database: "buyer_db",
             port: 3306
         }).promise().query(

@@ -42,7 +42,7 @@ const createDatabasePool = (database) => {
   return mysql.createPool({
     host: "localhost",
     user: "root",
-    password: "",
+    password: "12345",
     database: database,
     port: 3306,
     waitForConnections: true,

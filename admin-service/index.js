@@ -47,7 +47,7 @@ app.use((req, res, next) => {
 const adminDb = mysql.createConnection({
   host: "localhost",
   user: "root",
-  password: "",
+  password: "12345",
   database: "admin_db",
   port: 3306,
 });
@@ -64,7 +64,7 @@ adminDb.connect((err) => {
 const sellerAuthDb = mysql.createConnection({
   host: "localhost",
   user: "root",
-  password: "",
+  password: "12345",
   database: "seller_auth_db",
   port: 3306,
 });
@@ -80,7 +80,7 @@ sellerAuthDb.connect((err) => {
 const buyerDb = mysql.createConnection({
   host: "localhost",
   user: "root",
-  password: "",
+  password: "12345",
   database: "buyer_db",
   port: 3306,
 });
