@@ -211,7 +211,7 @@ const ManageUsers = () => {
       </div>
 
       <div className="filter-bar">
-        <div className="search-container">
+        <div style={styles.searchContainer}>
           <FiSearch size={18} />
           <input
             type="text"
@@ -705,6 +705,18 @@ const styles = {
     cursor: 'pointer',
     transition: 'background 0.3s ease',
   },
+  searchContainer: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    flex: 1,
+    maxWidth: '400px',
+    padding: '10px 16px',
+    background: '#f8fafc',
+    border: '2px solid #e0f2fe',
+    borderRadius: '8px',
+    transition: 'border-color 0.2s ease',
+  }
 };
 
 export default ManageUsers;

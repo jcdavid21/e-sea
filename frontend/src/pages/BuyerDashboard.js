@@ -166,16 +166,16 @@ const BuyerDashboard = () => {
             </button>
             <div className="hero-stats">
               <div className="stat-item">
-                <div className="stat-number">{stats.totalOrders}</div>
-                <div className="stat-label">Total Orders</div>
+                <div className="stat-number" style={{color: "white"}}>{stats.totalOrders}</div>
+                <div>Total Orders</div>
               </div>
               <div className="stat-item">
-                <div className="stat-number">{stats.activeOrders}</div>
-                <div className="stat-label">Pending Orders</div>
+                <div className="stat-number" style={{color: "white"}}>{stats.activeOrders}</div>
+                <div>Pending Orders</div>
               </div>
-              <div className="stat-item">
-                <div className="stat-number">₱{stats.totalSpent.toFixed(2)}</div>
-                <div className="stat-label">Total Spent</div>
+              <div className="stat-item stats-item-highlight">
+                <div className="stat-number" style={{color: "white"}}>₱{stats.totalSpent.toFixed(2)}</div>
+                <div className="">Total Spent</div>
               </div>
             </div>
           </div>
@@ -213,7 +213,7 @@ const BuyerDashboard = () => {
             </div>
           </div>
 
-          <div className="action-card">
+          {/* <div className="action-card">
             <div className="action-icon green">
               <FaHeart />
             </div>
@@ -221,7 +221,7 @@ const BuyerDashboard = () => {
               <h3>Favorites</h3>
               <p>Save Items</p>
             </div>
-          </div>
+          </div> */}
         </div>
 
         {/* Recent Purchases Section */}
@@ -238,8 +238,8 @@ const BuyerDashboard = () => {
             </div>
           ) : (
             <div className="product-list">
-              {recentPurchases.map((prod) => (
-                <div key={prod.purchase_id} className="product-card recent-card">
+              {recentPurchases.map((prod, index) => (
+                <div key={index} className="product-card recent-card">
                   <img
                     src={
                       prod.image_url
@@ -252,7 +252,7 @@ const BuyerDashboard = () => {
                   <h4>{prod.product_name}</h4>
                   <div className="price-con">
                     <p className="product-price">₱{Number(prod.price).toFixed(2)}</p>
-                    <p className="old-price">{prod.old_price ? `₱${Number(prod.old_price).toFixed(2)}` : "N/A"}</p>
+                    <p className="old-price">{prod.previous_price ? `₱${Number(prod.previous_price).toFixed(2)}` : ""}</p>
                   </div>
                   <p className="freshness">
                     {prod.freshness || "N/A"}
@@ -285,8 +285,8 @@ const BuyerDashboard = () => {
             <p className="no-results">No products found.</p>
           ) : (
             <div className="product-list">
-              {filteredBestSellers.map((prod) => (
-                <div key={prod.id} className="product-card bestseller-card">
+              {filteredBestSellers.map((prod, index) => (
+                <div key={index} className="product-card bestseller-card">
                   <div className="bestseller-badge">
                     <FaFish /> {prod.total_sold} Sold
                   </div>
@@ -305,7 +305,7 @@ const BuyerDashboard = () => {
                   </div>
                   <div className="price-con">
                     <p className="product-price">₱{Number(prod.price).toFixed(2)}</p>
-                    <p className="old-price">{prod.old_price ? `₱${Number(prod.old_price).toFixed(2)}` : "N/A"}</p>
+                   <p className="old-price">{prod.previous_price ? `₱${Number(prod.previous_price).toFixed(2)}` : ""}</p>
                   </div>
                   <p className="freshness">
                     {prod.freshness || "N/A"}
@@ -330,5 +330,6 @@ const BuyerDashboard = () => {
     </div>
   );
 };
+
 
 export default BuyerDashboard;

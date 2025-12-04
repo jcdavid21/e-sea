@@ -467,6 +467,7 @@ app.get("/api/buyer/purchases", async (req, res) => {
         fp.freshness,
         ph.old_price,
         ph.new_price,
+        fp.previous_price,
         0 AS rating
       FROM seller_auth_db.orders o
       JOIN seller_auth_db.order_items oi ON o.id = oi.order_id
@@ -782,6 +783,7 @@ app.get("/api/products/best-sellers", async (req, res) => {
         s.shop_name,
         ph.old_price,
         ph.new_price,
+        fp.previous_price,
         COALESCE(SUM(oi.quantity), 0) AS total_sold
       FROM seller_auth_db.fish_products fp
       LEFT JOIN seller_auth_db.order_items oi ON fp.id = oi.product_id

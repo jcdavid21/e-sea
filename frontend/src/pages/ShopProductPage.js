@@ -132,7 +132,7 @@ const ShopProductPage = () => {
                     <h4 className="product-name">{prod.name}</h4>
                     <div className="price-con">
                       <p className="product-price">₱{Number(prod.price).toFixed(2)}</p>
-                      <p className="old-price">{prod.old_price ? `₱${Number(prod.old_price).toFixed(2)}` : "N/A"}</p>
+                      <p className="old-price">{prod.previous_price ? `₱${Number(prod.previous_price).toFixed(2)}` : ""}</p>
                     </div>
                     <p className="freshness">
                       {prod.freshness || "N/A"}

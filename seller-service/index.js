@@ -1369,3 +1369,4 @@ const PORT = 5001; // Note: Original log showed port 5001, but typical Node setu
 app.listen(PORT, () => {
   console.log(`🚀 Seller Service running on port ${PORT}`);
 });
+

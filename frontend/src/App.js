@@ -28,6 +28,7 @@ import BuyerDashboard from "./pages/BuyerDashboard";
 import Shop from "./pages/Shop";
 import BuyerProfile from "./pages/BuyerProfile";
 import ShopProductPage from "./pages/ShopProductPage"; 
+import OrderHistory from './pages/OrderHistory';
 
 // Cart Page
 import CartPage from "./pages/CartPage";
@@ -75,6 +76,7 @@ function App() {
         <Route path="/buyer/notifications" element={<BuyerNotifications />} />
 
         <Route path="/shop/:shopId" element={<ShopProductPage />} />
+        <Route path="/buyer/orders" element={<OrderHistory />} />
 
       </Routes>
     </BrowserRouter>
