@@ -781,28 +781,27 @@ app.get("/api/products/best-sellers", async (req, res) => {
         fp.seller_id,
         fp.freshness,
         s.shop_name,
-        ph.old_price,
-        ph.new_price,
         fp.previous_price,
         COALESCE(SUM(oi.quantity), 0) AS total_sold
       FROM seller_auth_db.fish_products fp
       LEFT JOIN seller_auth_db.order_items oi ON fp.id = oi.product_id
       LEFT JOIN seller_auth_db.orders o ON oi.order_id = o.id AND o.status = 'Completed'
       LEFT JOIN admin_db.sellers s ON fp.seller_id = s.unique_id
-      LEFT JOIN seller_auth_db.price_history ph ON fp.id = ph.product_id
       WHERE s.status = 'accepted'
-      GROUP BY fp.id
+      GROUP BY fp.id, fp.name, fp.category, fp.price, fp.stock, fp.unit, 
+               fp.image_url, fp.seller_id, fp.freshness, s.shop_name, fp.previous_price
       ORDER BY total_sold DESC
       LIMIT 3
     `;
     
     const [products] = await sellerAuthDbPool.promise().query(sql);
     
-    return res.status(200).json(products);
+    return res.status(200).json(products || []);
   } catch (err) {
     console.error("Error fetching best sellers:", err);
     return res.status(500).json({ 
-      message: "Server error fetching best sellers." 
+      message: "Server error fetching best sellers.",
+      error: err.message 
     });
   }
 });
