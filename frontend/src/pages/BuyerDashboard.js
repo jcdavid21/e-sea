@@ -53,9 +53,10 @@ const BuyerDashboard = () => {
     try {
       const res = await fetch("http://localhost:5002/api/products/best-sellers");
       const data = await res.json();
-      setBestSellers(data);
+      setBestSellers(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error("Error fetching best sellers:", err);
+      setBestSellers([]);
     }
   };
 
@@ -131,10 +132,10 @@ const BuyerDashboard = () => {
 
   // Filter best sellers by search term
   const filteredBestSellers = searchTerm
-    ? bestSellers.filter((prod) =>
+    ? (Array.isArray(bestSellers) ? bestSellers.filter((prod) =>
         prod.name.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    : bestSellers;
+      ) : [])
+    : (Array.isArray(bestSellers) ? bestSellers : []);
 
   return (
     <div className="buyer-dashboard">
