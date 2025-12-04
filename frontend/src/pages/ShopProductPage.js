@@ -134,7 +134,7 @@ const ShopProductPage = () => {
                       <p className="product-price">₱{Number(prod.price).toFixed(2)}</p>
                       <p className="old-price">{prod.previous_price ? `₱${Number(prod.previous_price).toFixed(2)}` : ""}</p>
                     </div>
-                    <p className="freshness">
+                    <p className={`freshness freshness-${prod.freshness?.toLowerCase() || 'na'}`}>
                       {prod.freshness || "N/A"}
                     </p>
                     <div className="product-footer">
