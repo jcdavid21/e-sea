@@ -358,7 +358,7 @@ app.post("/api/seller/add-fish", upload.single("image"), async (req, res) => {
 app.put("/api/seller/fish/:id", upload.single("image"), async (req, res) => {
   try {
     const fishId = req.params.id;
-    const { name, category, unit, price, stock, seller_id } = req.body;
+    const { name, category, unit, price, stock, seller_id, freshness } = req.body;
     const newImage = req.file ? req.file.filename : null;
     const conn = authDb.promise();
 
@@ -396,6 +396,7 @@ app.put("/api/seller/fish/:id", upload.single("image"), async (req, res) => {
     if (name !== undefined) { fields.push("name = ?"); params.push(name); }
     if (category !== undefined) { fields.push("category = ?"); params.push(category); }
     if (unit !== undefined) { fields.push("unit = ?"); params.push(unit); }
+    if (freshness !== undefined) { fields.push("freshness = ?"); params.push(freshness); }
     if (price !== undefined) { 
       // Update the current price in fish_products
       fields.push("price = ?"); 

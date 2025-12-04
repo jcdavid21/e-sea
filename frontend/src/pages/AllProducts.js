@@ -19,6 +19,7 @@ function AllProducts() {
     stock: "",
     price: "",
     previous_price: "",
+    freshness: "",
   });
 
   const seller_id = localStorage.getItem("seller_unique_id");
@@ -86,6 +87,7 @@ function AllProducts() {
       stock: product.stock.toString(),
       price: product.price.toString(),
       previous_price: product.previous_price?.toString() || "",
+      freshness: product.freshness || "Fresh",
     });
     setShowModal(true);
   };
@@ -99,6 +101,7 @@ function AllProducts() {
       stock: "",
       price: "",
       previous_price: "",
+      freshness: "",
     });
   };
 
@@ -166,6 +169,7 @@ function AllProducts() {
       formDataToSend.append('category', formData.category);
       formDataToSend.append('stock', newStock);
       formDataToSend.append('price', newPrice);
+      formDataToSend.append('freshness', formData.freshness);
       formDataToSend.append('seller_id', seller_id);
 
       const res = await fetch(
@@ -365,6 +369,7 @@ function AllProducts() {
                 <th>Image</th>
                 <th>Name</th>
                 <th>Category</th>
+                <th>Freshness</th>
                 <th>Price (₱/kg)</th>
                 <th>Stock</th>
                 <th>Previous Price</th>
@@ -397,6 +402,17 @@ function AllProducts() {
                     <td style={{ fontWeight: '600', color: '#1e3c72' }}>{p.name}</td>
                     <td>
                       <span style={styles.categoryBadge}>{p.category}</span>
+                    </td>
+                    <td>
+                      <span style={{
+                        ...styles.categoryBadge,
+                        background: p.freshness === 'Fresh' ? '#d4edda' : 
+                                   p.freshness === 'Chilled' ? '#d1ecf1' : '#cfe2ff',
+                        color: p.freshness === 'Fresh' ? '#155724' : 
+                               p.freshness === 'Chilled' ? '#0c5460' : '#084298',
+                      }}>
+                        {p.freshness || 'Fresh'}
+                      </span>
                     </td>
                     <td style={{ fontWeight: '600' }}>₱{Number(p.price).toFixed(2)}</td>
 
@@ -517,6 +533,20 @@ function AllProducts() {
                       {cat.category_name}
                     </option>
                   ))}
+                </select>
+              </div>
+
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Freshness</label>
+                <select
+                  name="freshness"
+                  value={formData.freshness}
+                  onChange={handleInputChange}
+                  style={styles.input}
+                >
+                  <option value="Fresh">Fresh</option>
+                  <option value="Chilled">Chilled</option>
+                  <option value="Frozen">Frozen</option>
                 </select>
               </div>
 
