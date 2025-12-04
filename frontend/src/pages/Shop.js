@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom"; 
 import BuyerHeader from "./BuyerHeader";
 import ImgPlaceholder from "../assets/logo.png";
+import BannerImg from "../assets/bg-1.jpg";
 import './Shop.css'; 
 
 const Shop = () => {
@@ -50,9 +51,17 @@ const Shop = () => {
         onSearchChange={setSearchTerm}
         currentPage="shop"
       />
+      <div className="banner-bg">
+        <img src={BannerImg} alt="Banner" />
+        <div className="banner-text">
+          <h1>Welcome to E-Sea-Merkado</h1>
+          <p>Your one-stop shop for fresh seafood directly from the source!</p>
+          <a href="#shopnow" className="explore-btn">Explore Shops</a>
+        </div>
+      </div>
       
       <div className="shop-container">
-        <div className="shop-page-header">
+        <div className="shop-page-header" id="shopnow">
           <h1>🏪 All Shops</h1>
           <p className="shop-count">{filteredShops.length} shop{filteredShops.length !== 1 ? 's' : ''} available</p>
         </div>

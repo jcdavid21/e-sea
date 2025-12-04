@@ -30,7 +30,7 @@ const SellerLogin = () => {
       if (res.status === 200) {
         // ✅ Store with the correct key that AddFishProducts expects
         localStorage.setItem("seller_unique_id", formData.uniqueId);
-        setTimeout(() => navigate("/seller/dashboard"), 2000);
+        setTimeout(() => navigate("/seller/dashboard/home"), 2000);
       }
     } catch (err) {
       console.error("Login error:", err);

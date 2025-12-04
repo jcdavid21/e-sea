@@ -37,7 +37,7 @@ const upload = multer({ storage });
 const authDb = mysql.createConnection({
   host: "localhost",
   user: "root",
-  password: "12345",
+  password: "",
   database: "seller_auth_db",
   port: 3306,
 });
@@ -49,7 +49,7 @@ authDb.connect((err) => {
 const adminDb = mysql.createConnection({
   host: "localhost",
   user: "root",
-  password: "12345",
+  password: "",
   database: "admin_db",
   port: 3306,
 });
@@ -488,6 +488,80 @@ app.put("/api/seller/fish/:id/stock", async (req, res) => {
   }
 });
 
+// Get all sellers
+app.get("/api/admin/sellers", async (req, res) => {
+  try {
+    const [sellers] = await adminDb.promise().query(
+      "SELECT unique_id, first_name, last_name, shop_name, status FROM sellers"
+    );
+    res.json(sellers);
+  } catch (err) {
+    res.status(500).json({ message: "Error fetching sellers" });
+  }
+});
+
+// Get analytics orders with filters
+app.get("/api/admin/analytics/orders", async (req, res) => {
+  try {
+    const { timeFilter, seller_id } = req.query;
+    
+    let dateCondition = "";
+    if (timeFilter === "day") {
+      dateCondition = "AND o.order_date >= DATE_SUB(NOW(), INTERVAL 7 DAY)";
+    } else if (timeFilter === "week") {
+      dateCondition = "AND o.order_date >= DATE_SUB(NOW(), INTERVAL 28 DAY)";
+    } else {
+      dateCondition = "AND o.order_date >= DATE_SUB(NOW(), INTERVAL 6 MONTH)";
+    }
+    
+    let sellerCondition = seller_id && seller_id !== "all" ? `AND o.seller_id = ?` : "";
+    
+    const sql = `
+      SELECT 
+        o.id, o.seller_id, o.total, o.status, o.order_date,
+        oi.product_id, oi.quantity, oi.price,
+        f.name as product_name, f.category
+      FROM orders o
+      LEFT JOIN order_items oi ON o.id = oi.order_id
+      LEFT JOIN fish_products f ON oi.product_id = f.id
+      WHERE 1=1 ${dateCondition} ${sellerCondition}
+      ORDER BY o.order_date DESC
+    `;
+    
+    const params = seller_id && seller_id !== "all" ? [seller_id] : [];
+    const [orders] = await authDb.promise().query(sql, params);
+    
+    // Group items by order
+    const ordersMap = {};
+    orders.forEach(row => {
+      if (!ordersMap[row.id]) {
+        ordersMap[row.id] = {
+          id: row.id,
+          seller_id: row.seller_id,
+          total: row.total,
+          status: row.status,
+          order_date: row.order_date,
+          items: []
+        };
+      }
+      if (row.product_id) {
+        ordersMap[row.id].items.push({
+          product_id: row.product_id,
+          product_name: row.product_name,
+          category: row.category,
+          quantity: row.quantity,
+          price: row.price
+        });
+      }
+    });
+    
+    res.json(Object.values(ordersMap));
+  } catch (err) {
+    console.error("Analytics error:", err);
+    res.status(500).json({ message: "Error fetching analytics" });
+  }
+});
+
 // =================================
 // PRICE ANALYSIS ENDPOINTS (UPDATED)
 // =================================
@@ -794,6 +868,93 @@ app.post("/api/upload-payment-proof", upload.single("proof"), async (req, res) =
   }
 });
 
+
+app.put("/api/seller/update-info/:seller_id", async (req, res) => {
+  try {
+    const { seller_id } = req.params;
+    const { 
+      first_name, 
+      middle_name, 
+      last_name, 
+      shop_name, 
+      street, 
+      barangay, 
+      municipality, 
+      province 
+    } = req.body;
+
+    // Verify seller exists
+    const [existing] = await adminDb.promise().query(
+      "SELECT unique_id FROM sellers WHERE unique_id = ?",
+      [seller_id]
+    );
+
+    if (existing.length === 0) {
+      return res.status(404).json({ message: "Seller not found." });
+    }
+
+    // Build dynamic update query (excluding unique_id)
+    const fields = [];
+    const params = [];
+
+    if (first_name !== undefined) { 
+      fields.push("first_name = ?"); 
+      params.push(first_name); 
+    }
+    if (middle_name !== undefined) { 
+      fields.push("middle_name = ?"); 
+      params.push(middle_name); 
+    }
+    if (last_name !== undefined) { 
+      fields.push("last_name = ?"); 
+      params.push(last_name); 
+    }
+    if (shop_name !== undefined) { 
+      fields.push("shop_name = ?"); 
+      params.push(shop_name); 
+    }
+    if (street !== undefined) { 
+      fields.push("street = ?"); 
+      params.push(street); 
+    }
+    if (barangay !== undefined) { 
+      fields.push("barangay = ?"); 
+      params.push(barangay); 
+    }
+    if (municipality !== undefined) { 
+      fields.push("municipality = ?"); 
+      params.push(municipality); 
+    }
+    if (province !== undefined) { 
+      fields.push("province = ?"); 
+      params.push(province); 
+    }
+
+    if (fields.length === 0) {
+      return res.status(400).json({ message: "No fields to update." });
+    }
+
+    // Add seller_id to params for WHERE clause
+    params.push(seller_id);
+
+    const sql = `UPDATE sellers SET ${fields.join(", ")} WHERE unique_id = ?`;
+    
+    const [result] = await adminDb.promise().query(sql, params);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "Failed to update seller information." });
+    }
+
+    res.json({ 
+      message: "Seller information updated successfully.",
+      updated_fields: fields.length
+    });
+  } catch (err) {
+    console.error("❌ Update Seller Info Error:", err);
+    res.status(500).json({ message: "Server error while updating seller information." });
+  }
+});
+
 // --------------------------
 // UPDATED: CREATE Order WITH Proof of Payment and customer_id
 // --------------------------
@@ -821,7 +982,7 @@ app.post("/api/orders", async (req, res) => {
         const [buyerInfo] = await mysql.createPool({
             host: "localhost",
             user: "root",
-            password: "12345",
+            password: "",
             database: "buyer_db",
             port: 3306
         }).promise().query(
@@ -954,6 +1115,9 @@ app.post("/api/orders", async (req, res) => {
 // --------------------------
 app.get("/api/orders", async (req, res) => {
     const sellerId = req.query.seller_id;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const offset = (page - 1) * limit;
 
     if (!sellerId) {
         return res.status(400).json({ error: "seller_id is required" });
@@ -981,11 +1145,15 @@ app.get("/api/orders", async (req, res) => {
         LEFT JOIN order_items oi ON o.id = oi.order_id
         LEFT JOIN fish_products f ON oi.product_id = f.id
         WHERE o.seller_id = ? 
-        ORDER BY o.order_date DESC
+        ORDER BY o.id DESC
+        LIMIT ? OFFSET ?
     `;
 
+    const countSql = `SELECT COUNT(DISTINCT o.id) as total FROM orders o WHERE o.seller_id = ?`;
+
     try {
-        const [result] = await authDb.promise().query(sql, [sellerId]);
+        const [result] = await authDb.promise().query(sql, [sellerId, limit, offset]);
+        const [countResult] = await authDb.promise().query(countSql, [sellerId]);
         
         const ordersMap = {};
 
@@ -1000,7 +1168,7 @@ app.get("/api/orders", async (req, res) => {
                     total: row.total,
                     paymentMode: row.payment_mode,
                     paid: row.paid,
-                    proofOfPayment: row.proof_of_payment, // Include proof path
+                    proofOfPayment: row.proof_of_payment,
                     orderDate: row.order_date,
                     status: row.status,
                     items: []
@@ -1019,12 +1187,53 @@ app.get("/api/orders", async (req, res) => {
         });
 
         const orders = Object.values(ordersMap);
-        res.json(orders);
+        const totalOrders = countResult[0].total;
+        const totalPages = Math.ceil(totalOrders / limit);
+
+        res.json({
+            orders,
+            pagination: {
+                currentPage: page,
+                totalPages,
+                totalOrders,
+                limit
+            }
+        });
     } catch (err) {
         console.error("❌ Fetch Orders Error:", err);
         res.status(500).json({ message: "Server error fetching orders" });
     }
 });
+
+// ---------------------------------
+// GET products by category (for buyer)
+// ---------------------------------
+app.get("/api/products/by-category", async (req, res) => {
+  try {
+    const { category } = req.query;
+    
+    if (!category) {
+      return res.status(400).json({ message: "Category is required" });
+    }
+
+    const sql = `
+      SELECT 
+        fp.*,
+        s.shop_name
+      FROM fish_products fp
+      LEFT JOIN admin_db.sellers s ON fp.seller_id = s.unique_id
+      WHERE fp.category = ? AND fp.stock > 0
+      ORDER BY fp.created_at DESC
+    `;
+    
+    const [rows] = await authDb.promise().query(sql, [category]);
+    res.json(rows);
+  } catch (err) {
+    console.error("❌ Fetch Products by Category Error:", err);
+    res.status(500).json({ message: "Server error fetching products" });
+  }
+});
+
 
 // --------------------------
 // UPDATE Order Status WITH Buyer Notification
@@ -1147,6 +1356,9 @@ app.put("/api/seller/notifications/:id/read", async (req, res) => {
         res.status(500).json({ message: "Server error marking notification as read." });
     }
 });
+
+
+
 
 
 // =================================

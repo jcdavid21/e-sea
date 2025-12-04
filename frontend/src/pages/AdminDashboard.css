@@ -123,6 +123,66 @@
   color: #cdd1e0;
 }
 
+/* 🔹 Mobile Header (hidden on desktop) */
+.mobile-header {
+  display: none;
+  align-items: center;
+  gap: 15px;
+  padding: 15px 20px;
+  background-color: #161c6c;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+}
+
+.hamburger-btn {
+  background: none;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  padding: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hamburger-btn .material-symbols-outlined {
+  font-size: 28px;
+}
+
+.mobile-logo-section {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mobile-logo {
+  width: 35px;
+  height: 35px;
+}
+
+.mobile-brand-name {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+  color: #ffffff;
+}
+
+/* 🔹 Sidebar Overlay (mobile only) */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 998;
+}
+
 /* 🔹 Responsive Adjustments */
 @media (max-width: 768px) {
   .main-content {

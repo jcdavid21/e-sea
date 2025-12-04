@@ -46,10 +46,6 @@ const SellerDashboard = () => {
             <FaHome />
             <span>Home</span>
           </Link>
-          <Link to="/seller/dashboard/add-fish" className="nav-link">
-            <FaBoxOpen />
-            <span>Add Fish Products</span>
-          </Link>
           <Link to="/seller/dashboard/stock" className="nav-link">
             <FaClipboardList />
             <span>Stock Management</span>

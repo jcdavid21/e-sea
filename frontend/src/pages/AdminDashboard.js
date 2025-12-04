@@ -1,17 +1,15 @@
 import React, { useState } from "react";
 import { useNavigate, Outlet, useLocation } from "react-router-dom";
 import "./AdminDashboard.css";
-
-// Components
 import ApproveSellers from "./ApproveSellers";
 import ManageUsers from "./ManageUsers";
 import AdminAnalytics from "./AdminAnalytics";
-
-// Assets
+import Reports from "./Reports";
 import logo from "../assets/logo.png";
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState("analytics");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -37,6 +35,8 @@ const AdminDashboard = () => {
         return <ApproveSellers />;
       case "manageUsers":
         return <ManageUsers />;
+      case "reports":
+        return <Reports />;
       default:
         return <AdminAnalytics />;
     }
@@ -46,24 +46,45 @@ const AdminDashboard = () => {
   const handleLogout = () => {
     localStorage.removeItem("authToken");
     sessionStorage.clear();
-    navigate("/admin/dashboard");
+    navigate("/");
   };
 
-  // Sidebar button click handler
   const handleNavClick = (tabName, path) => {
     setActiveTab(tabName);
+    setIsSidebarOpen(false); // Close sidebar on mobile after selection
     if (path) {
       navigate(path);
     } else {
-      // Navigate to main dashboard when clicking tabs without specific paths
       navigate("/admin/dashboard");
     }
   };
 
   return (
     <div className="admin-dashboard">
+      <header className="mobile-header">
+        <button 
+          className="hamburger-btn" 
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          aria-label="Toggle menu"
+        >
+          <span className="material-symbols-outlined">menu</span>
+        </button>
+        <div className="mobile-logo-section">
+          <img src={logo} alt="Logo" className="mobile-logo" />
+          <h2 className="mobile-brand-name">e-Sea-Merkado</h2>
+        </div>
+      </header>
+
+      {/* Overlay for mobile */}
+      {isSidebarOpen && (
+        <div 
+          className="sidebar-overlay" 
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className="sidebar">
+      <aside className={`sidebar ${isSidebarOpen ? 'open' : ''}`}>
         <div className="sidebar-top">
           <div className="logo-section">
             <img src={logo} alt="Logo" className="logo" />
@@ -108,7 +129,10 @@ const AdminDashboard = () => {
               Seller Products
             </button>
 
-            <button>
+            <button
+              className={activeTab === "reports" ? "active" : ""}
+              onClick={() => handleNavClick("reports")}
+            >
               <span className="material-symbols-outlined">bar_chart</span>
               Reports
             </button>
@@ -116,7 +140,7 @@ const AdminDashboard = () => {
         </div>
 
         <div className="sidebar-bottom">
-          <button className="logout-btn" onClick={handleLogout}>
+          <button className="logout-btn" onClick={()=> handleLogout()}>
             <span className="material-symbols-outlined">logout</span>
             Logout
           </button>

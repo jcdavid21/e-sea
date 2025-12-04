@@ -42,7 +42,7 @@ const createDatabasePool = (database) => {
   return mysql.createPool({
     host: "localhost",
     user: "root",
-    password: "12345",
+    password: "",
     database: database,
     port: 3306,
     waitForConnections: true,
@@ -464,10 +464,14 @@ app.get("/api/buyer/purchases", async (req, res) => {
         CONCAT('ORD-', LPAD(o.id, 6, '0')) AS order_number,
         o.status,
         fp.image_url,
+        fp.freshness,
+        ph.old_price,
+        ph.new_price,
         0 AS rating
       FROM seller_auth_db.orders o
       JOIN seller_auth_db.order_items oi ON o.id = oi.order_id
       LEFT JOIN seller_auth_db.fish_products fp ON oi.product_id = fp.id
+      LEFT JOIN seller_auth_db.price_history ph ON oi.product_id = ph.product_id
       WHERE o.customer_id = ?
       ORDER BY o.order_date DESC
       LIMIT 10
@@ -774,12 +778,16 @@ app.get("/api/products/best-sellers", async (req, res) => {
         fp.unit,
         fp.image_url,
         fp.seller_id,
+        fp.freshness,
         s.shop_name,
+        ph.old_price,
+        ph.new_price,
         COALESCE(SUM(oi.quantity), 0) AS total_sold
       FROM seller_auth_db.fish_products fp
       LEFT JOIN seller_auth_db.order_items oi ON fp.id = oi.product_id
       LEFT JOIN seller_auth_db.orders o ON oi.order_id = o.id AND o.status = 'Completed'
       LEFT JOIN admin_db.sellers s ON fp.seller_id = s.unique_id
+      LEFT JOIN seller_auth_db.price_history ph ON fp.id = ph.product_id
       WHERE s.status = 'accepted'
       GROUP BY fp.id
       ORDER BY total_sold DESC

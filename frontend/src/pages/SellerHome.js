@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
+import { Fish, Package, DollarSign, Clock, TrendingUp, TrendingDown, Minus, Calendar, User, Phone, MapPin, MessageCircle, Trophy, AlertTriangle, CheckCircle, List, BarChart3, Waves, ShoppingCart } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
 import './SellerHome.css';
 
 const SellerHome = () => {
@@ -9,6 +10,11 @@ const SellerHome = () => {
   const [profile, setProfile] = useState({ logo: "" });
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  
+  // Filter states
+  const [salesPeriod, setSalesPeriod] = useState('7days'); // 7days, 30days, 90days, all
+  const [categoryFilter, setCategoryFilter] = useState('all'); // all, or specific category
+  const [orderStatusFilter, setOrderStatusFilter] = useState('Pending');
 
   const SELLER_ID = localStorage.getItem("seller_unique_id");
 
@@ -17,7 +23,7 @@ const SellerHome = () => {
       try {
         const [prodRes, orderRes, profileRes, infoRes] = await Promise.all([
           fetch(`http://localhost:5001/api/seller/fish?seller_id=${SELLER_ID}`),
-          fetch(`http://localhost:5001/api/orders?seller_id=${SELLER_ID}`),
+          fetch(`http://localhost:5001/api/orders?seller_id=${SELLER_ID}&limit=1000`),
           fetch(`http://localhost:5001/api/seller/profile/${SELLER_ID}`),
           fetch(`http://localhost:5001/api/seller/info/${SELLER_ID}`)
         ]);
@@ -28,7 +34,11 @@ const SellerHome = () => {
         const infoData = await infoRes.json();
 
         setProducts(Array.isArray(prodData) ? prodData : []);
-        setOrders(Array.isArray(orderData) ? orderData : []);
+        
+        // Extract orders array from the response
+        const ordersArray = orderData.orders || [];
+        setOrders(Array.isArray(ordersArray) ? ordersArray : []);
+        
         setProfile(profileData || {});
         setSellerInfo(infoData || {});
       } catch (err) {
@@ -42,10 +52,23 @@ const SellerHome = () => {
     fetchData();
   }, [SELLER_ID]);
 
+  // Get unique categories from products
+  const getCategories = () => {
+    const categories = [...new Set(products.map(p => p.category || "Uncategorized"))];
+    return categories;
+  };
+
+  // Filter products by category
+  const getFilteredProducts = () => {
+    if (categoryFilter === 'all') return products;
+    return products.filter(p => p.category === categoryFilter);
+  };
+
   // Get products by category for chart
   const getProductsByCategory = () => {
+    const filteredProducts = getFilteredProducts();
     const categoryCount = {};
-    products.forEach(product => {
+    filteredProducts.forEach(product => {
       const category = product.category || "Uncategorized";
       categoryCount[category] = (categoryCount[category] || 0) + 1;
     });
@@ -56,10 +79,11 @@ const SellerHome = () => {
     }));
   };
 
-  // Get products by category for pie chart
+  // Get products for pie chart
   const getProductsForPieChart = () => {
+    const filteredProducts = getFilteredProducts();
     const categoryCount = {};
-    products.forEach(product => {
+    filteredProducts.forEach(product => {
       const category = product.category || "Uncategorized";
       categoryCount[category] = (categoryCount[category] || 0) + 1;
     });
@@ -70,36 +94,101 @@ const SellerHome = () => {
     }));
   };
 
-  const COLORS = ['#1e88a8', '#2a9d8f', '#2c7a7b', '#0891b2', '#0e7490', '#155e75'];
+  const COLORS = ['#0891b2', '#06b6d4', '#22d3ee', '#67e8f9', '#a5f3fc', '#cffafe'];
 
-  // Get total revenue
+  // Get total revenue (completed orders only - like original code)
   const getTotalRevenue = () => {
     return orders
       .filter(o => o.status === 'Completed')
       .reduce((sum, order) => sum + Number(order.total), 0);
   };
 
-  // Get orders by date for chart
-  const getOrdersByDate = () => {
-    const dateCount = {};
-    orders.forEach(order => {
-      const date = new Date(order.orderDate).toISOString().split('T')[0];
-      dateCount[date] = (dateCount[date] || 0) + 1;
-    });
+  // Get pending revenue
+  const getPendingRevenue = () => {
+    return orders
+      .filter(o => o.status === 'Pending')
+      .reduce((sum, order) => sum + Number(order.total), 0);
+  };
+
+  // Get orders by date for chart with period filter
+    const getOrdersByDate = () => {
+      const dateCount = {};
+      const revenueByDate = {};
+      
+      orders
+        .filter(order => order.status === 'Completed')
+        .forEach(order => {
+          const date = new Date(order.orderDate).toISOString().split('T')[0];
+          dateCount[date] = (dateCount[date] || 0) + 1;
+          revenueByDate[date] = (revenueByDate[date] || 0) + Number(order.total);
+        });
     
-    // Get last 7 days
-    const last7Days = [];
-    for (let i = 6; i >= 0; i--) {
+    // Calculate days based on period
+    let days = 7;
+    if (salesPeriod === '30days') days = 30;
+    else if (salesPeriod === '90days') days = 90;
+    else if (salesPeriod === 'all') days = 365;
+    
+    const result = [];
+    for (let i = days - 1; i >= 0; i--) {
       const date = new Date();
       date.setDate(date.getDate() - i);
       const dateStr = date.toISOString().split('T')[0];
-      last7Days.push({
+      result.push({
         date: dateStr,
-        orders: dateCount[dateStr] || 0
+        orders: dateCount[dateStr] || 0,
+        revenue: revenueByDate[dateStr] || 0
       });
     }
     
-    return last7Days;
+    return result;
+  };
+
+  // Get order status distribution
+  const getOrderStatusDistribution = () => {
+    const statusCount = {};
+    orders.forEach(order => {
+      const status = order.status || "Unknown";
+      statusCount[status] = (statusCount[status] || 0) + 1;
+    });
+    
+    return Object.entries(statusCount).map(([name, value]) => ({
+      name,
+      value
+    }));
+  };
+
+  // Get top selling products (only from completed orders)
+  const getTopSellingProducts = () => {
+    const productSales = {};
+    
+    // Only count completed orders
+    orders
+      .filter(order => order.status === 'Completed')
+      .forEach(order => {
+        if (order.items && Array.isArray(order.items)) {
+          order.items.forEach(item => {
+            const productName = item.productName || "Unknown";
+            if (!productSales[productName]) {
+              productSales[productName] = { name: productName, quantity: 0, revenue: 0 };
+            }
+            productSales[productName].quantity += item.quantity;
+            productSales[productName].revenue += item.quantity * Number(item.price);
+          });
+        }
+      });
+    
+    return Object.values(productSales)
+      .sort((a, b) => b.quantity - a.quantity)
+      .slice(0, 5);
+  };
+
+  // Get low stock products
+  const getLowStockProducts = () => {
+    return products
+      .filter(p => p.stock < 10)
+      .sort((a, b) => a.stock - b.stock)
+      .slice(0, 5);
   };
 
   // Filter orders by selected date
@@ -110,12 +199,42 @@ const SellerHome = () => {
     });
   };
 
-  const pendingOrders = orders.filter(o => o.status === "Pending");
+  // Calculate average order value (only completed orders)
+  const getAverageOrderValue = () => {
+    const completedOrders = orders.filter(o => o.status === 'Completed');
+    if (completedOrders.length === 0) return 0;
+    const total = completedOrders.reduce((sum, order) => sum + Number(order.total), 0);
+    return total / completedOrders.length;
+  };
+
+  // Get order growth percentage (only completed orders)
+  const getOrderGrowth = () => {
+    const today = new Date();
+    const lastWeek = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const twoWeeksAgo = new Date(today.getTime() - 14 * 24 * 60 * 60 * 1000);
+    
+    const lastWeekOrders = orders.filter(o => {
+      const orderDate = new Date(o.orderDate);
+      return o.status === 'Completed' && orderDate >= lastWeek && orderDate < today;
+    }).length;
+    
+    const previousWeekOrders = orders.filter(o => {
+      const orderDate = new Date(o.orderDate);
+      return o.status === 'Completed' && orderDate >= twoWeeksAgo && orderDate < lastWeek;
+    }).length;
+    
+    if (previousWeekOrders === 0) return lastWeekOrders > 0 ? 100 : 0;
+    return ((lastWeekOrders - previousWeekOrders) / previousWeekOrders * 100).toFixed(1);
+  };
+
+  const pendingOrders = orderStatusFilter === 'all' 
+    ? orders 
+    : orders.filter(o => o.status === orderStatusFilter);
   const ordersForSelectedDate = getOrdersForDate(selectedDate);
+  const orderGrowth = getOrderGrowth();
 
   const getFileUrl = (path) => {
     if (!path) return "https://via.placeholder.com/100";
-    // Remove leading slashes and "uploads/" if present
     const normalized = path.replace(/^\/+/, '').replace(/^uploads\//, '');
     return `http://localhost:5001/uploads/${normalized}`;
   };
@@ -156,29 +275,31 @@ const SellerHome = () => {
       <div className="stats-grid">
         <div className="stat-card stat-products">
           <div className="stat-icon-wrapper">
-            <div className="stat-icon">🐟</div>
+            <Fish className="stat-icon" size={24} />
           </div>
           <div className="stat-content">
             <p className="stat-label">Total Products</p>
             <h2 className="stat-value">{products.length}</h2>
-            <p className="stat-subtext">Items in stock</p>
+            <p className="stat-subtext">{getLowStockProducts().length} low stock items</p>
           </div>
         </div>
 
         <div className="stat-card stat-orders">
           <div className="stat-icon-wrapper">
-            <div className="stat-icon">📦</div>
+              <Package className="stat-icon" size={24} />
           </div>
           <div className="stat-content">
             <p className="stat-label">Total Orders</p>
             <h2 className="stat-value">{orders.length}</h2>
-            <p className="stat-subtext">All time orders</p>
+            <p className="stat-subtext">
+              {orderGrowth > 0 ? <TrendingUp size={14} /> : orderGrowth < 0 ? <TrendingDown size={14} /> : <Minus size={14} />}% vs last week
+            </p>
           </div>
         </div>
 
         <div className="stat-card stat-revenue">
           <div className="stat-icon-wrapper">
-            <div className="stat-icon">💰</div>
+            <DollarSign className="stat-icon" size={24} />
           </div>
           <div className="stat-content">
             <p className="stat-label">Revenue</p>
@@ -186,24 +307,62 @@ const SellerHome = () => {
             <p className="stat-subtext">From completed orders</p>
           </div>
         </div>
+
+        <div className="stat-card stat-pending" style={{
+          background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)',
+          borderLeft: '4px solid #f59e0b'
+        }}>
+          <div className="stat-icon-wrapper">
+            <Clock className="stat-icon" size={24} />
+          </div>
+          <div className="stat-content">
+            <p className="stat-label">Pending Orders</p>
+            <h2 className="stat-value">{pendingOrders.length}</h2>
+            <p className="stat-subtext">₱{getPendingRevenue().toLocaleString()} pending</p>
+          </div>
+        </div>
       </div>
 
       {/* Main Content Grid */}
       <div className="content-grid">
-        {/* Sales Chart */}
+        {/* Sales Chart with Filter */}
         <div className="chart-card chart-large">
           <div className="card-header">
-            <h3>🌊 Sales Overview</h3>
-            <span className="chart-period">Last 7 Days</span>
+            <h3><Waves size={18} style={{ display: 'inline', marginRight: '8px' }} /> Sales & Revenue Overview</h3>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <select 
+                value={salesPeriod} 
+                onChange={(e) => setSalesPeriod(e.target.value)}
+                className="chart-filter"
+                style={{
+                  padding: '6px 12px',
+                  borderRadius: '8px',
+                  border: '2px solid #cbd5e1',
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  background: 'white'
+                }}
+              >
+                <option value="7days">Last 7 Days</option>
+                <option value="30days">Last 30 Days</option>
+                <option value="90days">Last 90 Days</option>
+                <option value="all">All Time</option>
+              </select>
+            </div>
           </div>
           <div className="chart-content">
             {orders.length > 0 ? (
-              <ResponsiveContainer width="100%" height={220}>
-                <LineChart data={getOrdersByDate()} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
+              <ResponsiveContainer width="100%" height={280}>
+                <AreaChart data={getOrdersByDate()} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
                   <defs>
                     <linearGradient id="colorOrders" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#0891b2" stopOpacity={0.6}/>
-                      <stop offset="95%" stopColor="#0891b2" stopOpacity={0.05}/>
+                      <stop offset="5%" stopColor="#0891b2" stopOpacity={0.8}/>
+                      <stop offset="95%" stopColor="#0891b2" stopOpacity={0.1}/>
+                    </linearGradient>
+                    <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.8}/>
+                      <stop offset="95%" stopColor="#10b981" stopOpacity={0.1}/>
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
@@ -215,6 +374,15 @@ const SellerHome = () => {
                     axisLine={{ stroke: '#e5e7eb' }}
                   />
                   <YAxis 
+                    yAxisId="left"
+                    stroke="#6b7280" 
+                    fontSize={11}
+                    tickLine={false}
+                    axisLine={{ stroke: '#e5e7eb' }}
+                  />
+                  <YAxis 
+                    yAxisId="right"
+                    orientation="right"
                     stroke="#6b7280" 
                     fontSize={11}
                     tickLine={false}
@@ -225,42 +393,52 @@ const SellerHome = () => {
                       backgroundColor: 'white', 
                       border: 'none',
                       borderRadius: '12px',
-                      padding: '8px 12px',
+                      padding: '12px',
                       boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
                     }}
                     labelStyle={{ fontSize: '12px', fontWeight: '600', color: '#0e7490' }}
                   />
-                  <Line 
+                  <Legend />
+                  <Area 
+                    yAxisId="left"
                     type="monotone" 
                     dataKey="orders" 
                     stroke="#0891b2" 
-                    strokeWidth={3}
+                    strokeWidth={2}
                     fill="url(#colorOrders)"
-                    dot={{ fill: '#0891b2', r: 5, strokeWidth: 2, stroke: 'white' }}
-                    activeDot={{ r: 7, strokeWidth: 2, stroke: 'white' }}
+                    name="Orders"
                   />
-                </LineChart>
+                  <Area 
+                    yAxisId="right"
+                    type="monotone" 
+                    dataKey="revenue" 
+                    stroke="#10b981" 
+                    strokeWidth={2}
+                    fill="url(#colorRevenue)"
+                    name="Revenue (₱)"
+                  />
+                </AreaChart>
               </ResponsiveContainer>
             ) : (
               <div className="empty-state">
-                <p>🌊 No order data available</p>
+                <p><Waves size={18} style={{ display: 'inline', marginRight: '8px' }} /> No order data available</p>
               </div>
             )}
           </div>
         </div>
 
-        {/* Top Product Sale - Pie Chart */}
+        {/* Order Status Distribution */}
         <div className="chart-card">
           <div className="card-header">
-            <h3>🐠 Top Product Sale</h3>
+            <h3><BarChart3 size={18} style={{ display: 'inline', marginRight: '8px' }} /> Order Status</h3>
           </div>
           <div className="chart-content pie-chart-container">
-            {products.length > 0 ? (
+            {orders.length > 0 ? (
               <>
                 <ResponsiveContainer width="100%" height={180}>
                   <PieChart>
                     <Pie
-                      data={getProductsForPieChart()}
+                      data={getOrderStatusDistribution()}
                       cx="50%"
                       cy="50%"
                       innerRadius={45}
@@ -268,7 +446,7 @@ const SellerHome = () => {
                       paddingAngle={3}
                       dataKey="value"
                     >
-                      {getProductsForPieChart().map((entry, index) => (
+                      {getOrderStatusDistribution().map((entry, index) => (
                         <Cell 
                           key={`cell-${index}`} 
                           fill={COLORS[index % COLORS.length]}
@@ -290,7 +468,7 @@ const SellerHome = () => {
                   </PieChart>
                 </ResponsiveContainer>
                 <div className="pie-legend">
-                  {getProductsForPieChart().map((entry, index) => (
+                  {getOrderStatusDistribution().map((entry, index) => (
                     <div key={index} className="legend-item">
                       <span 
                         className="legend-color" 
@@ -304,7 +482,152 @@ const SellerHome = () => {
               </>
             ) : (
               <div className="empty-state">
-                <p>🐠 No product data</p>
+                <p><BarChart3 size={18} style={{ display: 'inline', marginRight: '8px' }} /> No order data</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+              {/* Product Distribution with Filter */}
+        <div className="chart-card">
+          <div className="card-header">
+            <h3><Fish size={18} style={{ display: 'inline', marginRight: '8px' }} /> Products by Category</h3>
+            <select 
+              value={categoryFilter} 
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              className="chart-filter"
+              style={{
+                padding: '6px 12px',
+                borderRadius: '8px',
+                border: '2px solid #cbd5e1',
+                fontSize: '12px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                background: 'white'
+              }}
+            >
+              <option value="all">All Categories</option>
+              {getCategories().map(cat => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
+            </select>
+          </div>
+          <div className="chart-content">
+            {products.length > 0 ? (
+              <ResponsiveContainer width="100%" height={220}>
+                <BarChart data={getProductsByCategory()} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
+                  <XAxis 
+                    dataKey="name" 
+                    stroke="#6b7280" 
+                    fontSize={11}
+                    tickLine={false}
+                    axisLine={{ stroke: '#e5e7eb' }}
+                  />
+                  <YAxis 
+                    stroke="#6b7280" 
+                    fontSize={11}
+                    tickLine={false}
+                    axisLine={{ stroke: '#e5e7eb' }}
+                  />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'white', 
+                      border: 'none',
+                      borderRadius: '12px',
+                      padding: '8px 12px',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+                    }}
+                  />
+                  <Bar 
+                    dataKey="count" 
+                    fill="#0891b2" 
+                    radius={[8, 8, 0, 0]}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="empty-state">
+                <p><Fish size={18} style={{ display: 'inline', marginRight: '8px' }} /> No product data</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+      {/* Secondary Analytics Row */}
+      <div className="content-grid">
+
+        {/* Top Selling Products */}
+        <div className="chart-card">
+          <div className="card-header">
+            <h3><Trophy size={18} style={{ display: 'inline', marginRight: '8px' }} /> Top Selling Products</h3>
+          </div>
+          <div className="chart-content">
+            {getTopSellingProducts().length > 0 ? (
+              <div style={{ padding: '10px 0' }}>
+                {getTopSellingProducts().map((product, index) => (
+                  <div key={index} style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    padding: '12px',
+                    marginBottom: '8px',
+                    background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
+                    borderRadius: '8px',
+                    borderLeft: '3px solid #0891b2'
+                  }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: '700', fontSize: '13px', color: '#0f172a', marginBottom: '4px' }}>
+                        #{index + 1} {product.name}
+                      </div>
+                      <div style={{ fontSize: '11px', color: '#64748b' }}>
+                        {product.quantity} sold • ₱{product.revenue.toFixed(2)}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="empty-state">
+                <p>🏆 No sales data yet</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Low Stock Alert */}
+        <div className="chart-card" style={{ borderTop: '3px solid #ef4444' }}>
+          <div className="card-header">
+            <h3><AlertTriangle size={18} style={{ display: 'inline', marginRight: '8px' }} /> Low Stock Alert</h3>
+          </div>
+          <div className="chart-content">
+            {getLowStockProducts().length > 0 ? (
+              <div style={{ padding: '10px 0' }}>
+                {getLowStockProducts().map((product, index) => (
+                  <div key={index} style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    padding: '12px',
+                    marginBottom: '8px',
+                    background: 'linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)',
+                    borderRadius: '8px',
+                    borderLeft: '3px solid #ef4444'
+                  }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: '700', fontSize: '13px', color: '#0f172a', marginBottom: '4px' }}>
+                        {product.name}
+                      </div>
+                      <div style={{ fontSize: '11px', color: '#dc2626' }}>
+                        Only {product.stock} {product.unit || 'units'} left
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="empty-state">
+                <p><CheckCircle size={48} color="#10b981" /> All products well stocked</p>
               </div>
             )}
           </div>
@@ -315,7 +638,7 @@ const SellerHome = () => {
       <div className="calendar-section">
         <div className="calendar-card">
           <div className="card-header">
-            <h3>📅 Orders by Date</h3>
+            <h3><Calendar size={18} style={{ display: 'inline', marginRight: '8px' }} /> Orders by Date</h3>
             <div className="date-picker-wrapper">
               <input
                 type="date"
@@ -359,11 +682,33 @@ const SellerHome = () => {
         </div>
       </div>
 
-      {/* Pending Orders */}
+      {/* Orders Section with Filter */}
       <div className="pending-orders-section">
         <div className="section-header">
-          <h3>⏳ Pending Orders</h3>
-          <span className="pending-count">{pendingOrders.length}</span>
+          <h3><List size={18} style={{ display: 'inline', marginRight: '8px' }} /> Orders</h3>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <select 
+              value={orderStatusFilter} 
+              onChange={(e) => setOrderStatusFilter(e.target.value)}
+              style={{
+                padding: '8px 16px',
+                borderRadius: '8px',
+                border: '2px solid #cbd5e1',
+                fontSize: '13px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                background: 'white'
+              }}
+            >
+              <option value="all">All Orders</option>
+              <option value="Pending">Pending</option>
+              <option value="Preparing">Preparing</option>
+              <option value="Ready for Pickup">Ready for Pickup</option>
+              <option value="Completed">Completed</option>
+              <option value="Cancelled">Cancelled</option>
+            </select>
+            <span className="pending-count">{pendingOrders.length}</span>
+          </div>
         </div>
         
         <div className="pending-orders-grid">
@@ -373,15 +718,28 @@ const SellerHome = () => {
                 <div className="pending-order-header">
                   <div className="pending-order-id-section">
                     <span className="pending-order-number">#{order.orderId}</span>
-                    <span className="pending-badge">PENDING</span>
+                    <span 
+                      className="pending-badge"
+                      style={{
+                        color: '#fff',
+                        backgroundColor: 
+                          order.status === 'Completed' ? '#10b981' :
+                          order.status === 'Preparing' ? '#3ec7d1ff' :
+                          order.status === 'Ready for Pickup' ? '#3b82f6' :
+                          order.status === 'Cancelled' ? '#ef4444' :
+                          '#4e6986ff'
+                      }}
+                    >
+                      {order.status.toUpperCase()}
+                    </span>
                   </div>
                 </div>
                 
                 <div className="pending-order-body">
                   <div className="customer-section">
-                    <div className="customer-name-compact">👤 {order.customerName}</div>
-                    <div className="customer-detail">📞 {order.contact}</div>
-                    <div className="customer-detail">📍 {order.address}</div>
+                    <div className="customer-name-compact"><User size={14} style={{ display: 'inline', marginRight: '4px' }} /> {order.customerName}</div>
+                    <div className="customer-detail"><Phone size={14} style={{ display: 'inline', marginRight: '4px' }} /> {order.contact}</div>
+                    <div className="customer-detail"><MapPin size={14} style={{ display: 'inline', marginRight: '4px' }} /> {order.address}</div>
                   </div>
                   
                   <div className="order-summary">
@@ -395,7 +753,7 @@ const SellerHome = () => {
                     </div>
                     {order.notes && (
                       <div className="order-notes-compact">
-                        💬 {order.notes}
+                        <MessageCircle size={14} style={{ display: 'inline', marginRight: '4px' }} /> {order.notes}
                       </div>
                     )}
                   </div>
@@ -417,8 +775,9 @@ const SellerHome = () => {
             ))
           ) : (
             <div className="empty-pending">
-              <h4>All Caught Up!</h4>
-              <p>No pending orders at the moment</p>
+              <div className="empty-icon"><ShoppingCart size={48} color="#0891b2" /></div>
+              <h4>No Orders Found!</h4>
+              <p>No {orderStatusFilter === 'all' ? '' : orderStatusFilter.toLowerCase()} orders at the moment</p>
             </div>
           )}
         </div>

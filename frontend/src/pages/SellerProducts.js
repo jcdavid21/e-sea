@@ -1,24 +1,32 @@
-// SellerProducts.js - COMPLETE WITH UNIQUE CLASS NAMES
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { FiArrowLeft, FiFilter, FiChevronLeft, FiChevronRight, FiChevronsLeft, FiChevronsRight } from "react-icons/fi";
 import "./SellerProducts.css";
 
 function SellerProducts() {
-  const { sellerId } = useParams(); // Get seller ID from URL
+  const { sellerId } = useParams();
   const navigate = useNavigate();
   
   const [products, setProducts] = useState([]);
+  const [filteredProducts, setFilteredProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [shopName, setShopName] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(5);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     if (sellerId) {
       loadData();
     }
   }, [sellerId]);
+
+  useEffect(() => {
+    applyFilters();
+  }, [selectedCategory, searchQuery, products]);
 
   const loadData = async () => {
     setLoading(true);
@@ -50,23 +58,51 @@ function SellerProducts() {
     }
   };
 
-  const filteredProducts =
-    selectedCategory === "All"
-      ? products
-      : products.filter((p) => p.category === selectedCategory);
+  const applyFilters = () => {
+    let filtered = products;
+
+    // Category filter
+    if (selectedCategory !== "All") {
+      filtered = filtered.filter(p => p.category === selectedCategory);
+    }
+
+    // Search filter
+    if (searchQuery.trim()) {
+      filtered = filtered.filter(p => 
+        p.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.category?.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    setFilteredProducts(filtered);
+    setCurrentPage(1);
+  };
 
   const getCategoryCount = (name) =>
     name === "All"
       ? products.length
       : products.filter((p) => p.category === name).length;
 
+  // Pagination
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentProducts = filteredProducts.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
   // Loading State
   if (loading) {
     return (
       <div className="sp-container">
-        <div className="sp-loading-spinner">
-          <div className="sp-spinner"></div>
-          <p>Loading products...</p>
+        <div className="sp-loading-container">
+          <div className="sp-loading-spinner"></div>
+          <p className="sp-loading-text">Loading products...</p>
         </div>
       </div>
     );
@@ -76,16 +112,15 @@ function SellerProducts() {
   if (error) {
     return (
       <div className="sp-container">
-        <div className="sp-header">
-          <button onClick={() => navigate(-1)} className="sp-back-btn">
-            &larr; Back to Sellers
-          </button>
-        </div>
-        <div className="sp-error-message">
-          <h3>⚠️ Error Loading Products</h3>
+        <button onClick={() => navigate(-1)} className="sp-back-btn">
+          <FiArrowLeft size={18} />
+          Back to Sellers
+        </button>
+        <div className="sp-error-box">
+          <h3>Error Loading Products</h3>
           <p>{error}</p>
           <button onClick={loadData} className="sp-retry-btn">
-            🔄 Retry
+            Retry
           </button>
         </div>
       </div>
@@ -94,155 +129,211 @@ function SellerProducts() {
 
   return (
     <div className="sp-container">
-      {/* Header Section */}
-      <div className="sp-header">
-        <button onClick={() => navigate(-1)} className="sp-back-btn">
-          &larr; Back to Sellers
-        </button>
-        <div className="sp-header-content">
+      <div className="sp-header-bar">
+        <div>
+          <button onClick={() => navigate(-1)} className="sp-back-btn">
+            <FiArrowLeft size={18} />
+            Back to Sellers
+          </button>
           <h2>Products for {shopName}</h2>
-          <div className="sp-product-count">
-            {filteredProducts.length}{" "}
-            {filteredProducts.length === 1 ? "Product" : "Products"}
-          </div>
+          <p className="sp-header-subtitle">
+            Viewing all products • {filteredProducts.length} of {products.length} product{products.length !== 1 ? 's' : ''}
+          </p>
         </div>
       </div>
 
-      {/* Category Filter */}
-      <div className="sp-category-filter">
-        <button
-          className={`sp-category-btn ${selectedCategory === "All" ? "active" : ""}`}
-          onClick={() => setSelectedCategory("All")}
-        >
-          All ({products.length})
-        </button>
-
-        {categories.map((cat) => (
-          <button
-            key={cat.id}
-            className={`sp-category-btn ${
-              selectedCategory === cat.category_name ? "active" : ""
-            }`}
-            onClick={() => setSelectedCategory(cat.category_name)}
+      <div className="sp-filter-bar">
+        <FiFilter size={18} />
+        <span>Search Products:</span>
+        <input
+          type="text"
+          placeholder="Search by product name or category..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="sp-search-input"
+        />
+        {searchQuery && (
+          <button 
+            onClick={() => setSearchQuery("")}
+            className="sp-clear-btn"
           >
-            {cat.category_name} ({getCategoryCount(cat.category_name)})
+            Clear
           </button>
-        ))}
+        )}
       </div>
 
-      {/* Products Table or Empty State */}
+      <div className="sp-filter-bar">
+        <FiFilter size={18} />
+        <span>Category:</span>
+        <div className="sp-filter-buttons">
+          <button
+            className={`sp-category-btn ${selectedCategory === "All" ? "active" : ""}`}
+            onClick={() => setSelectedCategory("All")}
+          >
+            All ({products.length})
+          </button>
+
+          {categories.map((cat) => (
+            <button
+              key={cat.id}
+              className={`sp-category-btn ${
+                selectedCategory === cat.category_name ? "active" : ""
+              }`}
+              onClick={() => setSelectedCategory(cat.category_name)}
+            >
+              {cat.category_name} ({getCategoryCount(cat.category_name)})
+            </button>
+          ))}
+        </div>
+      </div>
+
       {filteredProducts.length === 0 ? (
         <div className="sp-no-products">
           <div className="sp-empty-state">
             <span className="sp-empty-icon">📦</span>
             <h3>No Products Found</h3>
             <p>
-              {shopName} has no products
-              {selectedCategory !== "All" && ` in "${selectedCategory}" category`}.
+              {searchQuery 
+                ? `No products match your search "${searchQuery}"`
+                : `${shopName} has no products${selectedCategory !== "All" ? ` in "${selectedCategory}" category` : ''}.`
+              }
             </p>
           </div>
         </div>
       ) : (
-        <div className="sp-table-wrapper">
-          <table className="sp-table">
-            <thead>
-              <tr>
-                <th>Image</th>
-                <th>Name</th>
-                <th>Category</th>
-                <th>Price (₱/{products[0]?.unit || "kg"})</th>
-                <th>Stock</th>
-                <th>Previous Price</th>
-                <th>Status</th>
-              </tr>
-            </thead>
+        <div className="sp-table-card">
+          <div className="sp-table-wrapper">
+            <table className="sp-table">
+              <thead>
+                <tr>
+                  <th>Image</th>
+                  <th>Product Name</th>
+                  <th>Category</th>
+                  <th>Current Price</th>
+                  <th>Stock</th>
+                  <th>Unit</th>
+                  <th>Previous Price</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
 
-            <tbody>
-              {filteredProducts.map((p) => {
-                // Determine stock status
-                let stockStatus = "high";
-                if (p.stock < 5) stockStatus = "critical";
-                else if (p.stock <= 20) stockStatus = "low";
+              <tbody>
+                {currentProducts.map((p) => {
+                  const hasPriceChange = p.previous_price && p.previous_price !== p.price;
+                  const priceIncreased = hasPriceChange && p.price > p.previous_price;
+                  const isOutOfStock = p.stock === 0;
+                  const isLowStock = p.stock > 0 && p.stock < 10;
 
-                // Determine price trend
-                let priceTrend = "stable";
-                if (p.previous_price && p.previous_price !== p.price) {
-                  priceTrend = p.price > p.previous_price ? "up" : "down";
-                }
+                  return (
+                    <tr key={p.id}>
+                      <td className="sp-td-image">
+                        {p.image_url ? (
+                          <img
+                            src={`http://localhost:5001/uploads/${p.image_url}`}
+                            alt={p.name}
+                            className="sp-product-img"
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = "/placeholder-fish.png";
+                            }}
+                          />
+                        ) : (
+                          <div className="sp-no-image">📷</div>
+                        )}
+                      </td>
 
-                return (
-                  <tr key={p.id}>
-                    {/* Product Image */}
-                    <td>
-                      {p.image_url ? (
-                        <img
-                          src={`http://localhost:5001/uploads/${p.image_url}`}
-                          alt={p.name}
-                          className="sp-product-img"
-                          onError={(e) => {
-                            e.target.onerror = null;
-                            e.target.src = "/placeholder-fish.png";
-                          }}
-                        />
-                      ) : (
-                        <div className="sp-no-image">📷</div>
-                      )}
-                    </td>
+                      <td className="sp-td-name">
+                        <span className="sp-product-name">{p.name}</span>
+                      </td>
 
-                    {/* Product Name */}
-                    <td className="sp-product-name">{p.name}</td>
+                      <td className="sp-td-category">
+                        <span className="sp-category-badge">{p.category}</span>
+                      </td>
 
-                    {/* Category */}
-                    <td>
-                      <span className="sp-category-badge">{p.category}</span>
-                    </td>
+                      <td className="sp-td-price">
+                        <div className="sp-price-container">
+                          <span className="sp-current-price">
+                            ₱{Number(p.price).toFixed(2)}
+                          </span>
+                          {hasPriceChange && (
+                            <span className={`sp-price-indicator ${priceIncreased ? 'up' : 'down'}`}>
+                              {priceIncreased ? '↑' : '↓'}
+                            </span>
+                          )}
+                        </div>
+                      </td>
 
-                    {/* Current Price */}
-                    <td className="sp-price-cell">
-                      <span className="sp-current-price">
-                        ₱{Number(p.price).toFixed(2)}
-                      </span>
-                      {priceTrend !== "stable" && (
-                        <span className={`sp-price-trend ${priceTrend}`}>
-                          {priceTrend === "up" ? "↑" : "↓"}
+                      <td className="sp-td-stock">
+                        <span className={`sp-stock-number ${isOutOfStock ? 'out' : isLowStock ? 'low' : ''}`}>
+                          {p.stock}
                         </span>
-                      )}
-                    </td>
+                      </td>
 
-                    {/* Stock Level */}
-                    <td className={`sp-stock-cell ${stockStatus}`}>
-                      <span className="sp-stock-value">
-                        {p.stock} {p.unit || "kg"}
-                      </span>
-                      <span className={`sp-stock-badge ${stockStatus}`}>
-                        {stockStatus === "critical" && "⚠️ Critical"}
-                        {stockStatus === "low" && "📉 Low"}
-                        {stockStatus === "high" && "✅ Good"}
-                      </span>
-                    </td>
+                      <td className="sp-td-unit">
+                        <span className="sp-unit-text">{p.unit || 'kg'}</span>
+                      </td>
 
-                    {/* Previous Price */}
-                    <td className="sp-previous-price">
-                      {p.previous_price && p.previous_price !== p.price ? (
-                        <span className="sp-old-price">
-                          ₱{Number(p.previous_price).toFixed(2)}
+                      <td className="sp-td-previous">
+                        {hasPriceChange ? (
+                          <span className="sp-old-price">
+                            ₱{Number(p.previous_price).toFixed(2)}
+                          </span>
+                        ) : (
+                          <span className="sp-no-change">—</span>
+                        )}
+                      </td>
+
+                      <td className="sp-td-status">
+                        <span className={`sp-status-badge ${isOutOfStock ? 'out-of-stock' : 'active'}`}>
+                          {isOutOfStock ? 'Out of Stock' : 'Available'}
                         </span>
-                      ) : (
-                        <span className="sp-no-change">-</span>
-                      )}
-                    </td>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
 
-                    {/* Status */}
-                    <td>
-                      <span className={`sp-status-badge ${p.stock > 0 ? "active" : "out-of-stock"}`}>
-                        {p.stock > 0 ? "Active" : "Out of Stock"}
-                      </span>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+          {filteredProducts.length > itemsPerPage && (
+            <div className="sp-pagination">
+              <button
+                onClick={() => handlePageChange(1)}
+                disabled={currentPage === 1}
+                className="sp-pagination-btn"
+                title="First Page"
+              >
+                <FiChevronsLeft size={18} />
+              </button>
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="sp-pagination-btn"
+                title="Previous Page"
+              >
+                <FiChevronLeft size={18} />
+              </button>
+              <span className="sp-pagination-info">
+                Page <strong>{currentPage}</strong> of <strong>{totalPages}</strong>
+              </span>
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="sp-pagination-btn"
+                title="Next Page"
+              >
+                <FiChevronRight size={18} />
+              </button>
+              <button
+                onClick={() => handlePageChange(totalPages)}
+                disabled={currentPage === totalPages}
+                className="sp-pagination-btn"
+                title="Last Page"
+              >
+                <FiChevronsRight size={18} />
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
