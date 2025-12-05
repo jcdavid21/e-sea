@@ -38,7 +38,7 @@ function AddFishProducts() {
   const loadCategories = async () => {
     try {
       const res = await fetch(
-        `http://localhost:5001/api/seller/categories?seller_id=${seller_id}`
+        `${process.env.REACT_APP_API_URL}/api/seller/categories?seller_id=${seller_id}`
       );
       const data = await res.json();
       setCategories(data);
@@ -82,7 +82,7 @@ function AddFishProducts() {
     }
 
     try {
-      const res = await fetch("http://localhost:5001/api/seller/categories", {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/seller/categories`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -131,12 +131,12 @@ function AddFishProducts() {
     try {
       let res;
       if (editingId) {
-        res = await fetch(`http://localhost:5001/api/seller/fish/${editingId}`, {
+        res = await fetch(`${process.env.REACT_APP_API_URL}/api/seller/fish/${editingId}`, {
           method: "PUT",
           body: formData,
         });
       } else {
-        res = await fetch("http://localhost:5001/api/seller/add-fish", {
+        res = await fetch(`${process.env.REACT_APP_API_URL}/api/seller/add-fish`, {
           method: "POST",
           body: formData,
         });

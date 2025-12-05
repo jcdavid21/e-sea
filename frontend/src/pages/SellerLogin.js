@@ -20,7 +20,7 @@ const SellerLogin = () => {
     setMessage("Logging in...");
 
     try {
-      const res = await axios.post("http://localhost:5001/api/seller/login", {
+      const res = await axios.post(`${process.env.REACT_APP_API_URL}/api/seller/login`, {
         unique_id: formData.uniqueId,
         password: formData.password,
       });

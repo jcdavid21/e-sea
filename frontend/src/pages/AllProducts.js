@@ -36,13 +36,13 @@ function AllProducts() {
     setLoading(true);
     try {
       const catRes = await fetch(
-        `http://localhost:5001/api/seller/categories?seller_id=${seller_id}`
+        `${process.env.REACT_APP_API_URL}/api/seller/categories?seller_id=${seller_id}`
       );
       const catData = await catRes.json();
       setCategories(catData);
 
       const prodRes = await fetch(
-        `http://localhost:5001/api/seller/fish?seller_id=${seller_id}`
+        `${process.env.REACT_APP_API_URL}/api/seller/fish?seller_id=${seller_id}`
       );
       const prodData = await prodRes.json();
       setProducts(prodData);
@@ -173,7 +173,7 @@ function AllProducts() {
       formDataToSend.append('seller_id', seller_id);
 
       const res = await fetch(
-        `http://localhost:5001/api/seller/fish/${editingProduct.id}`,
+        `${process.env.REACT_APP_API_URL}/api/seller/fish/${editingProduct.id}`,
         {
           method: "PUT",
           body: formDataToSend,
@@ -388,7 +388,7 @@ function AllProducts() {
                     <td>
                       {p.image_url ? (
                         <img
-                          src={`http://localhost:5001/uploads/${p.image_url}`}
+                          src={`${process.env.REACT_APP_API_URL}/uploads/${p.image_url}`}
                           alt={p.name}
                           className="ap-product-img"
                         />
@@ -583,7 +583,7 @@ function AllProducts() {
                   <label style={styles.label}>Current Product Image</label>
                   <div style={styles.imagePreviewBox}>
                     <img
-                      src={`http://localhost:5001/uploads/${editingProduct.image_url}`}
+                      src={`${process.env.REACT_APP_API_URL}/uploads/${editingProduct.image_url}`}
                       alt={editingProduct.name}
                       style={styles.previewImage}
                     />

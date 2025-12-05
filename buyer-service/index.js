@@ -5,9 +5,7 @@ import bcrypt from "bcrypt";
 import bodyParser from "body-parser";
 import path from "path";
 import { fileURLToPath } from "url";
-import dotenv from "dotenv";
-
-// Load environment variables
+import dotenv from 'dotenv';
 dotenv.config();
 
 const app = express();
@@ -19,7 +17,7 @@ const __dirname = path.dirname(__filename);
 //  Middleware Configuration
 // =============================
 
-const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000']; 
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:3000').split(',');
 const corsOptions = {
     origin: (origin, callback) => {
         if (!origin || allowedOrigins.indexOf(origin) !== -1) {
@@ -77,6 +75,7 @@ const adminDbPool = createDatabasePool(
   process.env.ADMIN_DB_NAME,
   process.env.ADMIN_DB_PORT
 );
+
 
 // Test database connections
 buyerDbPool.getConnection((err, connection) => {
@@ -1205,7 +1204,7 @@ app.get("/api/buyer/debug/buyers", async (req, res) => {
 // =============================
 //  Server Initialization
 // =============================
-const PORT = 5002;
+const PORT = process.env.PORT || 5002;
 
 app.listen(PORT, () => {
   console.log(`🚀 Buyer Service running on http://localhost:${PORT}`);

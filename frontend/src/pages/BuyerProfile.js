@@ -50,7 +50,7 @@ const BuyerProfile = () => {
       console.log("🔍 Fetching profile for customer_id:", customer_id);
       
       const res = await axios.get(
-        `http://localhost:5002/api/buyer/profile/${customer_id}`
+        `${process.env.REACT_APP_API_URL}/api/buyer/profile/${customer_id}`
       );
       
       if (res.status === 200) {
@@ -133,7 +133,7 @@ const BuyerProfile = () => {
 
     try {
       const res = await axios.put(
-        `http://localhost:5002/api/buyer/profile/${customer_id}`,
+        `${process.env.REACT_APP_API_URL}/api/buyer/profile/${customer_id}`,
         editForm
       );
 

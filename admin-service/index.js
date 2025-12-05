@@ -4,6 +4,7 @@ const mysql = require("mysql2");
 const bcrypt = require("bcrypt");
 const cors = require("cors");
 const axios = require("axios");
+require('dotenv').config();
 
 const app = express();
 
@@ -45,11 +46,11 @@ app.use((req, res, next) => {
 //  Database Connections
 // =============================
 const adminDb = mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  password: "",
-  database: "admin_db",
-  port: 3306,
+  host: process.env.ADMIN_DB_HOST,
+  user: process.env.ADMIN_DB_USER,
+  password: process.env.ADMIN_DB_PASSWORD,
+  database: process.env.ADMIN_DB_NAME,
+  port: process.env.ADMIN_DB_PORT,
 });
 
 adminDb.connect((err) => {
@@ -62,11 +63,11 @@ adminDb.connect((err) => {
 });
 
 const sellerAuthDb = mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  password: "",
-  database: "seller_auth_db",
-  port: 3306,
+  host: process.env.SELLER_DB_HOST,
+  user: process.env.SELLER_DB_USER,
+  password: process.env.SELLER_DB_PASSWORD,
+  database: process.env.SELLER_DB_NAME,
+  port: process.env.SELLER_DB_PORT,
 });
 
 sellerAuthDb.connect((err) => {
@@ -78,11 +79,11 @@ sellerAuthDb.connect((err) => {
 });
 
 const buyerDb = mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  password: "",
-  database: "buyer_db",
-  port: 3306,
+  host: process.env.BUYER_DB_HOST,
+  user: process.env.BUYER_DB_USER,
+  password: process.env.BUYER_DB_PASSWORD,
+  database: process.env.BUYER_DB_NAME,
+  port: process.env.BUYER_DB_PORT,
 });
 
 buyerDb.connect((err) => {

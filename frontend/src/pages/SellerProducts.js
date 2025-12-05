@@ -34,7 +34,7 @@ function SellerProducts() {
     
     try {
       const res = await fetch(
-        `http://localhost:5003/api/admin/seller-products?seller_id=${sellerId}`
+        `${process.env.REACT_APP_API_URL}/api/admin/seller-products?seller_id=${sellerId}`
       );
       
       if (!res.ok) {
@@ -229,7 +229,7 @@ function SellerProducts() {
                       <td className="sp-td-image">
                         {p.image_url ? (
                           <img
-                            src={`http://localhost:5001/uploads/${p.image_url}`}
+                            src={`${process.env.REACT_APP_API_URL}/uploads/${p.image_url}`}
                             alt={p.name}
                             className="sp-product-img"
                             onError={(e) => {

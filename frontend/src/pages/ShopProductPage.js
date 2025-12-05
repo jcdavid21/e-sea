@@ -48,10 +48,10 @@ const ShopProductPage = () => {
   useEffect(() => {
     const loadProducts = async () => {
       try {
-        const res = await fetch(`http://localhost:5002/api/shop/${shopId}/products`);
+        const res = await fetch(`${process.env.REACT_APP_API_URL}/api/shop/${shopId}/products`);
         
         if (!res.ok) {
-          const allShopsRes = await fetch("http://localhost:5002/api/shop");
+          const allShopsRes = await fetch(`${process.env.REACT_APP_API_URL}/api/shop`);
           if (!allShopsRes.ok) throw new Error("Failed to fetch products");
           
           const allShops = await allShopsRes.json();
@@ -115,7 +115,7 @@ const ShopProductPage = () => {
           <div className="product-list-grid">
             {filteredProducts.map((prod) => {
               const price = Number(prod.new_price ?? prod.price ?? 0);
-              const imageUrl = prod.image_url ? `http://localhost:5001/uploads/${prod.image_url}` : "";
+              const imageUrl = prod.image_url ? `${process.env.REACT_APP_API_URL}/uploads/${prod.image_url}` : "";
               
               return (
                 <div key={prod.id} className="product-card bestseller-card">

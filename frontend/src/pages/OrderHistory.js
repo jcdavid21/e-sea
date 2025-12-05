@@ -52,7 +52,7 @@ const OrderHistory = () => {
   const fetchOrders = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`http://localhost:5002/api/buyer/purchases?buyer_id=${CUSTOMER_ID}`);
+      const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/buyer/purchases?buyer_id=${CUSTOMER_ID}`);
       setOrders(res.data);
     } catch (error) {
       console.error("Error fetching orders:", error);

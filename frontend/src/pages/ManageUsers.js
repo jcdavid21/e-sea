@@ -35,7 +35,7 @@ const ManageUsers = () => {
   const fetchBuyers = async () => {
     setLoading(true);
     try {
-      const res = await axios.get("http://localhost:5003/api/all-buyers");
+      const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/all-buyers`);
       setBuyers(res.data);
     } catch (error) {
       console.error("Error fetching buyers:", error);
@@ -46,7 +46,7 @@ const ManageUsers = () => {
 
   const fetchSellers = async () => {
     try {
-      const res = await axios.get("http://localhost:5003/api/all-sellers");
+      const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/all-sellers`);
       setSellers(res.data);
     } catch (error) {
       console.error("Error fetching sellers:", error);

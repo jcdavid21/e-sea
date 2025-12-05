@@ -54,7 +54,7 @@ const ApproveSellers = () => {
   const fetchSellers = async () => {
     setLoading(true);
     try {
-      const res = await axios.get("http://localhost:5003/api/sellers");
+      const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/sellers`);
 
       const data = res.data.map((s) => ({
         ...s,
@@ -111,7 +111,7 @@ const ApproveSellers = () => {
 
   const handleCheckRequirements = async (sellerId) => {
     try {
-      const res = await axios.put(`http://localhost:5003/api/sellers/${sellerId}/check-requirements`);
+      const res = await axios.put(`${process.env.REACT_APP_API_URL}/api/sellers/${sellerId}/check-requirements`);
       
       if (res.data.status === "rejected") {
         Swal.fire({
@@ -150,7 +150,7 @@ const ApproveSellers = () => {
 
       // Check if exceeded 3-day deadline
       if (daysSinceCreation >= 3) {
-        await axios.put(`http://localhost:5003/api/sellers/${id}/status`, {
+        await axios.put(`${process.env.REACT_APP_API_URL}/api/sellers/${id}/status`, {
           status: "rejected"
         });
         
@@ -178,7 +178,7 @@ const ApproveSellers = () => {
 
       if (!result.isConfirmed) return;
 
-      await axios.put(`http://localhost:5003/api/sellers/${id}/status`, {
+      await axios.put(`${process.env.REACT_APP_API_URL}/api/sellers/${id}/status`, {
         status,
       });
 
@@ -207,7 +207,7 @@ const ApproveSellers = () => {
 
   const handleAddSuccess = async (newSellerData) => {
     try {
-      await axios.post("http://localhost:5003/api/sellers", newSellerData);
+      await axios.post(`${process.env.REACT_APP_API_URL}/api/sellers`, newSellerData);
       
       Swal.fire({
         icon: "success",
@@ -239,7 +239,7 @@ const ApproveSellers = () => {
 
   const handleUpdateRequirements = async (sellerId, updatedRequirements) => {
     try {
-      await axios.put(`http://localhost:5003/api/sellers/${sellerId}/requirements`, {
+      await axios.put(`${process.env.REACT_APP_API_URL}/api/sellers/${sellerId}/requirements`, {
         requirements: updatedRequirements
       });
       

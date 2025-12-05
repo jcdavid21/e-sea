@@ -64,7 +64,7 @@ function SellerProfile() {
     setLoading(true);
     try {
       const infoRes = await fetch(
-        `http://localhost:5001/api/seller/info/${seller_id}`
+        `${process.env.REACT_APP_API_URL}/api/seller/info/${seller_id}`
       );
       const infoData = await infoRes.json();
       
@@ -74,7 +74,7 @@ function SellerProfile() {
       }
 
       const profileRes = await fetch(
-        `http://localhost:5001/api/seller/profile/${seller_id}`
+        `${process.env.REACT_APP_API_URL}/api/seller/profile/${seller_id}`
       );
       const profileData = await profileRes.json();
       
@@ -152,7 +152,7 @@ function SellerProfile() {
     setSaving(true);
     try {
       const res = await fetch(
-        `http://localhost:5001/api/seller/update-info/${seller_id}`,
+        `${process.env.REACT_APP_API_URL}/api/seller/update-info/${seller_id}`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -206,7 +206,7 @@ function SellerProfile() {
 
     try {
       const res = await fetch(
-        `http://localhost:5001/api/seller/upload-${type}/${seller_id}`,
+        `${process.env.REACT_APP_API_URL}/api/seller/upload-${type}/${seller_id}`,
         {
           method: "POST",
           body: formData,
@@ -249,7 +249,7 @@ function SellerProfile() {
   const getFileUrl = (path) => {
     if (!path) return null;
     const normalized = path.startsWith("/") ? path : "/" + path;
-    return `http://localhost:5001${normalized}`;
+    return `${process.env.REACT_APP_API_URL}${normalized}`;
   };
 
   const getFullAddress = () => {

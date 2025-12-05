@@ -14,7 +14,7 @@ const Shop = () => {
   useEffect(() => {
     const loadShops = async () => {
       try {
-        const res = await fetch("http://localhost:5002/api/shop");
+        const res = await fetch(`${process.env.REACT_APP_API_URL}/api/shop`);
         if (!res.ok) throw new Error("Failed to fetch shop data");
         const data = await res.json();
         const processedData = data.map(shop => ({
@@ -90,7 +90,7 @@ const Shop = () => {
                   <div className="shop-info">
                     {shop.logo ? (
                       <img
-                        src={`http://localhost:5001${shop.logo}`}
+                        src={`${process.env.REACT_APP_API_URL}${shop.logo}`}
                         alt={`${shop.shop_name} logo`}
                         className="shop-logo"
                         onError={(e) => { 

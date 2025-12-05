@@ -36,9 +36,9 @@ const Reports = () => {
     try {
       // Fetch notifications from users and sellers
       const [userRes, sellerRes, ordersRes] = await Promise.all([
-        axios.get("http://localhost:5003/api/users/notifications"),
-        axios.get("http://localhost:5003/api/sellers/notifications"),
-        axios.get("http://localhost:5003/api/orders/completed")
+        axios.get(`${process.env.REACT_APP_API_URL}/api/users/notifications`),
+        axios.get(`${process.env.REACT_APP_API_URL}/api/sellers/notifications`),
+        axios.get(`${process.env.REACT_APP_API_URL}/api/orders/completed`)
       ]);
 
       const userNotifications = userRes.data.map(n => ({ ...n, source: "user" }));

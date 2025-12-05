@@ -73,7 +73,7 @@ const AdminAnalytics = () => {
   const fetchAnalytics = async () => {
     setLoading(true);
     try {
-      const sellersRes = await fetch('http://localhost:5003/api/sellers');
+      const sellersRes = await fetch(`${process.env.REACT_APP_API_URL}/api/sellers`);
       const sellers = await sellersRes.json();
       const acceptedSellers = sellers.filter(s => s.status === 'accepted');
 
@@ -85,7 +85,7 @@ const AdminAnalytics = () => {
 
       for (const seller of acceptedSellers) {
         try {
-          const ordersRes = await fetch(`http://localhost:5001/api/orders?seller_id=${seller.unique_id}`);
+          const ordersRes = await fetch(`${process.env.REACT_APP_SELLER_API_URL}/api/orders?seller_id=${seller.unique_id}`);
           const ordersData = await ordersRes.json();
           const orders = ordersData.orders || [];
 
@@ -139,7 +139,7 @@ const AdminAnalytics = () => {
             });
           });
 
-          const productsRes = await fetch(`http://localhost:5001/api/seller/fish?seller_id=${seller.unique_id}`);
+          const productsRes = await fetch(`${process.env.REACT_APP_SELLER_API_URL}/api/seller/fish?seller_id=${seller.unique_id}`);
           const products = await productsRes.json();
           allProducts = [...allProducts, ...products];
         } catch (err) {

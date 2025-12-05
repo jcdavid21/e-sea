@@ -27,7 +27,7 @@ function ManageSellers() {
     
     try {
       console.log("🔄 Fetching sellers from API...");
-      const res = await fetch("http://localhost:5003/api/admin/all-sellers");
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/all-sellers`);
       
       if (!res.ok) {
         throw new Error(`HTTP error! status: ${res.status}`);
@@ -73,7 +73,7 @@ function ManageSellers() {
   const getFileUrl = (path) => {
     if (!path) return null;
     const normalized = path.startsWith("/") ? path : "/" + path;
-    return `http://localhost:5001${normalized}`;
+    return `${process.env.REACT_APP_API_URL}${normalized}`;
   };
 
   const handleViewProducts = (sellerUniqueId) => {

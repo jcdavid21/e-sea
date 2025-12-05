@@ -92,7 +92,7 @@ const totalPages = Math.ceil(filteredStockItems.length / itemsPerPage);
     }
     try {
       const res = await fetch(
-        `http://localhost:5001/api/seller/fish?seller_id=${encodeURIComponent(seller_id)}`
+        `${process.env.REACT_APP_API_URL}/api/seller/fish?seller_id=${encodeURIComponent(seller_id)}`
       );
       const data = await res.json();
       setStockItems(data);
@@ -107,7 +107,7 @@ const totalPages = Math.ceil(filteredStockItems.length / itemsPerPage);
   const loadCategories = async () => {
     try {
       const res = await fetch(
-        `http://localhost:5001/api/seller/categories?seller_id=${encodeURIComponent(seller_id)}`
+        `${process.env.REACT_APP_API_URL}/api/seller/categories?seller_id=${encodeURIComponent(seller_id)}`
       );
       const data = await res.json();
       setCategories(data);
@@ -181,7 +181,7 @@ const totalPages = Math.ceil(filteredStockItems.length / itemsPerPage);
     }
 
     try {
-      const res = await fetch("http://localhost:5001/api/seller/categories", {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/seller/categories`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -282,7 +282,7 @@ const totalPages = Math.ceil(filteredStockItems.length / itemsPerPage);
       formDataToSend.append('seller_id', seller_id);
       formDataToSend.append('image', formData.image);
 
-      const res = await fetch("http://localhost:5001/api/seller/add-fish", {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/seller/add-fish`, {
         method: "POST",
         body: formDataToSend,
       });
@@ -369,7 +369,7 @@ const totalPages = Math.ceil(filteredStockItems.length / itemsPerPage);
       }
 
       const res = await fetch(
-        `http://localhost:5001/api/seller/fish/${editingItem.id}`,
+        `${process.env.REACT_APP_API_URL}/api/seller/fish/${editingItem.id}`,
         {
           method: "PUT",
           body: formDataToSend,
@@ -626,7 +626,7 @@ const totalPages = Math.ceil(filteredStockItems.length / itemsPerPage);
                           <img
                             src={
                               item.image_url
-                                ? `http://localhost:5001/uploads/${item.image_url}`
+                                ? `${process.env.REACT_APP_API_URL}/uploads/${item.image_url}`
                                 : "https://via.placeholder.com/150?text=No+Image"
                             }
                             alt={item.name}

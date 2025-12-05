@@ -24,7 +24,7 @@ export default function BuyerNotifications() {
 
     try {
       const res = await fetch(
-        `http://localhost:5002/api/buyer/${buyerId}/notifications`,
+        `${process.env.REACT_APP_API_URL}/api/buyer/${buyerId}/notifications`,
         {
           method: 'GET',
           credentials: 'include',
@@ -63,7 +63,7 @@ export default function BuyerNotifications() {
   const markAsRead = async (notificationId) => {
     try {
       const res = await fetch(
-        `http://localhost:5002/api/buyer/notifications/${notificationId}/read`,
+        `${process.env.REACT_APP_API_URL}/api/buyer/notifications/${notificationId}/read`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -91,7 +91,7 @@ export default function BuyerNotifications() {
   const markAllAsRead = async () => {
     try {
       const res = await fetch(
-        `http://localhost:5002/api/buyer/${buyerId}/notifications/read-all`,
+        `${process.env.REACT_APP_API_URL}/api/buyer/${buyerId}/notifications/read-all`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
