@@ -5,6 +5,7 @@ const cors = require("cors");
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
+require("dotenv").config();
 
 const app = express();
 app.use(express.json());
@@ -35,11 +36,11 @@ const upload = multer({ storage });
 // MySQL connections
 // --------------------------
 const authDb = mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  password: "",
-  database: "seller_auth_db",
-  port: 3306,
+  host: process.env.SELLER_DB_HOST,
+  user: process.env.SELLER_DB_USER,
+  password: process.env.SELLER_DB_PASSWORD,
+  database: process.env.SELLER_DB_NAME,
+  port: process.env.SELLER_DB_PORT,
 });
 authDb.connect((err) => {
   if (err) console.error("❌ Auth DB connection error:", err);
@@ -47,17 +48,16 @@ authDb.connect((err) => {
 });
 
 const adminDb = mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  password: "",
-  database: "admin_db",
-  port: 3306,
+  host: process.env.ADMIN_DB_HOST,
+  user: process.env.ADMIN_DB_USER,
+  password: process.env.ADMIN_DB_PASSWORD,
+  database: process.env.ADMIN_DB_NAME,
+  port: process.env.ADMIN_DB_PORT,
 });
 adminDb.connect((err) => {
   if (err) console.error("❌ Admin DB connection error:", err);
   else console.log("✅ Connected to admin_db");
 });
-
 // =================================
 // HELPER FUNCTIONS
 // =================================
@@ -398,7 +398,6 @@ app.put("/api/seller/fish/:id", upload.single("image"), async (req, res) => {
     if (unit !== undefined) { fields.push("unit = ?"); params.push(unit); }
     if (freshness !== undefined) { fields.push("freshness = ?"); params.push(freshness); }
     if (price !== undefined) { 
-      // Update the current price in fish_products
       fields.push("price = ?"); 
       params.push(price); 
     }
@@ -981,11 +980,11 @@ app.post("/api/orders", async (req, res) => {
     try {
         // 1. Fetch buyer info from buyer_db to create notification string
         const [buyerInfo] = await mysql.createPool({
-            host: "localhost",
-            user: "root",
-            password: "",
-            database: "buyer_db",
-            port: 3306
+          host: process.env.BUYER_DB_HOST,
+          user: process.env.BUYER_DB_USER,
+          password: process.env.BUYER_DB_PASSWORD,
+          database: process.env.BUYER_DB_NAME,
+          port: process.env.BUYER_DB_PORT
         }).promise().query(
             "SELECT first_name, last_name, contact FROM buyer_authentication WHERE id = ?",
             [buyer_id]
