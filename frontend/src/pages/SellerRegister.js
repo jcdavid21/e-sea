@@ -22,7 +22,7 @@ const SellerRegister = () => {
     setMessage("Processing registration...");
 
     try {
-      const res = await axios.post(`${process.env.REACT_APP_API_URL}/api/seller/register`, {
+      const res = await axios.post(`${process.env.REACT_APP_SELLER_API_URL}/api/seller/register`, {
         email: formData.email,
         unique_id: formData.uniqueId,
         password: formData.password,

@@ -51,7 +51,7 @@ const BuyerDashboard = () => {
   // Fetch best sellers with total sold
   const loadBestSellers = async () => {
     try {
-      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/products/best-sellers`);
+      const res = await fetch(`${process.env.REACT_APP_BUYER_API_URL}/api/products/best-sellers`);
       const data = await res.json();
       setBestSellers(Array.isArray(data) ? data : []);
     } catch (err) {
@@ -69,7 +69,7 @@ const BuyerDashboard = () => {
 
     try {
       const res = await fetch(
-        `${process.env.REACT_APP_API_URL}/api/buyer/purchases?buyer_id=${CUSTOMER_ID}`
+        `${process.env.REACT_APP_BUYER_API_URL}/api/buyer/purchases?buyer_id=${CUSTOMER_ID}`
       );
       
       if (!res.ok) {
@@ -244,7 +244,7 @@ const BuyerDashboard = () => {
                   <img
                     src={
                       prod.image_url
-                        ? `${process.env.REACT_APP_API_URL}/uploads/${prod.image_url}`
+                        ? `${process.env.REACT_APP_SELLER_API_URL}/uploads/${prod.image_url}`
                         : "https://via.placeholder.com/150?text=No+Image"
                     }
                     alt={prod.product_name}
@@ -294,7 +294,7 @@ const BuyerDashboard = () => {
                   <img
                     src={
                       prod.image_url
-                        ? `${process.env.REACT_APP_API_URL}/uploads/${prod.image_url}`
+                        ? `${process.env.REACT_APP_SELLER_API_URL}/uploads/${prod.image_url}`
                         : "https://via.placeholder.com/150?text=No+Image"
                     }
                     alt={prod.name}

@@ -22,10 +22,10 @@ const SellerHome = () => {
     const fetchData = async () => {
       try {
         const [prodRes, orderRes, profileRes, infoRes] = await Promise.all([
-          fetch(`${process.env.REACT_APP_API_URL}/api/seller/fish?seller_id=${SELLER_ID}`),
-          fetch(`${process.env.REACT_APP_API_URL}/api/orders?seller_id=${SELLER_ID}&limit=1000`),
-          fetch(`${process.env.REACT_APP_API_URL}/api/seller/profile/${SELLER_ID}`),
-          fetch(`${process.env.REACT_APP_API_URL}/api/seller/info/${SELLER_ID}`)
+          fetch(`${process.env.REACT_APP_SELLER_API_URL}/api/seller/fish?seller_id=${SELLER_ID}`),
+          fetch(`${process.env.REACT_APP_SELLER_API_URL}/api/orders?seller_id=${SELLER_ID}&limit=1000`),
+          fetch(`${process.env.REACT_APP_SELLER_API_URL}/api/seller/profile/${SELLER_ID}`),
+          fetch(`${process.env.REACT_APP_SELLER_API_URL}/api/seller/info/${SELLER_ID}`)
         ]);
 
         const prodData = await prodRes.json();
@@ -236,7 +236,7 @@ const SellerHome = () => {
   const getFileUrl = (path) => {
     if (!path) return "https://via.placeholder.com/100";
     const normalized = path.replace(/^\/+/, '').replace(/^uploads\//, '');
-    return `${process.env.REACT_APP_API_URL}/uploads/${normalized}`;
+    return `${process.env.REACT_APP_SELLER_API_URL}/uploads/${normalized}`;
   };
 
   if (loading) {

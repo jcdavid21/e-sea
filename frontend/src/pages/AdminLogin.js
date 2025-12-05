@@ -14,15 +14,11 @@ const AdminLogin = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      // Use environment variable for API URL
-      const res = await axios.post(
-        `${process.env.REACT_APP_API_URL}/api/admin/login`,
-        {
-          username,
-          admin_id: adminID,
-          password,
-        }
-      );
+      const res = await axios.post(`${process.env.REACT_APP_ADMIN_API_URL}/api/admin/login`, {
+        username,
+        admin_id: adminID,
+        password,
+      });
       alert(res.data.message);
       navigate("/admin/dashboard");
     } catch (err) {

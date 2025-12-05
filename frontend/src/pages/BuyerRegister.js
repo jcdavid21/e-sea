@@ -38,7 +38,7 @@ const BuyerRegister = () => {
     }
 
     try {
-      const res = await axios.post(`${process.env.REACT_APP_API_URL}/api/buyer/register`, formData);
+      const res = await axios.post(`${process.env.REACT_APP_BUYER_API_URL}/api/buyer/register`, formData);
       setMessage(res.data.message);
       if (res.status === 201) {
         setTimeout(() => navigate("/buyer/login"), 2000);

@@ -1204,7 +1204,7 @@ app.get("/api/buyer/debug/buyers", async (req, res) => {
 // =============================
 //  Server Initialization
 // =============================
-const PORT = process.env.PORT || 5002;
+const PORT = process.env.BUYER_DB_PORT || 5002;
 
 app.listen(PORT, () => {
   console.log(`🚀 Buyer Service running on http://localhost:${PORT}`);

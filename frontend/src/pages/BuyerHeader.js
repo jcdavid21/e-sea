@@ -54,7 +54,7 @@ const BuyerHeader = ({ searchTerm, onSearchChange, onNavClick, currentPage }) =>
 
       setIsLoading(true);
       try {
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/products/search-suggestions`, {
+        const response = await fetch(`${process.env.REACT_APP_BUYER_API_URL}/api/products/search-suggestions`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -176,7 +176,7 @@ const BuyerHeader = ({ searchTerm, onSearchChange, onNavClick, currentPage }) =>
                       <img
                         src={
                           product.image_url
-                            ? `${process.env.REACT_APP_API_URL}/uploads/${product.image_url}`
+                            ? `${process.env.REACT_APP_SELLER_API_URL}/uploads/${product.image_url}`
                             : "https://via.placeholder.com/40?text=No+Image"
                         }
                         alt={product.name}

@@ -53,7 +53,7 @@ export default function ViewOrders() {
 
     setLoading(true);
     try {
-      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/orders?seller_id=${sellerId}&page=${page}&limit=${limit}`);
+      const res = await fetch(`${process.env.REACT_APP_SELLER_API_URL}/api/orders?seller_id=${sellerId}&page=${page}&limit=${limit}`);
       if (!res.ok) throw new Error("Failed to fetch orders");
       const data = await res.json();
       console.log("Fetched orders data:", data);
@@ -94,7 +94,7 @@ export default function ViewOrders() {
     if (!result.isConfirmed) return;
 
     try {
-      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/orders/${orderId}/status`, {
+      const res = await fetch(`${process.env.REACT_APP_SELLER_API_URL}/api/orders/${orderId}/status`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -468,7 +468,7 @@ export default function ViewOrders() {
               <div className="proof-image-section">
                 <div className="proof-image-wrapper">
                   <img
-                    src={`${process.env.REACT_APP_API_URL}${selectedProof}`}
+                    src={`${process.env.REACT_APP_SELLER_API_URL}${selectedProof}`}
                     alt="Proof of Payment"
                     className="proof-image"
                     onError={(e) => {
@@ -481,7 +481,7 @@ export default function ViewOrders() {
             </div>
             <div className="modal-footer">
               <a
-                href={`${process.env.REACT_APP_API_URL}${selectedProof}`}
+                href={`${process.env.REACT_APP_SELLER_API_URL}${selectedProof}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn btn-download"

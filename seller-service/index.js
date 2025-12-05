@@ -1365,7 +1365,7 @@ app.put("/api/seller/notifications/:id/read", async (req, res) => {
 // SERVER START
 // =================================
 
-const PORT = 5001; // Note: Original log showed port 5001, but typical Node setup often uses 3001/8080. Keeping 3001 as default.
+const PORT = process.env.SELLER_DB_PORT || 5001;
 app.listen(PORT, () => {
   console.log(`🚀 Seller Service running on port ${PORT}`);
 });

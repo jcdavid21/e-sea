@@ -142,7 +142,7 @@ const CartPage = () => {
       }
 
       const productIds = savedCart.map(item => item.id);
-      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/products/details`, {
+      const res = await fetch(`${process.env.REACT_APP_BUYER_API_URL}/api/products/details`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ product_ids: productIds })
@@ -192,7 +192,7 @@ const CartPage = () => {
   // Fetch QR code for a specific seller
   const fetchSellerQrCode = async (seller_id) => {
     try {
-      const qrRes = await fetch(`${process.env.REACT_APP_API_URL}/api/seller/${seller_id}/qr`);
+      const qrRes = await fetch(`${process.env.REACT_APP_BUYER_API_URL}/api/seller/${seller_id}/qr`);
       if (qrRes.ok) {
         const qrData = await qrRes.json();
         if (qrData.qr) {
@@ -354,7 +354,7 @@ const CartPage = () => {
       formData.append("customer_name", orderData.name);
       formData.append("customer_contact", orderData.contact);
 
-      const uploadRes = await fetch(`${process.env.REACT_APP_API_URL}/api/upload-payment-proof`, {
+      const uploadRes = await fetch(`${process.env.REACT_APP_SELLER_API_URL}/api/upload-payment-proof`, {
         method: "POST",
         body: formData,
       });
@@ -366,7 +366,7 @@ const CartPage = () => {
       const uploadData = await uploadRes.json();
       const proofFilePath = uploadData.proof_path;
 
-      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/orders`, {
+      const res = await fetch(`${process.env.REACT_APP_SELLER_API_URL}/api/orders`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -492,7 +492,7 @@ const CartPage = () => {
               <div className="item-image">
                 {item.image_url ? (
                   <img
-                    src={`${process.env.REACT_APP_API_URL}/uploads/${item.image_url}`}
+                    src={`${process.env.REACT_APP_SELLER_API_URL}/uploads/${item.image_url}`}
                     alt={item.name}
                     onError={(e) => {
                       e.target.onerror = null;
@@ -700,7 +700,7 @@ const CartPage = () => {
                     {qrCode ? (
                       <div className="qr-wrapper">
                         <img
-                          src={`${process.env.REACT_APP_API_URL}${qrCode}`}
+                          src={`${process.env.REACT_APP_SELLER_API_URL}${qrCode}`}
                           alt="GCash QR Code"
                           className="qr-code"
                         />

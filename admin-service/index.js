@@ -522,7 +522,7 @@ app.get("/api/orders/completed", async (req, res) => {
 // =============================
 //  Server Initialization
 // =============================
-const PORT = 5003; // Changed from 5000 due to macOS Control Center conflict
+const PORT = process.env.ADMIN_DB_PORT || 5003;
 
 const server = app.listen(PORT, () => {
   console.log(`

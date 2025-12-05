@@ -16,7 +16,7 @@ const BuyerLogin = () => {
     try {
       console.log("🔐 Attempting login for:", email);
       
-      const res = await axios.post(`${process.env.REACT_APP_API_URL}/api/buyer/login`, {
+      const res = await axios.post(`${process.env.REACT_APP_BUYER_API_URL}/api/buyer/login`, {
         email,
         password,
       });

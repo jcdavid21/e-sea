@@ -33,7 +33,7 @@ function EditProductModal({ product, categories, seller_id, onClose, onUpdated }
 
     try {
       const res = await fetch(
-        `${process.env.REACT_APP_API_URL}/api/seller/fish/${product.id}`,
+        `${process.env.REACT_APP_SELLER_API_URL}/api/seller/fish/${product.id}`,
         { method: "PUT", body: formData }
       );
 
@@ -87,7 +87,7 @@ function EditProductModal({ product, categories, seller_id, onClose, onUpdated }
           {(preview || product.image_url) && (
             <img
               className="preview-img"
-              src={preview || `${process.env.REACT_APP_API_URL}/uploads/${product.image_url}`}
+              src={preview || `${process.env.REACT_APP_SELLER_API_URL}/uploads/${product.image_url}`}
               alt="preview"
             />
           )}

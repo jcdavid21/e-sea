@@ -73,7 +73,7 @@ const AdminAnalytics = () => {
   const fetchAnalytics = async () => {
     setLoading(true);
     try {
-      const sellersRes = await fetch(`${process.env.REACT_APP_API_URL}/api/sellers`);
+      const sellersRes = await fetch(`${process.env.REACT_APP_ADMIN_API_URL}/api/sellers`);
       const sellers = await sellersRes.json();
       const acceptedSellers = sellers.filter(s => s.status === 'accepted');
 
