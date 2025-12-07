@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import Swal from 'sweetalert2';
-import { FiEdit2, FiSave, FiX, FiPackage, FiImage, FiChevronLeft, FiChevronRight, FiChevronsLeft, FiChevronsRight, FiAlertCircle } from "react-icons/fi";
+import { FiEdit2, FiSave, FiX, FiPackage, FiImage, FiChevronLeft, FiChevronRight, FiChevronsLeft, FiChevronsRight, FiAlertCircle, FiChevronDown, FiTrash2 } from "react-icons/fi";
 import "./AllProducts.css";
 
 function AllProducts() {
@@ -223,6 +223,68 @@ function AllProducts() {
     }
   };
 
+
+  const handleDeleteProduct = async (product) => {
+    const result = await Swal.fire({
+      title: `Delete ${product.name}?`,
+      html: `
+        <div style="text-align: left; padding: 10px;">
+          <p style="color: #dc3545; font-weight: 600;">⚠️ This action cannot be undone!</p>
+          <p><strong>Product:</strong> ${product.name}</p>
+          <p><strong>Category:</strong> ${product.category}</p>
+          <p><strong>Current Stock:</strong> ${product.stock} ${product.unit || 'kg'}</p>
+        </div>
+      `,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#dc3545',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Yes, delete it!',
+      cancelButtonText: 'Cancel'
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      // ⚠️ UPDATED: Added seller_id query parameter
+      const res = await fetch(
+        `${process.env.REACT_APP_SELLER_API_URL}/api/seller/fish/${product.id}?seller_id=${seller_id}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      const data = await res.json();
+
+      if (res.ok) {
+        Swal.fire({
+          icon: 'success',
+          title: 'Deleted!',
+          text: data.message || 'Product has been deleted successfully.',
+          confirmButtonColor: '#1e3c72',
+          timer: 2000,
+          timerProgressBar: true
+        });
+        await loadData();
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: data.message || "Error deleting product",
+          confirmButtonColor: '#1e3c72'
+        });
+      }
+    } catch (err) {
+      console.error("Failed to delete product:", err);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Error deleting product',
+        confirmButtonColor: '#1e3c72'
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="ap-container">
@@ -251,82 +313,44 @@ function AllProducts() {
       {/* FILTERS SECTION */}
       {products.length > 0 && (
         <div style={styles.filtersSection}>
-          <div style={styles.searchBox}>
-            <FiPackage style={styles.searchIcon} />
-            <input
-              type="text"
-              placeholder="Search by product name or category..."
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                setCurrentPage(1);
-              }}
-              style={styles.searchInput}
-            />
-            {searchQuery && (
-              <button onClick={() => setSearchQuery("")} style={styles.clearSearch}>
-                <FiX />
-              </button>
-            )}
-          </div>
-
-          <div style={styles.statusFilters}>
-            <button
-              style={{
-                ...styles.filterBtn,
-                ...(selectedCategory === "All" ? styles.filterBtnActive : {})
-              }}
-              onClick={() => {
-                setSelectedCategory("All");
-                setCurrentPage(1);
-              }}
-              onMouseEnter={(e) => {
-                if (selectedCategory !== "All") {
-                  e.target.style.borderColor = '#1e3c72';
-                  e.target.style.color = '#1e3c72';
-                  e.target.style.transform = 'translateY(-2px)';
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (selectedCategory !== "All") {
-                  e.target.style.borderColor = '#dee2e6';
-                  e.target.style.color = '#495057';
-                  e.target.style.transform = 'translateY(0)';
-                }
-              }}
-            >
-              All ({products.length})
-            </button>
-
-            {categories.map((cat) => (
-              <button
-                key={cat.id}
-                style={{
-                  ...styles.filterBtn,
-                  ...(selectedCategory === cat.category_name ? styles.filterBtnActive : {})
-                }}
-                onClick={() => {
-                  setSelectedCategory(cat.category_name);
+          <div style={styles.filterRow}>
+            <div style={styles.searchBox}>
+              <FiPackage style={styles.searchIcon} />
+              <input
+                type="text"
+                placeholder="Search by product name or category..."
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
                   setCurrentPage(1);
                 }}
-                onMouseEnter={(e) => {
-                  if (selectedCategory !== cat.category_name) {
-                    e.target.style.borderColor = '#1e3c72';
-                    e.target.style.color = '#1e3c72';
-                    e.target.style.transform = 'translateY(-2px)';
-                  }
+                style={styles.searchInput}
+              />
+              {searchQuery && (
+                <button onClick={() => setSearchQuery("")} style={styles.clearSearch}>
+                  <FiX />
+                </button>
+              )}
+            </div>
+
+            <div style={styles.dropdownWrapper}>
+              <FiChevronDown style={styles.dropdownIcon} />
+              <select
+                value={selectedCategory}
+                onChange={(e) => {
+                  setSelectedCategory(e.target.value);
+                  setCurrentPage(1);
                 }}
-                onMouseLeave={(e) => {
-                  if (selectedCategory !== cat.category_name) {
-                    e.target.style.borderColor = '#dee2e6';
-                    e.target.style.color = '#495057';
-                    e.target.style.transform = 'translateY(0)';
-                  }
-                }}
+                style={styles.dropdown}
               >
-                {cat.category_name} ({getCategoryCount(cat.category_name)})
-              </button>
-            ))}
+                <option value="All">All Categories ({products.length})</option>
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.category_name}>
+                    {cat.category_name} ({getCategoryCount(cat.category_name)})
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
       )}
@@ -428,15 +452,26 @@ function AllProducts() {
                     </td>
 
                     <td style={{ textAlign: 'center' }}>
-                      <button
-                        style={styles.editButton}
-                        onClick={() => openEditModal(p)}
-                        onMouseEnter={(e) => e.target.style.background = '#2d115b'}
-                        onMouseLeave={(e) => e.target.style.background = '#34238b'}
-                      >
-                        <FiEdit2 size={16} />
-                        <span>Edit</span>
-                      </button>
+                      <div style={styles.actionButtons}>
+                        <button
+                          style={styles.editButton}
+                          onClick={() => openEditModal(p)}
+                          onMouseEnter={(e) => e.target.style.background = '#2d115b'}
+                          onMouseLeave={(e) => e.target.style.background = '#34238b'}
+                          title="Edit Product"
+                        >
+                          <FiEdit2 size={16} />
+                        </button>
+                        <button
+                          style={styles.deleteButton}
+                          onClick={() => handleDeleteProduct(p)}
+                          onMouseEnter={(e) => e.target.style.background = '#b52a37'}
+                          onMouseLeave={(e) => e.target.style.background = '#dc3545'}
+                          title="Delete Product"
+                        >
+                          <FiTrash2 size={16} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );
@@ -791,6 +826,7 @@ const styles = {
     cursor: 'pointer',
     transition: 'background 0.3s ease',
   },
+  
   saveButton: {
     display: 'inline-flex',
     alignItems: 'center',
@@ -844,6 +880,38 @@ const styles = {
     padding: '24px',
     marginBottom: '24px',
     boxShadow: '0 2px 12px rgba(0, 0, 0, 0.08)',
+  },
+  filterRow: {
+    display: 'grid',
+    gridTemplateColumns: '1fr auto',
+    gap: '16px',
+  },
+  dropdownWrapper: {
+    position: 'relative',
+    minWidth: '250px',
+  },
+  dropdownIcon: {
+    position: 'absolute',
+    right: '16px',
+    top: '50%',
+    transform: 'translateY(-50%)',
+    color: '#6c757d',
+    fontSize: '20px',
+    pointerEvents: 'none',
+  },
+  dropdown: {
+    width: '100%',
+    padding: '14px 48px 14px 16px',
+    border: '2px solid #dee2e6',
+    borderRadius: '12px',
+    fontSize: '15px',
+    fontWeight: '600',
+    color: '#495057',
+    background: 'white',
+    cursor: 'pointer',
+    transition: 'all 0.2s ease',
+    appearance: 'none',
+    outline: 'none',
   },
   searchBox: {
     position: 'relative',
@@ -908,6 +976,26 @@ const styles = {
     color: 'white',
     boxShadow: '0 4px 12px rgba(30, 60, 114, 0.3)',
   },
+  actionButtons: {
+  display: 'flex',
+  gap: '8px',
+  justifyContent: 'center',
+  alignItems: 'center',
+},
+deleteButton: {
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: '8px',
+  padding: '10px 20px',
+  background: '#dc3545',
+  color: '#fff',
+  border: 'none',
+  borderRadius: '8px',
+  fontSize: '0.9rem',
+  fontWeight: '600',
+  cursor: 'pointer',
+  transition: 'all 0.3s ease',
+},
 };
 
 const styleSheet = document.createElement("style");

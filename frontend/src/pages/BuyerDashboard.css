@@ -1222,3 +1222,211 @@
   font-weight: 600;
   display: inline-block;
 }
+
+/* ==================
+   STORE HOURS CONTAINER (Buyer Dashboard)
+   ================== */
+.store-hours-container {
+  margin-bottom: 40px;
+}
+
+.store-hours-card {
+  background: white;
+  padding: 28px;
+  border-radius: 20px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e8eaf6;
+  border-top: 4px solid #10b981;
+  transition: all 0.3s;
+}
+
+.store-hours-card:hover {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+}
+
+.store-hours-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #f1f5f9;
+}
+
+.store-hours-header .header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #16135d;
+}
+
+.store-hours-header .header-left h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+
+.store-status-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hours-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.hours-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 18px;
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  border-radius: 12px;
+  border: 2px solid #bbf7d0;
+  transition: all 0.2s;
+}
+
+.hours-item:hover {
+  border-color: #10b981;
+  transform: translateX(4px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+}
+
+.hours-item.today {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  border-color: #3b82f6;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+}
+
+.hours-item.closed {
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  border-color: #fecaca;
+}
+
+.hours-item.closed:hover {
+  border-color: #f87171;
+}
+
+.day-label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.today-badge {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  width: fit-content;
+  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3);
+}
+
+.day-name {
+  font-weight: 800;
+  font-size: 14px;
+  color: #16135d;
+  letter-spacing: -0.3px;
+}
+
+.time-display {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.open-indicator {
+  color: #10b981;
+  font-size: 12px;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.time-text {
+  font-size: 13px;
+  font-weight: 700;
+  color: #16135d;
+  letter-spacing: -0.2px;
+}
+
+.closed-display {
+  gap: 6px;
+}
+
+.closed-indicator {
+  color: #ef4444;
+  font-size: 12px;
+}
+
+.closed-text {
+  font-size: 13px;
+  font-weight: 700;
+  color: #dc2626;
+}
+
+/* No Hours Set State */
+.no-hours-set {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  grid-column: 1 / -1;
+}
+
+.no-hours-set p {
+  margin: 16px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+/* Responsive Design for Store Hours */
+@media (max-width: 768px) {
+  .store-hours-card {
+    padding: 20px;
+  }
+
+  .store-hours-header {
+    flex-direction: column;
+    gap: 16px;
+    align-items: flex-start;
+  }
+
+  .store-status-badge {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .hours-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hours-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .time-display {
+    width: 100%;
+  }
+}

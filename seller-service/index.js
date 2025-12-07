@@ -755,6 +755,8 @@ app.delete("/api/seller/fish/:id", async (req, res) => {
   }
 });
 
+
+
 app.put("/api/seller/fish/:id/stock", async (req, res) => {
   try {
     const fishId = req.params.id;
@@ -1596,6 +1598,104 @@ app.put("/api/buyer/:customerId/notifications/read-all", async (req, res) => {
 });
 
 // =============================
+//  STORE HOURS ROUTES
+// =============================
+
+app.get("/api/seller/store-hours/:seller_id", async (req, res) => {
+  const { seller_id } = req.params;
+  
+  try {
+    const [hours] = await db.promise().query(
+      `SELECT day_of_week, is_open, open_time, close_time 
+       FROM store_hours 
+       WHERE seller_id = ? 
+       ORDER BY FIELD(day_of_week, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')`,
+      [seller_id]
+    );
+    
+    // If no hours set, return default hours (closed all days)
+    if (hours.length === 0) {
+      const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+      return res.json(days.map(day => ({
+        day_of_week: day,
+        is_open: false,
+        open_time: '09:00:00',
+        close_time: '17:00:00'
+      })));
+    }
+    
+    res.json(hours);
+  } catch (err) {
+    console.error("Error fetching store hours:", err);
+    res.status(500).json({ message: "Error fetching store hours" });
+  }
+});
+
+app.post("/api/seller/store-hours/:seller_id", async (req, res) => {
+  const { seller_id } = req.params;
+  const { hours } = req.body;
+  
+  if (!hours || !Array.isArray(hours)) {
+    return res.status(400).json({ message: "Hours data is required" });
+  }
+  
+  try {
+    await db.promise().query("START TRANSACTION");
+    
+    // Delete existing hours for this seller
+    await db.promise().query("DELETE FROM store_hours WHERE seller_id = ?", [seller_id]);
+    
+    // Insert new hours
+    for (const hour of hours) {
+      await db.promise().query(
+        `INSERT INTO store_hours (seller_id, day_of_week, is_open, open_time, close_time) 
+         VALUES (?, ?, ?, ?, ?)`,
+        [seller_id, hour.day_of_week, hour.is_open ? 1 : 0, hour.open_time, hour.close_time]
+      );
+    }
+    
+    await db.promise().query("COMMIT");
+    
+    res.json({ message: "Store hours updated successfully" });
+  } catch (err) {
+    await db.promise().query("ROLLBACK");
+    console.error("Error updating store hours:", err);
+    res.status(500).json({ message: "Error updating store hours" });
+  }
+});
+
+// =============================
+//  STORE HOURS ROUTES (Global)
+// =============================
+
+app.get("/api/store-hours/global", async (req, res) => {
+  try {
+    // Get any seller's hours (since it's global for all)
+    const [hours] = await db.promise().query(
+      `SELECT day_of_week, is_open, open_time, close_time 
+       FROM store_hours 
+       LIMIT 7`
+    );
+    
+    // If no hours set, return default hours (7 AM - 10 PM, all days open)
+    if (hours.length === 0) {
+      const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+      return res.json(days.map(day => ({
+        day_of_week: day,
+        is_open: true,
+        open_time: '07:00:00',
+        close_time: '22:00:00'
+      })));
+    }
+    
+    res.json(hours);
+  } catch (err) {
+    console.error("Error fetching global store hours:", err);
+    res.status(500).json({ message: "Error fetching store hours" });
+  }
+});
+
+// =============================
 //  BUYER PROFILE ROUTES
 // =============================
 
@@ -2092,16 +2192,43 @@ app.get("/api/products/best-sellers", async (req, res) => {
       LEFT JOIN order_items oi ON fp.id = oi.product_id
       LEFT JOIN orders o ON oi.order_id = o.id AND o.status = 'Completed'
       LEFT JOIN sellers s ON fp.seller_id = s.unique_id
-      WHERE s.status = 'accepted'
+      WHERE s.status = 'accepted' AND fp.stock > 0
       GROUP BY fp.id, fp.name, fp.category, fp.price, fp.stock, fp.unit, 
                fp.image_url, fp.seller_id, fp.freshness, s.shop_name, fp.previous_price
+      HAVING total_sold > 0
       ORDER BY total_sold DESC
-      LIMIT 3
+      LIMIT 4
     `;
     
     const [products] = await db.promise().query(sql);
     
-    return res.status(200).json(products || []);
+    // If no best sellers, get random recommended products
+    if (products.length === 0) {
+      const recommendedSql = `
+        SELECT 
+          fp.id,
+          fp.name,
+          fp.category,
+          fp.price,
+          fp.stock,
+          fp.unit,
+          fp.image_url,
+          fp.seller_id,
+          fp.freshness,
+          s.shop_name,
+          fp.previous_price,
+          0 AS total_sold
+        FROM fish_products fp
+        LEFT JOIN sellers s ON fp.seller_id = s.unique_id
+        WHERE s.status = 'accepted' AND fp.stock > 0
+        ORDER BY RAND()
+        LIMIT 4
+      `;
+      const [recommended] = await db.promise().query(recommendedSql);
+      return res.status(200).json(recommended || []);
+    }
+    
+    return res.status(200).json(products);
   } catch (err) {
     console.error("Error fetching best sellers:", err);
     return res.status(500).json({ 

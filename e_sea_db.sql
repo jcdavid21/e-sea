@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Dec 07, 2025 at 09:55 AM
+-- Generation Time: Dec 07, 2025 at 04:32 PM
 -- Server version: 10.4.28-MariaDB
 -- PHP Version: 8.0.28
 
@@ -341,6 +341,36 @@ INSERT INTO `seller_profiles` (`id`, `seller_id`, `logo`, `qr`, `created_at`, `u
 (1, 'SELL-GFGDHQ', '/uploads/1764741573081-1763954589043-shop_logo.jpg', '/uploads/1764742012626-front_landscape.jpg', '2025-11-22 11:29:06', '2025-12-03 06:06:52'),
 (3, 'SELL-7LED1Z', '/uploads/1763954589043-shop_logo.jpg', NULL, '2025-11-24 03:23:09', '2025-11-24 03:23:09');
 
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `store_hours`
+--
+
+CREATE TABLE `store_hours` (
+  `id` int(11) NOT NULL,
+  `seller_id` varchar(50) NOT NULL,
+  `day_of_week` enum('Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday') NOT NULL,
+  `is_open` tinyint(1) DEFAULT 1,
+  `open_time` time DEFAULT NULL,
+  `close_time` time DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `store_hours`
+--
+
+INSERT INTO `store_hours` (`id`, `seller_id`, `day_of_week`, `is_open`, `open_time`, `close_time`, `created_at`, `updated_at`) VALUES
+(8, 'SELL-GFGDHQ', 'Monday', 1, '07:00:00', '22:00:00', '2025-12-07 15:30:40', '2025-12-07 15:30:40'),
+(9, 'SELL-GFGDHQ', 'Tuesday', 0, '09:00:00', '17:00:00', '2025-12-07 15:30:40', '2025-12-07 15:30:40'),
+(10, 'SELL-GFGDHQ', 'Wednesday', 0, '09:00:00', '17:00:00', '2025-12-07 15:30:40', '2025-12-07 15:30:40'),
+(11, 'SELL-GFGDHQ', 'Thursday', 0, '09:00:00', '17:00:00', '2025-12-07 15:30:40', '2025-12-07 15:30:40'),
+(12, 'SELL-GFGDHQ', 'Friday', 0, '09:00:00', '17:00:00', '2025-12-07 15:30:40', '2025-12-07 15:30:40'),
+(13, 'SELL-GFGDHQ', 'Saturday', 0, '09:00:00', '17:00:00', '2025-12-07 15:30:40', '2025-12-07 15:30:40'),
+(14, 'SELL-GFGDHQ', 'Sunday', 1, '09:00:00', '00:00:00', '2025-12-07 15:30:40', '2025-12-07 15:30:40');
+
 --
 -- Indexes for dumped tables
 --
@@ -418,6 +448,13 @@ ALTER TABLE `seller_profiles`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `store_hours`
+--
+ALTER TABLE `store_hours`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `unique_seller_day` (`seller_id`,`day_of_week`);
+
+--
 -- AUTO_INCREMENT for dumped tables
 --
 
@@ -449,7 +486,7 @@ ALTER TABLE `fish_categories`
 -- AUTO_INCREMENT for table `fish_products`
 --
 ALTER TABLE `fish_products`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT for table `orders`
@@ -492,6 +529,12 @@ ALTER TABLE `seller_notifications`
 --
 ALTER TABLE `seller_profiles`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT for table `store_hours`
+--
+ALTER TABLE `store_hours`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

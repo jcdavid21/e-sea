@@ -30,8 +30,12 @@ const CartPage = () => {
   const [proofOfPayment, setProofOfPayment] = useState(null);
   const [proofPreview, setProofPreview] = useState(null);
   const [uploadingProof, setUploadingProof] = useState(false);
-  const [sellerId, setSellerId] = useState(null);
-  const [storeHours, setStoreHours] = useState({ isOpen: true, openingTime: '7:00 AM', closingTime: '10:00 PM' });
+  const [storeHours, setStoreHours] = useState([]);
+  const [currentStoreStatus, setCurrentStoreStatus] = useState({ 
+    isOpen: true, 
+    openingTime: '7:00 AM', 
+    closingTime: '10:00 PM' 
+  });
 
   // Get customer ID from sessionStorage
   const CUSTOMER_ID = getCustomerId();
@@ -57,15 +61,29 @@ const CartPage = () => {
   }, [CUSTOMER_ID, navigate]);
   
   useEffect(() => {
-    const checkHours = () => {
-      const hours = checkOpeningHours();
-      setStoreHours(hours);
+    const fetchStoreHours = async () => {
+      try {
+        const response = await fetch(`${process.env.REACT_APP_BUYER_API_URL}/api/store-hours/global`);
+        const data = await response.json();
+        setStoreHours(data);
+        const status = checkIfStoreOpen(data);
+        setCurrentStoreStatus(status);
+      } catch (err) {
+        console.error("Error fetching store hours:", err);
+      }
     };
 
-    checkHours();
-    const interval = setInterval(checkHours, 60000);
+    fetchStoreHours();
+    
+    const interval = setInterval(() => {
+      if (storeHours.length > 0) {
+        const status = checkIfStoreOpen(storeHours);
+        setCurrentStoreStatus(status);
+      }
+    }, 60000);
+
     return () => clearInterval(interval);
-  }, []);
+  }, [storeHours]);
 
   // Fetch QR code when items are selected
   useEffect(() => {
@@ -220,22 +238,56 @@ const CartPage = () => {
     }
   };
 
-  const checkOpeningHours = () => {
+  const checkIfStoreOpen = (hours) => {
+    if (!hours || hours.length === 0) {
+      return { isOpen: true, openingTime: '7:00 AM', closingTime: '10:00 PM' };
+    }
+
     const now = new Date();
-    
-    // Convert to Asia/Manila timezone
     const phTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Manila' }));
+    const currentDay = phTime.toLocaleDateString('en-US', { weekday: 'long' });
     const currentHour = phTime.getHours();
+    const currentMinute = phTime.getMinutes();
+    const currentTimeInMinutes = currentHour * 60 + currentMinute;
+
+    const todayHours = hours.find(h => h.day_of_week === currentDay);
     
-    // Opening hours: 7 AM to 10 PM
-    const isOpen = currentHour >= 7 && currentHour < 22;
+    if (!todayHours || !todayHours.is_open) {
+      return { isOpen: false, openingTime: 'Closed', closingTime: 'Today' };
+    }
+
+    const [openHour, openMin] = todayHours.open_time.split(':').map(Number);
+    const [closeHour, closeMin] = todayHours.close_time.split(':').map(Number);
+    const openTimeInMinutes = openHour * 60 + openMin;
     
+    // Handle midnight (00:00:00) as end of day (24:00 or 1440 minutes)
+    let closeTimeInMinutes = closeHour * 60 + closeMin;
+    if (closeHour === 0 && closeMin === 0) {
+      closeTimeInMinutes = 24 * 60; // Treat 00:00 as end of day
+    }
+
+    const isOpen = currentTimeInMinutes >= openTimeInMinutes && currentTimeInMinutes < closeTimeInMinutes;
+
+    const formatTime = (timeStr) => {
+      const [h, m] = timeStr.split(':').map(Number);
+      
+      // Handle midnight display
+      if (h === 0 && m === 0) {
+        return '12:00 AM (Midnight)';
+      }
+      
+      const period = h >= 12 ? 'PM' : 'AM';
+      const hour12 = h % 12 || 12;
+      return `${hour12}:${m.toString().padStart(2, '0')} ${period}`;
+    };
+
     return {
       isOpen,
-      openingTime: '7:00 AM',
-      closingTime: '10:00 PM'
+      openingTime: formatTime(todayHours.open_time),
+      closingTime: formatTime(todayHours.close_time)
     };
   };
+
 
   // Fetch QR code for a specific seller
   const fetchSellerQrCode = async (seller_id) => {
@@ -573,24 +625,93 @@ const CartPage = () => {
             <FaShoppingCart className="cart-icon" />
             <h1>Shopping Cart</h1>
           </div>
-          
-          <div className={`store-hours-badge ${storeHours.isOpen ? 'open' : 'closed'}`}>
-            <div className="hours-status-inline">
-              {storeHours.isOpen ? (
-                <>
-                  <FaCheckCircle className="status-icon" />
-                  <span className="status-text">Store Open</span>
-                </>
-              ) : (
-                <>
-                  <FaTimesCircle className="status-icon" />
-                  <span className="status-text">Store Closed</span>
-                </>
-              )}
+        </div>
+
+        {/* Store Hours Display */}
+        <div className="store-hours-container">
+          <div className="store-hours-card">
+            <div className="store-hours-header">
+              <div className="header-left">
+                <FaClock size={20} />
+                <h3>Store Operating Hours</h3>
+              </div>
+              <div className="store-status-badge" style={{
+                background: currentStoreStatus.isOpen 
+                  ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' 
+                  : 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+                color: 'white',
+                padding: '8px 18px',
+                borderRadius: '25px',
+                fontSize: '13px',
+                fontWeight: '800',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                boxShadow: currentStoreStatus.isOpen 
+                  ? '0 4px 12px rgba(16, 185, 129, 0.4)' 
+                  : '0 4px 12px rgba(239, 68, 68, 0.4)'
+              }}>
+                {currentStoreStatus.isOpen ? (
+                  <>
+                    <FaCheckCircle size={16} />
+                    <span>Open Now</span>
+                  </>
+                ) : (
+                  <>
+                    <FaTimesCircle size={16} />
+                    <span>Closed</span>
+                  </>
+                )}
+              </div>
             </div>
-            <div className="hours-time-inline">
-              <FaClock className="clock-icon" />
-              <span>{storeHours.openingTime} - {storeHours.closingTime}</span>
+            
+            <div className="hours-grid">
+              {storeHours.length > 0 ? (
+                storeHours.map((hour, index) => {
+                  const isToday = new Date().toLocaleDateString('en-US', { weekday: 'long' }) === hour.day_of_week;
+                  
+                  return (
+                    <div 
+                      key={hour.day_of_week} 
+                      className={`hours-item ${isToday ? 'today' : ''} ${!hour.is_open ? 'closed' : ''}`}
+                    >
+                      <div className="day-label">
+                        {isToday && <span className="today-badge">Today</span>}
+                        <span className="day-name">{hour.day_of_week}</span>
+                      </div>
+                      
+                      {hour.is_open ? (
+                        <div className="time-display">
+                          <span className="open-indicator">●</span>
+                          <span className="time-text">
+                            {new Date(`2000-01-01T${hour.open_time}`).toLocaleTimeString('en-US', { 
+                              hour: 'numeric', 
+                              minute: '2-digit',
+                              hour12: true 
+                            })}
+                            {' - '}
+                            {new Date(`2000-01-01T${hour.close_time}`).toLocaleTimeString('en-US', { 
+                              hour: 'numeric', 
+                              minute: '2-digit',
+                              hour12: true 
+                            })}
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="time-display closed-display">
+                          <span className="closed-indicator">●</span>
+                          <span className="closed-text">Closed</span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="no-hours-set">
+                  <FaClock size={48} color="#94a3b8" />
+                  <p>Store hours information not available</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -698,7 +819,7 @@ const CartPage = () => {
 
           <button
             onClick={() => {
-              if (!storeHours.isOpen) {
+              if (!currentStoreStatus.isOpen) {
                 Swal.fire({
                   icon: 'warning',
                   title: 'Store Closed',
@@ -707,7 +828,7 @@ const CartPage = () => {
                       <p style="font-size: 16px; margin-bottom: 16px;">We're currently closed.</p>
                       <div style="background: #f8f9fa; padding: 16px; border-radius: 8px; margin-bottom: 12px;">
                         <p style="font-weight: 600; margin-bottom: 8px;">Operating Hours:</p>
-                        <p style="font-size: 18px; color: #0066cc;">${storeHours.openingTime} - ${storeHours.closingTime}</p>
+                        <p style="font-size: 18px; color: #0066cc;">${currentStoreStatus.openingTime} - ${currentStoreStatus.closingTime}</p>
                       </div>
                       <p style="color: #666;">Please come back during our operating hours.</p>
                     </div>
@@ -739,9 +860,9 @@ const CartPage = () => {
               setShowCheckoutModal(true);
             }}
             className="btn-checkout"
-            disabled={selectedCartItems.length === 0 || !storeHours.isOpen}
+            disabled={selectedCartItems.length === 0 || !currentStoreStatus.isOpen}
           >
-            {!storeHours.isOpen ? (
+            {!currentStoreStatus.isOpen ? (
               <>
                 <FaClock style={{ marginRight: '8px' }} />
                 Store Closed
@@ -755,7 +876,7 @@ const CartPage = () => {
         {showCheckoutModal && (
           <div className="modal-overlay" onClick={() => setShowCheckoutModal(false)}>
             <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-              <div className="modal-header">
+              <div className="modal-header modal-header-cartpage">
                 <h2>Checkout</h2>
                 <button className="modal-close" onClick={() => setShowCheckoutModal(false)}>
                   ×

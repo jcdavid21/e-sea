@@ -463,6 +463,10 @@
   border-bottom: 2px solid #e8eaf6;
 }
 
+.modal-header-cartpage{
+  background: white !important;
+}
+
 .modal-header h2 {
   font-size: 1.5rem;
   color: #16135d;
@@ -1507,5 +1511,213 @@
   
   .header-title h1 {
     font-size: 24px;
+  }
+}
+
+/* ==================
+   STORE HOURS CONTAINER (Cart Page)
+   ================== */
+.cart-page .store-hours-container {
+  margin-bottom: 24px;
+}
+
+.cart-page .store-hours-card {
+  background: white;
+  padding: 28px;
+  border-radius: 20px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e8eaf6;
+  border-top: 4px solid #10b981;
+  transition: all 0.3s;
+}
+
+.cart-page .store-hours-card:hover {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+}
+
+.cart-page .store-hours-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #f1f5f9;
+}
+
+.cart-page .store-hours-header .header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #16135d;
+}
+
+.cart-page .store-hours-header .header-left h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+
+.cart-page .store-status-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cart-page .hours-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.cart-page .hours-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 18px;
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  border-radius: 12px;
+  border: 2px solid #bbf7d0;
+  transition: all 0.2s;
+}
+
+.cart-page .hours-item:hover {
+  border-color: #10b981;
+  transform: translateX(4px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+}
+
+.cart-page .hours-item.today {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  border-color: #3b82f6;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+}
+
+.cart-page .hours-item.closed {
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  border-color: #fecaca;
+}
+
+.cart-page .hours-item.closed:hover {
+  border-color: #f87171;
+}
+
+.cart-page .day-label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cart-page .today-badge {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  width: fit-content;
+  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3);
+}
+
+.cart-page .day-name {
+  font-weight: 800;
+  font-size: 14px;
+  color: #16135d;
+  letter-spacing: -0.3px;
+}
+
+.cart-page .time-display {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cart-page .open-indicator {
+  color: #10b981;
+  font-size: 12px;
+  animation: pulse-cart 2s infinite;
+}
+
+@keyframes pulse-cart {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.cart-page .time-text {
+  font-size: 13px;
+  font-weight: 700;
+  color: #16135d;
+  letter-spacing: -0.2px;
+}
+
+.cart-page .closed-display {
+  gap: 6px;
+}
+
+.cart-page .closed-indicator {
+  color: #ef4444;
+  font-size: 12px;
+}
+
+.cart-page .closed-text {
+  font-size: 13px;
+  font-weight: 700;
+  color: #dc2626;
+}
+
+.cart-page .no-hours-set {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  grid-column: 1 / -1;
+}
+
+.cart-page .no-hours-set p {
+  margin: 16px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+/* Responsive Design for Cart Page Store Hours */
+@media (max-width: 768px) {
+  .cart-page .store-hours-card {
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+
+  .cart-page .store-hours-header {
+    flex-direction: column;
+    gap: 16px;
+    align-items: flex-start;
+  }
+
+  .cart-page .store-status-badge {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .cart-page .hours-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .cart-page .hours-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .cart-page .time-display {
+    width: 100%;
   }
 }

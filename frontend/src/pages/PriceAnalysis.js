@@ -669,6 +669,7 @@ function PriceAnalysis() {
         .products-list {
           max-height: calc(100vh - 280px);
           overflow-y: auto;
+          overflow-x: hidden; /* Add this */
         }
 
         .product-item {
@@ -676,6 +677,7 @@ function PriceAnalysis() {
           border-bottom: 1px solid #e9ecef;
           cursor: pointer;
           transition: all 0.2s ease;
+          overflow: hidden; /* Add this */
         }
 
         .product-item:hover {
@@ -688,15 +690,21 @@ function PriceAnalysis() {
         }
 
         .product-info h4 {
-          font-size: 15px;
-          font-weight: 600;
-          color: #212529;
-          margin-bottom: 4px;
-        }
+            font-size: 15px;
+            font-weight: 600;
+            color: #212529;
+            margin-bottom: 4px;
+            overflow: hidden; /* Add this */
+            text-overflow: ellipsis; /* Add this */
+            white-space: nowrap; /* Add this */
+          }
 
         .product-category {
           font-size: 12px;
           color: #6c757d;
+          overflow: hidden; /* Add this */
+          text-overflow: ellipsis; /* Add this */
+          white-space: nowrap; /* Add this */
         }
 
         .product-details {
@@ -1390,9 +1398,14 @@ function PriceAnalysis() {
           }
           
           .products-panel {
-            max-height: 400px;
+            max-height: none; /* Change from 400px to none */
+          }
+
+          .products-list {
+            max-height: 500px; /* Add fixed height for mobile */
           }
         }
+
 
         @media (max-width: 768px) {
           .price-analysis-container {
