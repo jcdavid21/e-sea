@@ -2,6 +2,9 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./CartPage.css";
 import BuyerHeader from "./BuyerHeader";
+import Swal from 'sweetalert2';
+import { FaClock, FaCheckCircle, FaTimesCircle, FaShoppingCart } from 'react-icons/fa';
+
 
 // Import cart utilities
 import { getCart, saveCart, getCustomerId } from "../utils/cartUtils";
@@ -28,6 +31,7 @@ const CartPage = () => {
   const [proofPreview, setProofPreview] = useState(null);
   const [uploadingProof, setUploadingProof] = useState(false);
   const [sellerId, setSellerId] = useState(null);
+  const [storeHours, setStoreHours] = useState({ isOpen: true, openingTime: '7:00 AM', closingTime: '10:00 PM' });
 
   // Get customer ID from sessionStorage
   const CUSTOMER_ID = getCustomerId();
@@ -36,8 +40,14 @@ const CartPage = () => {
   useEffect(() => {
     if (!CUSTOMER_ID) {
       console.warn("⚠️ User not logged in, redirecting to login page");
-      alert("Please login first to view your cart");
-      navigate("/buyer/login");
+      Swal.fire({
+        icon: 'warning',
+        title: 'Not Logged In',
+        text: 'Please log in to access your cart.',
+        confirmButtonColor: '#3085d6'
+      }).then(() => {
+        navigate("/buyer/login");
+      });
       return;
     }
     
@@ -45,6 +55,17 @@ const CartPage = () => {
     loadCartWithProductDetails();
     loadSavedAddresses();
   }, [CUSTOMER_ID, navigate]);
+  
+  useEffect(() => {
+    const checkHours = () => {
+      const hours = checkOpeningHours();
+      setStoreHours(hours);
+    };
+
+    checkHours();
+    const interval = setInterval(checkHours, 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Fetch QR code when items are selected
   useEffect(() => {
@@ -81,7 +102,12 @@ const CartPage = () => {
 
   const saveNewAddress = () => {
     if (!orderData.name || !orderData.address || !orderData.contact) {
-      alert("Please fill in name, address, and contact to save.");
+      Swal.fire({
+        icon: 'warning',
+        title: 'Incomplete Information',
+        text: 'Please fill in name, address, and contact to save.',
+        confirmButtonColor: '#3085d6'
+      });
       return;
     }
 
@@ -96,7 +122,12 @@ const CartPage = () => {
     const updatedAddresses = [...savedAddresses, newAddress];
     setSavedAddresses(updatedAddresses);
     localStorage.setItem(getAddressesKey(), JSON.stringify(updatedAddresses));
-    alert("Address saved successfully!");
+    Swal.fire({
+      icon: 'success',
+      title: 'Address Saved',
+      text: 'Address saved successfully!',
+      confirmButtonColor: '#3085d6'
+    });
   };
 
   const deleteAddress = (addressId) => {
@@ -189,6 +220,23 @@ const CartPage = () => {
     }
   };
 
+  const checkOpeningHours = () => {
+    const now = new Date();
+    
+    // Convert to Asia/Manila timezone
+    const phTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Manila' }));
+    const currentHour = phTime.getHours();
+    
+    // Opening hours: 7 AM to 10 PM
+    const isOpen = currentHour >= 7 && currentHour < 22;
+    
+    return {
+      isOpen,
+      openingTime: '7:00 AM',
+      closingTime: '10:00 PM'
+    };
+  };
+
   // Fetch QR code for a specific seller
   const fetchSellerQrCode = async (seller_id) => {
     try {
@@ -226,7 +274,12 @@ const CartPage = () => {
         if (itemToToggle.seller_id === currentSeller) {
           setSelectedItems((prev) => [...prev, id]);
         } else {
-          alert("⚠️ You can only select items from a single seller. Please uncheck items from other sellers first.");
+          Swal.fire({
+            icon: 'warning',
+            title: 'Multiple Sellers Selected',
+            text: "⚠️ You can only select items from a single seller. Please uncheck items from other sellers first.",
+            confirmButtonColor: '#3085d6'
+          });
         }
       }
     }
@@ -269,7 +322,12 @@ const CartPage = () => {
     if (item && item.quantity < (item.stock || 999)) {
       updateQuantity(id, item.quantity + 1);
     } else {
-      alert(`Maximum available stock is ${item.stock} ${item.unit || "units"}`);
+      Swal.fire({
+        icon: 'warning',
+        title: 'Stock Limit Reached',
+        text: `Maximum available stock is ${item.stock} ${item.unit || "units"}`,
+        confirmButtonColor: '#3085d6'
+      });
     }
   };
 
@@ -285,12 +343,22 @@ const CartPage = () => {
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      alert("Please upload an image file (JPG, PNG, etc.)");
+      Swal.fire({
+        icon: 'warning',
+        title: 'Invalid File Type',
+        text: "Please upload an image file (JPG, PNG, etc.)",
+        confirmButtonColor: '#3085d6'
+      });
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      alert("Image size must be less than 5MB");
+      Swal.fire({
+        icon: 'warning',
+        title: 'File Too Large',
+        text: "Image size must be less than 5MB",
+        confirmButtonColor: '#3085d6'
+      });
       return;
     }
 
@@ -322,27 +390,52 @@ const CartPage = () => {
     // Check if items are from multiple sellers
     const sellers = getSellersFromSelectedItems();
     if (sellers.length > 1) {
-      alert("⚠️ You can only checkout items from a single seller at a time.\n\nPlease uncheck items from other sellers.");
+      Swal.fire({
+        icon: 'warning',
+        title: 'Multiple Sellers Selected',
+        text: "⚠️ You can only checkout items from a single seller at a time.\n\nPlease uncheck items from other sellers.",
+        confirmButtonColor: '#3085d6'
+      });
       return;
     }
 
     if (!orderData.name || !orderData.address || !orderData.contact) {
-      alert("Please fill in all required delivery information.");
+      Swal.fire({
+        icon: 'warning',
+        title: 'Incomplete Information',
+        text: "Please fill in all required delivery information.",
+        confirmButtonColor: '#3085d6'
+      });
       return;
     }
 
     if (!proofOfPayment) {
-      alert("Please upload proof of payment.");
+      Swal.fire({
+        icon: 'warning',
+        title: 'Proof of Payment Required',
+        text: "Please upload proof of payment.",
+        confirmButtonColor: '#3085d6'
+      });
       return;
     }
 
     if (!confirmPayment) {
-      alert("Please confirm payment.");
+      Swal.fire({
+        icon: 'warning',
+        title: 'Payment Confirmation Required',
+        text: "Please confirm payment.",
+        confirmButtonColor: '#3085d6'
+      });
       return;
     }
 
     if (selectedCartItems.length === 0) {
-      alert("Please select at least one item.");
+      Swal.fire({
+        icon: 'warning',
+        title: 'No Items Selected',
+        text: "Please select at least one item.",
+        confirmButtonColor: '#3085d6'
+      });
       return;
     }
 
@@ -383,11 +476,21 @@ const CartPage = () => {
       const data = await res.json();
 
       if (!res.ok) {
-        alert(data.message || "Failed to place order.");
+        Swal.fire({
+          icon: 'error',
+          title: 'Order Failed',
+          text: data.message || "Failed to place order.",
+          confirmButtonColor: '#3085d6'
+        });
         return;
       }
 
-      alert(data.message || "Order placed successfully!");
+      Swal.fire({
+        icon: 'success',
+        title: 'Order Placed',
+        text: "Your order has been placed successfully!",
+        confirmButtonColor: '#3085d6'
+      });
 
       const remainingCart = cart.filter(
         (item) => !selectedItems.includes(item.id)
@@ -404,7 +507,12 @@ const CartPage = () => {
       
     } catch (err) {
       console.error("Order error:", err);
-      alert("Error placing order. Please try again.");
+      Swal.fire({
+        icon: 'error',
+        title: 'Order Error',
+        text: "Error placing order. Please try again.",
+        confirmButtonColor: '#3085d6'
+      });
     } finally {
       setUploadingProof(false);
     }
@@ -461,7 +569,30 @@ const CartPage = () => {
       
       <div className="cart-page">
         <div className="cart-header">
-          <h1>🛒 Shopping Cart</h1>
+          <div className="header-title">
+            <FaShoppingCart className="cart-icon" />
+            <h1>Shopping Cart</h1>
+          </div>
+          
+          <div className={`store-hours-badge ${storeHours.isOpen ? 'open' : 'closed'}`}>
+            <div className="hours-status-inline">
+              {storeHours.isOpen ? (
+                <>
+                  <FaCheckCircle className="status-icon" />
+                  <span className="status-text">Store Open</span>
+                </>
+              ) : (
+                <>
+                  <FaTimesCircle className="status-icon" />
+                  <span className="status-text">Store Closed</span>
+                </>
+              )}
+            </div>
+            <div className="hours-time-inline">
+              <FaClock className="clock-icon" />
+              <span>{storeHours.openingTime} - {storeHours.closingTime}</span>
+            </div>
+          </div>
         </div>
 
         <div className="select-all-container">
@@ -567,21 +698,57 @@ const CartPage = () => {
 
           <button
             onClick={() => {
+              if (!storeHours.isOpen) {
+                Swal.fire({
+                  icon: 'warning',
+                  title: 'Store Closed',
+                  html: `
+                    <div style="text-align: center;">
+                      <p style="font-size: 16px; margin-bottom: 16px;">We're currently closed.</p>
+                      <div style="background: #f8f9fa; padding: 16px; border-radius: 8px; margin-bottom: 12px;">
+                        <p style="font-weight: 600; margin-bottom: 8px;">Operating Hours:</p>
+                        <p style="font-size: 18px; color: #0066cc;">${storeHours.openingTime} - ${storeHours.closingTime}</p>
+                      </div>
+                      <p style="color: #666;">Please come back during our operating hours.</p>
+                    </div>
+                  `,
+                  confirmButtonColor: '#3085d6',
+                  confirmButtonText: 'Understood'
+                });
+                return;
+              }
               if (selectedCartItems.length === 0) {
-                alert("Please select at least one item.");
+                Swal.fire({
+                  icon: 'info',
+                  title: 'No Items Selected',
+                  text: 'Please select at least one item to checkout.',
+                  confirmButtonColor: '#3085d6'
+                });
                 return;
               }
               const sellers = getSellersFromSelectedItems();
               if (sellers.length > 1) {
-                alert("⚠️ You can only checkout items from a single seller at a time.\n\nPlease uncheck items from other sellers.");
+                Swal.fire({
+                  icon: 'warning',
+                  title: 'Multiple Sellers',
+                  text: 'You can only checkout items from a single seller at a time. Please uncheck items from other sellers.',
+                  confirmButtonColor: '#3085d6'
+                });
                 return;
               }
               setShowCheckoutModal(true);
             }}
             className="btn-checkout"
-            disabled={selectedCartItems.length === 0}
+            disabled={selectedCartItems.length === 0 || !storeHours.isOpen}
           >
-            Proceed to Checkout
+            {!storeHours.isOpen ? (
+              <>
+                <FaClock style={{ marginRight: '8px' }} />
+                Store Closed
+              </>
+            ) : (
+              'Proceed to Checkout'
+            )}
           </button>
         </div>
 

@@ -35,6 +35,7 @@ import CartPage from "./pages/CartPage";
 
 // Notifications Page (NEW)
 import BuyerNotifications from "./pages/BuyerNotifications";
+import SellerReports from "./pages/SellerReports";
 
 function App() {
   return (
@@ -63,6 +64,7 @@ function App() {
           <Route path="products" element={<AllProducts />} />
           <Route path="price" element={<PriceAnalysis />} />
           <Route path="profile" element={<Profile />} />
+          <Route path="reports" element={<SellerReports />} />
         </Route>
 
         {/* Buyer Routes */}

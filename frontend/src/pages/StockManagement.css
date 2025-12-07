@@ -282,3 +282,16 @@
     min-width: 100%;
   }
 }
+
+
+/* Add to your existing CSS file */
+@media (max-width: 768px) {
+  .stock-container {
+    margin: 20px auto;
+    padding: 16px;
+  }
+  
+  .stock-container h2 {
+    font-size: 1.5rem;
+  }
+}

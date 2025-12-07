@@ -5,6 +5,8 @@ import bcrypt from "bcrypt";
 import bodyParser from "body-parser";
 import path from "path";
 import { fileURLToPath } from "url";
+import dotenv from 'dotenv';
+dotenv.config();
 
 const app = express();
 
@@ -15,13 +17,12 @@ const __dirname = path.dirname(__filename);
 //  Middleware Configuration
 // =============================
 
-const allowedOrigins = ['http://localhost:3000']; 
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:3000').split(',');
 const corsOptions = {
     origin: (origin, callback) => {
         if (!origin || allowedOrigins.indexOf(origin) !== -1) {
             callback(null, true);
         } else {
-            // Block requests from unauthorized origins
             callback(new Error('Not allowed by CORS'), false);
         }
     },
@@ -38,22 +39,43 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // =============================
 //  Database Connection Pools
 // =============================
-const createDatabasePool = (database) => {
+const createDatabasePool = (host, user, password, database, port) => {
   return mysql.createPool({
-    host: "localhost",
-    user: "root",
-    password: "",
+    host: host,
+    user: user,
+    password: password,
     database: database,
-    port: 3306,
+    port: port,
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0
   });
 };
 
-const buyerDbPool = createDatabasePool("buyer_db");
-const sellerAuthDbPool = createDatabasePool("seller_auth_db");
-const adminDbPool = createDatabasePool("admin_db");
+const buyerDbPool = createDatabasePool(
+  process.env.BUYER_DB_HOST,
+  process.env.BUYER_DB_USER,
+  process.env.BUYER_DB_PASSWORD,
+  process.env.BUYER_DB_NAME,
+  process.env.BUYER_DB_PORT
+);
+
+const sellerAuthDbPool = createDatabasePool(
+  process.env.SELLER_DB_HOST,
+  process.env.SELLER_DB_USER,
+  process.env.SELLER_DB_PASSWORD,
+  process.env.SELLER_DB_NAME,
+  process.env.SELLER_DB_PORT
+);
+
+const adminDbPool = createDatabasePool(
+  process.env.ADMIN_DB_HOST,
+  process.env.ADMIN_DB_USER,
+  process.env.ADMIN_DB_PASSWORD,
+  process.env.ADMIN_DB_NAME,
+  process.env.ADMIN_DB_PORT
+);
+
 
 // Test database connections
 buyerDbPool.getConnection((err, connection) => {
@@ -1182,7 +1204,7 @@ app.get("/api/buyer/debug/buyers", async (req, res) => {
 // =============================
 //  Server Initialization
 // =============================
-const PORT = 5002;
+const PORT = process.env.BUYER_DB_PORT || 5002;
 
 app.listen(PORT, () => {
   console.log(`🚀 Buyer Service running on http://localhost:${PORT}`);

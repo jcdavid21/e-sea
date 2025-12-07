@@ -547,6 +547,7 @@ export default function ViewOrders() {
 
         .header-subtitle {
           font-size: 14px;
+          color: rgba(255, 255, 255, 0.85);
           opacity: 0.9;
         }
 
@@ -897,25 +898,28 @@ export default function ViewOrders() {
           display: flex;
           justify-content: center;
           align-items: center;
-          gap: 12px;
-          padding: 24px;
+          gap: 8px;
+          padding: 20px;
           background: white;
           border-radius: 16px;
           box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+          flex-wrap: wrap;
         }
 
         .pagination-btn {
           display: flex;
           align-items: center;
           justify-content: center;
-          width: 40px;
+          min-width: 40px;
           height: 40px;
+          padding: 0 12px;
           border: 2px solid #dee2e6;
           background: white;
           border-radius: 8px;
           cursor: pointer;
           transition: all 0.2s ease;
           color: #495057;
+          flex-shrink: 0;
         }
 
         .pagination-btn:hover:not(:disabled) {
@@ -931,14 +935,59 @@ export default function ViewOrders() {
         }
 
         .pagination-info {
-          margin: 0 16px;
+          margin: 0 8px;
           font-size: 14px;
           color: #495057;
+          white-space: nowrap;
         }
 
         .pagination-info strong {
           color: #1e3c72;
           font-weight: 700;
+        }
+
+        @media (max-width: 768px) {
+          .pagination {
+            padding: 16px;
+            gap: 6px;
+          }
+
+          .pagination-btn {
+            min-width: 36px;
+            height: 36px;
+            padding: 0 8px;
+          }
+
+          .pagination-info {
+            font-size: 13px;
+            margin: 0 4px;
+            width: 100%;
+            text-align: center;
+            order: -1;
+            margin-bottom: 8px;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .pagination {
+            padding: 12px;
+            gap: 4px;
+          }
+
+          .pagination-btn {
+            min-width: 32px;
+            height: 32px;
+            padding: 0 6px;
+          }
+
+          .pagination-btn svg {
+            width: 16px;
+            height: 16px;
+          }
+
+          .pagination-info {
+            font-size: 12px;
+          }
         }
 
         .modal-overlay {
@@ -1261,6 +1310,24 @@ export default function ViewOrders() {
 
           .proof-image {
             max-height: 300px;
+          }
+        }
+
+        @media (max-width: 1024px) {
+          .header-content h1 {
+            font-size: 18px;
+          }
+
+          .count-number {
+            font-size: 18px;
+          }
+
+          .header-subtitle {
+            font-size: 12px;
+          }
+
+          .orders-count {
+            padding: 12px 20px;
           }
         }
 

@@ -10,6 +10,7 @@ import {
   FaTruck,
   FaChartLine,
   FaArrowRight,
+  FaClock
 } from "react-icons/fa";
 import BannerImg from "../assets/bg-2.jpg";
 import "./BuyerDashboard.css";
@@ -160,7 +161,15 @@ const BuyerDashboard = () => {
         {/* Hero Banner */}
         <section className="hero-banner">
           <div className="hero-content">
-            <h1>Welcome to E-Sea Merkado Market! 🐟</h1>
+            <div style={{display: "flex", justifyContent: "space-between", alignItems: "center",
+              width: "100%"
+            }}>
+              <h1>Welcome to E-Sea Merkado Market! 🐟</h1>
+              <div className="store-hours">
+                <FaClock style={{ marginRight: '8px' }} />
+                <span>Store Hours: 7 AM - 10 PM</span>
+              </div>
+            </div>
             <p>Discover the finest fresh seafood. Quality guaranteed, ocean to table.</p>
             <button className="hero-cta" onClick={()=> navigate('/buyer/shop')}>
               Shop Now <FaArrowRight />
@@ -181,6 +190,7 @@ const BuyerDashboard = () => {
             </div>
           </div>
         </section>
+
 
         {/* Quick Actions */}
         <div className="quick-actions">
@@ -224,6 +234,7 @@ const BuyerDashboard = () => {
             </div>
           </div> */}
         </div>
+
 
         {/* Recent Purchases Section */}
         <section className="recent-section">

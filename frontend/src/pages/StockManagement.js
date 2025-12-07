@@ -672,43 +672,50 @@ const totalPages = Math.ceil(filteredStockItems.length / itemsPerPage);
           </tbody>
         </table>
 
-        {stockItems.length > itemsPerPage && (
-          <div style={styles.pagination}>
-            <button
-              onClick={() => handlePageChange(1)}
-              disabled={currentPage === 1}
-              style={{ ...styles.paginationBtn, ...(currentPage === 1 ? styles.paginationBtnDisabled : {}) }}
-              title="First Page"
-            >
-              <FiChevronsLeft size={18} />
-            </button>
-            <button
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-              style={{ ...styles.paginationBtn, ...(currentPage === 1 ? styles.paginationBtnDisabled : {}) }}
-              title="Previous Page"
-            >
-              <FiChevronLeft size={18} />
-            </button>
-            <span style={styles.paginationInfo}>
-              Page <strong>{currentPage}</strong> of <strong>{totalPagesFiltered}</strong>
-            </span>
-            <button
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage === totalPagesFiltered}
-              style={{ ...styles.paginationBtn, ...(currentPage === totalPagesFiltered ? styles.paginationBtnDisabled : {}) }}
-              title="Next Page"
-            >
-              <FiChevronRight size={18} />
-            </button>
-            <button
-              onClick={() => handlePageChange(totalPagesFiltered)}
-              disabled={currentPage === totalPagesFiltered}
-              style={{ ...styles.paginationBtn, ...(currentPage === totalPagesFiltered ? styles.paginationBtnDisabled : {}) }}
-              title="Last Page"
-            >
-              <FiChevronsRight size={18} />
-            </button>
+        {filteredStockItems.length > itemsPerPage && (
+          <div style={styles.paginationContainer}>
+            <div style={styles.paginationWrapper}>
+              <button
+                onClick={() => handlePageChange(1)}
+                disabled={currentPage === 1}
+                style={{ ...styles.paginationBtn, ...(currentPage === 1 ? styles.paginationBtnDisabled : {}) }}
+                title="First Page"
+              >
+                <FiChevronsLeft size={18} />
+              </button>
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                style={{ ...styles.paginationBtn, ...(currentPage === 1 ? styles.paginationBtnDisabled : {}) }}
+                title="Previous Page"
+              >
+                <FiChevronLeft size={18} />
+              </button>
+              
+              <div style={styles.paginationInfo}>
+                <span style={styles.pageText}>Page</span>
+                <span style={styles.pageNumber}>{currentPage}</span>
+                <span style={styles.pageText}>of</span>
+                <span style={styles.pageNumber}>{totalPagesFiltered}</span>
+              </div>
+              
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPagesFiltered}
+                style={{ ...styles.paginationBtn, ...(currentPage === totalPagesFiltered ? styles.paginationBtnDisabled : {}) }}
+                title="Next Page"
+              >
+                <FiChevronRight size={18} />
+              </button>
+              <button
+                onClick={() => handlePageChange(totalPagesFiltered)}
+                disabled={currentPage === totalPagesFiltered}
+                style={{ ...styles.paginationBtn, ...(currentPage === totalPagesFiltered ? styles.paginationBtnDisabled : {}) }}
+                title="Last Page"
+              >
+                <FiChevronsRight size={18} />
+              </button>
+            </div>
           </div>
         )}
       </div>
@@ -894,23 +901,36 @@ const styles = {
     borderRadius: '16px',
     boxShadow: '0 8px 24px rgba(0, 0, 0, 0.08)',
     fontFamily: "'Poppins', sans-serif",
+    '@media (max-width: 768px)': {
+      margin: '20px auto',
+      padding: '16px',
+      borderRadius: '12px',
+    }
   },
   header: {
     marginBottom: '30px',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: '16px',
   },
   title: {
     fontSize: '2rem',
     fontWeight: '700',
     color: '#1e3c72',
     margin: '0 0 8px 0',
+    '@media (max-width: 768px)': {
+      fontSize: '1.5rem',
+    }
   },
   subtitle: {
     fontSize: '0.95rem',
     color: '#666',
     margin: 0,
+    '@media (max-width: 768px)': {
+      fontSize: '0.85rem',
+    }
   },
   loading: {
     textAlign: 'center',
@@ -933,6 +953,10 @@ const styles = {
     fontSize: '0.95rem',
     fontWeight: '500',
     animation: 'slideDown 0.3s ease',
+    '@media (max-width: 768px)': {
+      fontSize: '0.85rem',
+      padding: '12px 14px',
+    }
   },
   alertInfo: {
     background: '#e7f1ff',
@@ -954,6 +978,11 @@ const styles = {
     gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
     gap: '20px',
     marginBottom: '30px',
+    '@media (max-width: 768px)': {
+      gridTemplateColumns: '1fr',
+      gap: '12px',
+      marginBottom: '20px',
+    }
   },
   summaryCard: {
     background: '#f8f9fa',
@@ -965,6 +994,10 @@ const styles = {
     boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
     transition: 'transform 0.2s ease',
     cursor: 'default',
+    '@media (max-width: 768px)': {
+      padding: '16px',
+      gap: '12px',
+    }
   },
   summaryIcon: {
     width: '56px',
@@ -973,17 +1006,28 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
+    flexShrink: 0,
+    '@media (max-width: 768px)': {
+      width: '48px',
+      height: '48px',
+    }
   },
   summaryLabel: {
     fontSize: '0.85rem',
     color: '#666',
     marginBottom: '4px',
     fontWeight: '500',
+    '@media (max-width: 768px)': {
+      fontSize: '0.75rem',
+    }
   },
   summaryValue: {
     fontSize: '1.8rem',
     fontWeight: '700',
     color: '#1e3c72',
+    '@media (max-width: 768px)': {
+      fontSize: '1.4rem',
+    }
   },
   tableWrapper: {
     overflowX: 'auto',
@@ -994,6 +1038,9 @@ const styles = {
     width: '100%',
     borderCollapse: 'collapse',
     fontSize: '0.95rem',
+    '@media (max-width: 768px)': {
+      fontSize: '0.8rem',
+    }
   },
   th: {
     background: 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)',
@@ -1005,6 +1052,10 @@ const styles = {
     textTransform: 'uppercase',
     letterSpacing: '0.5px',
     borderBottom: '2px solid #1e3c72',
+    '@media (max-width: 768px)': {
+      padding: '12px 10px',
+      fontSize: '0.7rem',
+    }
   },
   tr: {
     borderBottom: '1px solid #f0f0f0',
@@ -1013,11 +1064,18 @@ const styles = {
   td: {
     padding: '16px 20px',
     color: '#333',
+    '@media (max-width: 768px)': {
+      padding: '12px 10px',
+      fontSize: '0.8rem',
+    }
   },
   productCell: {
     display: 'flex',
     alignItems: 'center',
     gap: '12px',
+    '@media (max-width: 768px)': {
+      gap: '8px',
+    }
   },
   productImage: {
     width: '48px',
@@ -1025,6 +1083,10 @@ const styles = {
     borderRadius: '8px',
     objectFit: 'cover',
     border: '2px solid #f0f0f0',
+    '@media (max-width: 768px)': {
+      width: '36px',
+      height: '36px',
+    }
   },
   productImagePlaceholder: {
     width: '48px',
@@ -1035,10 +1097,17 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     border: '2px solid #e0e0e0',
+    '@media (max-width: 768px)': {
+      width: '36px',
+      height: '36px',
+    }
   },
   productName: {
     fontWeight: '600',
     color: '#1e3c72',
+    '@media (max-width: 768px)': {
+      fontSize: '0.85rem',
+    }
   },
   categoryBadge: {
     display: 'inline-block',
@@ -1048,6 +1117,10 @@ const styles = {
     borderRadius: '20px',
     fontSize: '0.85rem',
     fontWeight: '500',
+    '@media (max-width: 768px)': {
+      padding: '4px 10px',
+      fontSize: '0.75rem',
+    }
   },
   statusBadge: {
     display: 'inline-block',
@@ -1055,11 +1128,18 @@ const styles = {
     borderRadius: '20px',
     fontSize: '0.85rem',
     fontWeight: '600',
+    '@media (max-width: 768px)': {
+      padding: '4px 10px',
+      fontSize: '0.75rem',
+    }
   },
   noData: {
     textAlign: 'center',
     padding: '60px 20px',
     color: '#999',
+    '@media (max-width: 768px)': {
+      padding: '40px 16px',
+    }
   },
   editButton: {
     display: 'inline-flex',
@@ -1074,6 +1154,11 @@ const styles = {
     fontWeight: '600',
     cursor: 'pointer',
     transition: 'all 0.3s ease',
+    '@media (max-width: 768px)': {
+      padding: '8px 12px',
+      fontSize: '0.75rem',
+      gap: '4px',
+    }
   },
   modalOverlay: {
     position: 'fixed',
@@ -1096,6 +1181,10 @@ const styles = {
     maxHeight: '90vh',
     overflow: 'auto',
     boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
+    '@media (max-width: 768px)': {
+      maxWidth: '95%',
+      borderRadius: '12px',
+    }
   },
   modalHeader: {
     padding: '24px 30px',
@@ -1105,12 +1194,19 @@ const styles = {
     alignItems: 'center',
     background: 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)',
     borderRadius: '16px 16px 0 0',
+    '@media (max-width: 768px)': {
+      padding: '16px 20px',
+      borderRadius: '12px 12px 0 0',
+    }
   },
   modalTitle: {
     fontSize: '1.5rem',
     fontWeight: '700',
     color: '#fff',
     margin: 0,
+    '@media (max-width: 768px)': {
+      fontSize: '1.2rem',
+    }
   },
   closeButton: {
     background: 'transparent',
@@ -1126,14 +1222,24 @@ const styles = {
   },
   modalBody: {
     padding: '30px',
+    '@media (max-width: 768px)': {
+      padding: '20px',
+    }
   },
   formGroup: {
     marginBottom: '20px',
+    '@media (max-width: 768px)': {
+      marginBottom: '16px',
+    }
   },
   formRow: {
     display: 'grid',
     gridTemplateColumns: '1fr 1fr',
     gap: '20px',
+    '@media (max-width: 768px)': {
+      gridTemplateColumns: '1fr',
+      gap: '16px',
+    }
   },
   label: {
     display: 'block',
@@ -1141,6 +1247,10 @@ const styles = {
     fontSize: '0.9rem',
     fontWeight: '600',
     color: '#333',
+    '@media (max-width: 768px)': {
+      fontSize: '0.85rem',
+      marginBottom: '6px',
+    }
   },
   input: {
     width: '100%',
@@ -1151,6 +1261,10 @@ const styles = {
     transition: 'border-color 0.3s ease',
     outline: 'none',
     boxSizing: 'border-box',
+    '@media (max-width: 768px)': {
+      padding: '10px 12px',
+      fontSize: '0.9rem',
+    }
   },
   fileInput: {
     width: '100%',
@@ -1160,6 +1274,10 @@ const styles = {
     fontSize: '0.9rem',
     cursor: 'pointer',
     boxSizing: 'border-box',
+    '@media (max-width: 768px)': {
+      padding: '10px',
+      fontSize: '0.85rem',
+    }
   },
   modalFooter: {
     padding: '20px 30px',
@@ -1167,6 +1285,11 @@ const styles = {
     display: 'flex',
     justifyContent: 'flex-end',
     gap: '12px',
+    '@media (max-width: 768px)': {
+      padding: '16px 20px',
+      gap: '8px',
+      flexDirection: 'column-reverse',
+    }
   },
   cancelButton: {
     display: 'inline-flex',
@@ -1181,6 +1304,12 @@ const styles = {
     fontWeight: '600',
     cursor: 'pointer',
     transition: 'background 0.3s ease',
+    '@media (max-width: 768px)': {
+      width: '100%',
+      justifyContent: 'center',
+      padding: '10px 20px',
+      fontSize: '0.9rem',
+    }
   },
   saveButton: {
     display: 'inline-flex',
@@ -1195,6 +1324,12 @@ const styles = {
     fontWeight: '600',
     cursor: 'pointer',
     transition: 'background 0.3s ease',
+    '@media (max-width: 768px)': {
+      width: '100%',
+      justifyContent: 'center',
+      padding: '10px 20px',
+      fontSize: '0.9rem',
+    }
   },
   pagination: {
     display: 'flex',
@@ -1206,6 +1341,11 @@ const styles = {
     background: '#ffffff',
     borderRadius: '12px',
     border: '1px solid #e0e0e0',
+    flexWrap: 'wrap',
+    '@media (max-width: 768px)': {
+      padding: '16px',
+      gap: '8px',
+    }
   },
   paginationBtn: {
     display: 'flex',
@@ -1219,6 +1359,10 @@ const styles = {
     cursor: 'pointer',
     transition: 'all 0.2s ease',
     color: '#1e3c72',
+    '@media (max-width: 768px)': {
+      width: '36px',
+      height: '36px',
+    }
   },
   paginationBtnDisabled: {
     opacity: 0.3,
@@ -1228,6 +1372,10 @@ const styles = {
     margin: '0 16px',
     fontSize: '0.95rem',
     color: '#333',
+    '@media (max-width: 768px)': {
+      margin: '0 8px',
+      fontSize: '0.85rem',
+    }
   },
   addButton: {
     display: 'inline-flex',
@@ -1243,6 +1391,14 @@ const styles = {
     cursor: 'pointer',
     transition: 'all 0.3s ease',
     boxShadow: '0 4px 12px rgba(40, 167, 69, 0.3)',
+    whiteSpace: 'nowrap',
+    '@media (max-width: 768px)': {
+      width: '100%',
+      justifyContent: 'center',
+      padding: '10px 16px',
+      fontSize: '0.9rem',
+      gap: '6px',
+    }
   },
   addCategoryBtn: {
     marginTop: '10px',
@@ -1256,6 +1412,10 @@ const styles = {
     cursor: 'pointer',
     transition: 'all 0.3s ease',
     width: '100%',
+    '@media (max-width: 768px)': {
+      padding: '8px 12px',
+      fontSize: '0.8rem',
+    }
   },
   newCategorySection: {
     marginTop: '12px',
@@ -1263,6 +1423,9 @@ const styles = {
     background: '#f8f9fa',
     borderRadius: '8px',
     border: '1px solid #e0e0e0',
+    '@media (max-width: 768px)': {
+      padding: '10px',
+    }
   },
   saveCategoryBtn: {
     display: 'inline-flex',
@@ -1280,6 +1443,10 @@ const styles = {
     cursor: 'pointer',
     transition: 'all 0.3s ease',
     width: '100%',
+    '@media (max-width: 768px)': {
+      padding: '8px 12px',
+      fontSize: '0.8rem',
+    }
   },
   uploadButton: {
     display: 'inline-flex',
@@ -1296,6 +1463,10 @@ const styles = {
     cursor: 'pointer',
     transition: 'all 0.3s ease',
     width: '100%',
+    '@media (max-width: 768px)': {
+      padding: '10px 12px',
+      fontSize: '0.85rem',
+    }
   },
   imagePreviewBox: {
     marginTop: '16px',
@@ -1304,6 +1475,10 @@ const styles = {
     borderRadius: '8px',
     border: '2px dashed #e0e0e0',
     textAlign: 'center',
+    '@media (max-width: 768px)': {
+      padding: '12px',
+      marginTop: '12px',
+    }
   },
   previewImage: {
     maxWidth: '100%',
@@ -1311,6 +1486,9 @@ const styles = {
     borderRadius: '8px',
     marginBottom: '12px',
     objectFit: 'contain',
+    '@media (max-width: 768px)': {
+      maxHeight: '150px',
+    }
   },
   removeImageBtn: {
     display: 'inline-flex',
@@ -1325,6 +1503,10 @@ const styles = {
     fontWeight: '600',
     cursor: 'pointer',
     transition: 'all 0.3s ease',
+    '@media (max-width: 768px)': {
+      padding: '6px 12px',
+      fontSize: '0.8rem',
+    }
   },
   filtersSection: {
     background: 'white',
@@ -1332,10 +1514,18 @@ const styles = {
     padding: '24px',
     marginBottom: '24px',
     boxShadow: '0 2px 12px rgba(0, 0, 0, 0.08)',
+    '@media (max-width: 768px)': {
+      padding: '16px',
+      marginBottom: '16px',
+      borderRadius: '12px',
+    }
   },
   searchBox: {
     position: 'relative',
     marginBottom: '20px',
+    '@media (max-width: 768px)': {
+      marginBottom: '16px',
+    }
   },
   searchIcon: {
     position: 'absolute',
@@ -1344,6 +1534,10 @@ const styles = {
     transform: 'translateY(-50%)',
     color: '#6c757d',
     fontSize: '20px',
+    '@media (max-width: 768px)': {
+      left: '12px',
+      fontSize: '18px',
+    }
   },
   searchInput: {
     width: '100%',
@@ -1353,6 +1547,11 @@ const styles = {
     fontSize: '15px',
     transition: 'all 0.2s ease',
     boxSizing: 'border-box',
+    '@media (max-width: 768px)': {
+      padding: '12px 40px 12px 40px',
+      fontSize: '14px',
+      borderRadius: '10px',
+    }
   },
   clearSearch: {
     position: 'absolute',
@@ -1370,11 +1569,19 @@ const styles = {
     cursor: 'pointer',
     color: '#6c757d',
     transition: 'all 0.2s ease',
+    '@media (max-width: 768px)': {
+      right: '8px',
+      width: '24px',
+      height: '24px',
+    }
   },
   statusFilters: {
     display: 'flex',
     gap: '10px',
     flexWrap: 'wrap',
+    '@media (max-width: 768px)': {
+      gap: '8px',
+    }
   },
   filterBtn: {
     display: 'flex',
@@ -1389,6 +1596,11 @@ const styles = {
     color: '#495057',
     cursor: 'pointer',
     transition: 'all 0.2s ease',
+    '@media (max-width: 768px)': {
+      padding: '8px 14px',
+      fontSize: '12px',
+      gap: '6px',
+    }
   },
   filterBtnActive: {
     background: 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)',
@@ -1396,6 +1608,62 @@ const styles = {
     color: 'white',
     boxShadow: '0 4px 12px rgba(30, 60, 114, 0.3)',
   },
+  paginationContainer: {
+  width: '100%',
+  display: 'flex',
+  justifyContent: 'center',
+  padding: '16px 0',
+  marginTop: '20px',
+},
+paginationWrapper: {
+  display: 'flex',
+  justifyContent: 'center',
+  alignItems: 'center',
+  gap: '8px',
+  padding: '16px 20px',
+  background: '#ffffff',
+  borderRadius: '12px',
+  flexWrap: 'nowrap',
+  maxWidth: '100%',
+},
+paginationBtn: {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  minWidth: '36px',
+  width: '36px',
+  height: '36px',
+  border: '2px solid #e0e0e0',
+  background: '#fff',
+  borderRadius: '8px',
+  cursor: 'pointer',
+  transition: 'all 0.2s ease',
+  color: '#1e3c72',
+  flexShrink: 0,
+},
+paginationBtnDisabled: {
+  opacity: 0.3,
+  cursor: 'not-allowed',
+},
+paginationInfo: {
+  display: 'flex',
+  alignItems: 'center',
+  gap: '6px',
+  margin: '0 8px',
+  fontSize: '14px',
+  color: '#333',
+  flexShrink: 0,
+  whiteSpace: 'nowrap',
+},
+pageText: {
+  fontSize: '14px',
+  color: '#666',
+},
+pageNumber: {
+  fontSize: '16px',
+  fontWeight: '700',
+  color: '#1e3c72',
+},
 };
 
 export default StockManagement;

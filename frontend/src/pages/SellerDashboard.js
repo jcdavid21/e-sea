@@ -102,6 +102,17 @@ const SellerDashboard = () => {
             <FaChartBar />
             <span>Price Analysis</span>
           </Link>
+          {/* reports */}
+          <Link 
+            to="/seller/dashboard/reports" 
+            className="nav-link"
+            style={isActive('/seller/dashboard/reports') ? activeLinkStyle : {}}
+            onClick={() => setSidebarOpen(false)}
+          >
+            <FaClipboardList />
+            <span>Reports</span>
+          </Link>
+          {/* end reports */}
           <Link 
             to="/seller/dashboard/profile" 
             className="nav-link"

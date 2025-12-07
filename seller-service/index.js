@@ -56,9 +56,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// =============================
-//  Database Connection Pool
-// =============================
+
 const db = mysql.createPool({
   host: process.env.DB_HOST_NAME,
   user: process.env.DB_USER,
@@ -2529,7 +2527,7 @@ app.get("/api/buyer/debug/buyers", async (req, res) => {
 // =============================
 //  Server Initialization
 // =============================
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 
 app.listen(PORT, () => {
   console.log(`
