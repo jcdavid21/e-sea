@@ -9,11 +9,7 @@ import {
   FaHistory,
   FaHeart,
   FaTruck,
-  FaChartLine,
   FaArrowRight,
-  FaClock,
-  FaCheckCircle,
-  FaTimesCircle
 } from "react-icons/fa";
 import BannerImg from "../assets/bg-2.jpg";
 import "./BuyerDashboard.css";
@@ -33,12 +29,6 @@ const BuyerDashboard = () => {
     completedOrders: 0,
     totalSpent: 0
   });
-  const [storeHours, setStoreHours] = useState([]);
-  const [currentStoreStatus, setCurrentStoreStatus] = useState({ 
-    isOpen: true, 
-    openTime: '7:00 AM', 
-    closeTime: '10:00 PM' 
-  });
 
   const CUSTOMER_ID = sessionStorage.getItem("customer_id");
   const navigate = useNavigate();
@@ -56,45 +46,6 @@ const BuyerDashboard = () => {
       completedOrders,
       totalSpent
     });
-  };
-
-  const checkIfStoreOpen = (hours) => {
-    if (!hours || hours.length === 0) {
-      return { isOpen: true, openTime: '7:00 AM', closeTime: '10:00 PM' };
-    }
-
-    const now = new Date();
-    const phTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Manila' }));
-    const currentDay = phTime.toLocaleDateString('en-US', { weekday: 'long' });
-    const currentHour = phTime.getHours();
-    const currentMinute = phTime.getMinutes();
-    const currentTimeInMinutes = currentHour * 60 + currentMinute;
-
-    const todayHours = hours.find(h => h.day_of_week === currentDay);
-    
-    if (!todayHours || !todayHours.is_open) {
-      return { isOpen: false, openTime: 'Closed', closeTime: 'Closed' };
-    }
-
-    const [openHour, openMin] = todayHours.open_time.split(':').map(Number);
-    const [closeHour, closeMin] = todayHours.close_time.split(':').map(Number);
-    const openTimeInMinutes = openHour * 60 + openMin;
-    const closeTimeInMinutes = closeHour * 60 + closeMin;
-
-    const isOpen = currentTimeInMinutes >= openTimeInMinutes && currentTimeInMinutes < closeTimeInMinutes;
-
-    const formatTime = (timeStr) => {
-      const [h, m] = timeStr.split(':').map(Number);
-      const period = h >= 12 ? 'PM' : 'AM';
-      const hour12 = h % 12 || 12;
-      return `${hour12}:${m.toString().padStart(2, '0')} ${period}`;
-    };
-
-    return {
-      isOpen,
-      openTime: formatTime(todayHours.open_time),
-      closeTime: formatTime(todayHours.close_time)
-    };
   };
 
   // Fetch best sellers with total sold
@@ -151,30 +102,6 @@ const BuyerDashboard = () => {
       setLoading(false);
     }
   }, [bestSellers, recentPurchases]);
-
-  useEffect(() => {
-    const fetchStoreHours = async () => {
-      try {
-        const response = await fetch(`${process.env.REACT_APP_BUYER_API_URL}/api/store-hours/global`);
-        const data = await response.json();
-        setStoreHours(data);
-        const status = checkIfStoreOpen(data);
-        setCurrentStoreStatus(status);
-      } catch (err) {
-        console.error("Error fetching store hours:", err);
-      }
-    };
-
-    fetchStoreHours();
-    
-    // Check status every minute
-    const interval = setInterval(() => {
-      const status = checkIfStoreOpen(storeHours);
-      setCurrentStoreStatus(status);
-    }, 60000);
-
-    return () => clearInterval(interval);
-  }, [storeHours]);
 
   const showToast = (message) => {
     const toast = document.createElement('div');
@@ -258,95 +185,6 @@ const BuyerDashboard = () => {
             </div>
           </div>
         </section>
-
-        {/* Store Hours Section */}
-        <div className="store-hours-container">
-          <div className="store-hours-card">
-            <div className="store-hours-header">
-              <div className="header-left">
-                <FaClock size={20} />
-                <h3>Store Operating Hours</h3>
-              </div>
-              <div className="store-status-badge" style={{
-                background: currentStoreStatus.isOpen 
-                  ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' 
-                  : 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
-                color: 'white',
-                padding: '8px 18px',
-                borderRadius: '25px',
-                fontSize: '13px',
-                fontWeight: '800',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                boxShadow: currentStoreStatus.isOpen 
-                  ? '0 4px 12px rgba(16, 185, 129, 0.4)' 
-                  : '0 4px 12px rgba(239, 68, 68, 0.4)'
-              }}>
-                {currentStoreStatus.isOpen ? (
-                  <>
-                    <FaCheckCircle size={16} />
-                    <span>Open Now</span>
-                  </>
-                ) : (
-                  <>
-                    <FaTimesCircle size={16} />
-                    <span>Closed</span>
-                  </>
-                )}
-              </div>
-            </div>
-            
-            <div className="hours-grid">
-              {storeHours.length > 0 ? (
-                storeHours.map((hour, index) => {
-                  const isToday = new Date().toLocaleDateString('en-US', { weekday: 'long' }) === hour.day_of_week;
-                  
-                  return (
-                    <div 
-                      key={hour.day_of_week} 
-                      className={`hours-item ${isToday ? 'today' : ''} ${!hour.is_open ? 'closed' : ''}`}
-                    >
-                      <div className="day-label">
-                        {isToday && <span className="today-badge">Today</span>}
-                        <span className="day-name">{hour.day_of_week}</span>
-                      </div>
-                      
-                      {hour.is_open ? (
-                        <div className="time-display">
-                          <span className="open-indicator">●</span>
-                          <span className="time-text">
-                            {new Date(`2000-01-01T${hour.open_time}`).toLocaleTimeString('en-US', { 
-                              hour: 'numeric', 
-                              minute: '2-digit',
-                              hour12: true 
-                            })}
-                            {' - '}
-                            {new Date(`2000-01-01T${hour.close_time}`).toLocaleTimeString('en-US', { 
-                              hour: 'numeric', 
-                              minute: '2-digit',
-                              hour12: true 
-                            })}
-                          </span>
-                        </div>
-                      ) : (
-                        <div className="time-display closed-display">
-                          <span className="closed-indicator">●</span>
-                          <span className="closed-text">Closed</span>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })
-              ) : (
-                <div className="no-hours-set">
-                  <FaClock size={48} color="#94a3b8" />
-                  <p>Store hours information not available</p>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
 
 
         {/* Quick Actions */}

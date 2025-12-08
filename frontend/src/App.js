@@ -37,6 +37,8 @@ import CartPage from "./pages/CartPage";
 import BuyerNotifications from "./pages/BuyerNotifications";
 import SellerReports from "./pages/SellerReports";
 
+import StoreHours from "./pages/StoreHours";
+
 function App() {
   return (
     <BrowserRouter>
@@ -65,6 +67,7 @@ function App() {
           <Route path="price" element={<PriceAnalysis />} />
           <Route path="profile" element={<Profile />} />
           <Route path="reports" element={<SellerReports />} />
+          <Route path="store-hours" element={<StoreHours />} />
         </Route>
 
         {/* Buyer Routes */}

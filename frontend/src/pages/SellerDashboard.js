@@ -10,6 +10,7 @@ import {
   FaBars,
   FaTimes,
   FaShoppingCart,
+  FaClock,
 } from "react-icons/fa";
 import "./SellerDashboard.css";
 import logo from "../assets/logo.png";
@@ -101,6 +102,16 @@ const SellerDashboard = () => {
           >
             <FaChartBar />
             <span>Price Analysis</span>
+          </Link>
+          {/* store hours */}
+          <Link 
+            to="/seller/dashboard/store-hours" 
+            className="nav-link"
+            style={isActive('/seller/dashboard/store-hours') ? activeLinkStyle : {}}
+            onClick={() => setSidebarOpen(false)}
+          >
+            <FaClock />
+            <span>Store Hours</span>
           </Link>
           {/* reports */}
           <Link 

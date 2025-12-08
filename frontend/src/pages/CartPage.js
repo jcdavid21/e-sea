@@ -29,13 +29,8 @@ const CartPage = () => {
   const [loading, setLoading] = useState(true);
   const [proofOfPayment, setProofOfPayment] = useState(null);
   const [proofPreview, setProofPreview] = useState(null);
+  const [storeHours, setStoreHours] = useState({});
   const [uploadingProof, setUploadingProof] = useState(false);
-  const [storeHours, setStoreHours] = useState([]);
-  const [currentStoreStatus, setCurrentStoreStatus] = useState({ 
-    isOpen: true, 
-    openingTime: '7:00 AM', 
-    closingTime: '10:00 PM' 
-  });
 
   // Get customer ID from sessionStorage
   const CUSTOMER_ID = getCustomerId();
@@ -54,36 +49,12 @@ const CartPage = () => {
       });
       return;
     }
-    
+
     console.log("🛒 CartPage loaded for customer:", CUSTOMER_ID);
     loadCartWithProductDetails();
     loadSavedAddresses();
   }, [CUSTOMER_ID, navigate]);
-  
-  useEffect(() => {
-    const fetchStoreHours = async () => {
-      try {
-        const response = await fetch(`${process.env.REACT_APP_BUYER_API_URL}/api/store-hours/global`);
-        const data = await response.json();
-        setStoreHours(data);
-        const status = checkIfStoreOpen(data);
-        setCurrentStoreStatus(status);
-      } catch (err) {
-        console.error("Error fetching store hours:", err);
-      }
-    };
 
-    fetchStoreHours();
-    
-    const interval = setInterval(() => {
-      if (storeHours.length > 0) {
-        const status = checkIfStoreOpen(storeHours);
-        setCurrentStoreStatus(status);
-      }
-    }, 60000);
-
-    return () => clearInterval(interval);
-  }, [storeHours]);
 
   // Fetch QR code when items are selected
   useEffect(() => {
@@ -100,6 +71,20 @@ const CartPage = () => {
   // HELPER: Get user-specific addresses key
   const getAddressesKey = () => `saved_addresses_${CUSTOMER_ID}`;
 
+  const getStoreStatus = (sellerId) => {
+    const now = new Date();
+    const currentDay = now.toLocaleDateString('en-US', { weekday: 'long' });
+    const currentTime = now.toTimeString().slice(0, 5); // HH:MM format
+
+    const storeHours = {};
+
+    return {
+      isOpen: false,
+      currentDay,
+      currentTime
+    };
+  };
+
   // HELPER: Get sellers from selected items
   const getSellersFromSelectedItems = () => {
     const sellers = new Set();
@@ -113,10 +98,122 @@ const CartPage = () => {
 
   const loadSavedAddresses = () => {
     if (!CUSTOMER_ID) return;
-    
+
     const addresses = JSON.parse(localStorage.getItem(getAddressesKey())) || [];
     setSavedAddresses(addresses);
   };
+
+  const fetchAllStoreHours = async () => {
+    try {
+      // Get unique seller IDs from cart
+      const sellerIds = [...new Set(cart.map(item => item.seller_id))];
+
+      const hoursData = {};
+
+      for (const sellerId of sellerIds) {
+        if (sellerId) {
+          const response = await fetch(
+            `${process.env.REACT_APP_SELLER_API_URL}/api/seller/store-hours/${sellerId}`
+          );
+          if (response.ok) {
+            const hours = await response.json();
+            hoursData[sellerId] = hours;
+          }
+        }
+      }
+
+      setStoreHours(hoursData);
+    } catch (err) {
+      console.error("Error fetching store hours:", err);
+    }
+  };
+
+  const isStoreOpen = (sellerId) => {
+    if (!storeHours[sellerId]) return { isOpen: false, message: "Hours not set" };
+
+    const now = new Date();
+    const currentDay = now.toLocaleDateString('en-US', { weekday: 'long' });
+    const currentTime = now.toTimeString().slice(0, 5); // HH:MM format
+
+    const todayHours = storeHours[sellerId].find(h => h.day_of_week === currentDay);
+
+    if (!todayHours || !todayHours.is_open) {
+      // Find next open day
+      const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+      const currentDayIndex = daysOfWeek.indexOf(currentDay);
+
+      for (let i = 1; i <= 7; i++) {
+        const nextDayIndex = (currentDayIndex + i) % 7;
+        const nextDay = daysOfWeek[nextDayIndex];
+        const nextDayHours = storeHours[sellerId].find(h => h.day_of_week === nextDay);
+
+        if (nextDayHours && nextDayHours.is_open) {
+          const openTime = nextDayHours.open_time.substring(0, 5);
+          return {
+            isOpen: false,
+            message: `Closed - Opens ${i === 1 ? 'tomorrow' : nextDay} at ${formatTime(openTime)}`
+          };
+        }
+      }
+
+      return { isOpen: false, message: "Closed today" };
+    }
+
+    const openTime = todayHours.open_time.substring(0, 5);
+    const closeTime = todayHours.close_time.substring(0, 5);
+
+    // Handle midnight (00:00) as end of day (24:00)
+    let effectiveCloseTime = closeTime;
+    if (closeTime === '00:00') {
+      effectiveCloseTime = '24:00';
+    }
+
+    // Check if currently within operating hours
+    const isWithinHours = currentTime >= openTime && currentTime < effectiveCloseTime;
+
+    if (isWithinHours) {
+      // Display 12:00 AM instead of 24:00
+      const displayCloseTime = closeTime === '00:00' ? '12:00 AM' : formatTime(closeTime);
+      return {
+        isOpen: true,
+        message: `Open until ${displayCloseTime}`
+      };
+    } else if (currentTime < openTime) {
+      return {
+        isOpen: false,
+        message: `Opens today at ${formatTime(openTime)}`
+      };
+    } else {
+      // Already closed for today, find next open time
+      const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+      const currentDayIndex = daysOfWeek.indexOf(currentDay);
+
+      for (let i = 1; i <= 7; i++) {
+        const nextDayIndex = (currentDayIndex + i) % 7;
+        const nextDay = daysOfWeek[nextDayIndex];
+        const nextDayHours = storeHours[sellerId].find(h => h.day_of_week === nextDay);
+
+        if (nextDayHours && nextDayHours.is_open) {
+          const openTime = nextDayHours.open_time.substring(0, 5);
+          return {
+            isOpen: false,
+            message: `Closed - Opens ${i === 1 ? 'tomorrow' : nextDay} at ${formatTime(openTime)}`
+          };
+        }
+      }
+
+      return { isOpen: false, message: "Closed" };
+    }
+  };
+
+  const formatTime = (time24) => {
+    const [hours, minutes] = time24.split(':');
+    const hour = parseInt(hours);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const hour12 = hour % 12 || 12;
+    return `${hour12}:${minutes} ${ampm}`;
+  };
+
 
   const saveNewAddress = () => {
     if (!orderData.name || !orderData.address || !orderData.contact) {
@@ -181,10 +278,10 @@ const CartPage = () => {
 
     try {
       const savedCart = getCart();
-      
+
       console.log("🛍 Loading cart for customer:", CUSTOMER_ID);
       console.log("🛒 Cart data:", savedCart);
-      
+
       if (savedCart.length === 0) {
         setLoading(false);
         return;
@@ -200,7 +297,6 @@ const CartPage = () => {
       if (!res.ok) {
         console.error("Failed to fetch product details");
         setCart(savedCart);
-        // Don't auto-select items
         setSelectedItems([]);
         setLoading(false);
         return;
@@ -225,67 +321,44 @@ const CartPage = () => {
       });
 
       setCart(updatedCart);
-      // Don't auto-select items - let user choose
       setSelectedItems([]);
+      
+      // Fetch store hours after cart is loaded
+      await fetchStoreHoursForCart(updatedCart);
+      
     } catch (err) {
       console.error("Error loading cart:", err);
       const savedCart = getCart();
       setCart(savedCart);
-      // Don't auto-select items
       setSelectedItems([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const checkIfStoreOpen = (hours) => {
-    if (!hours || hours.length === 0) {
-      return { isOpen: true, openingTime: '7:00 AM', closingTime: '10:00 PM' };
-    }
+  const fetchStoreHoursForCart = async (cartData) => {
+    try {
+      // Get unique seller IDs from cart
+      const sellerIds = [...new Set(cartData.map(item => item.seller_id))];
 
-    const now = new Date();
-    const phTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Manila' }));
-    const currentDay = phTime.toLocaleDateString('en-US', { weekday: 'long' });
-    const currentHour = phTime.getHours();
-    const currentMinute = phTime.getMinutes();
-    const currentTimeInMinutes = currentHour * 60 + currentMinute;
+      const hoursData = {};
 
-    const todayHours = hours.find(h => h.day_of_week === currentDay);
-    
-    if (!todayHours || !todayHours.is_open) {
-      return { isOpen: false, openingTime: 'Closed', closingTime: 'Today' };
-    }
-
-    const [openHour, openMin] = todayHours.open_time.split(':').map(Number);
-    const [closeHour, closeMin] = todayHours.close_time.split(':').map(Number);
-    const openTimeInMinutes = openHour * 60 + openMin;
-    
-    // Handle midnight (00:00:00) as end of day (24:00 or 1440 minutes)
-    let closeTimeInMinutes = closeHour * 60 + closeMin;
-    if (closeHour === 0 && closeMin === 0) {
-      closeTimeInMinutes = 24 * 60; // Treat 00:00 as end of day
-    }
-
-    const isOpen = currentTimeInMinutes >= openTimeInMinutes && currentTimeInMinutes < closeTimeInMinutes;
-
-    const formatTime = (timeStr) => {
-      const [h, m] = timeStr.split(':').map(Number);
-      
-      // Handle midnight display
-      if (h === 0 && m === 0) {
-        return '12:00 AM (Midnight)';
+      for (const sellerId of sellerIds) {
+        if (sellerId) {
+          const response = await fetch(
+            `${process.env.REACT_APP_SELLER_API_URL}/api/seller/store-hours/${sellerId}`
+          );
+          if (response.ok) {
+            const hours = await response.json();
+            hoursData[sellerId] = hours;
+          }
+        }
       }
-      
-      const period = h >= 12 ? 'PM' : 'AM';
-      const hour12 = h % 12 || 12;
-      return `${hour12}:${m.toString().padStart(2, '0')} ${period}`;
-    };
 
-    return {
-      isOpen,
-      openingTime: formatTime(todayHours.open_time),
-      closingTime: formatTime(todayHours.close_time)
-    };
+      setStoreHours(hoursData);
+    } catch (err) {
+      console.error("Error fetching store hours:", err);
+    }
   };
 
 
@@ -309,9 +382,22 @@ const CartPage = () => {
     }
   };
 
+
   const toggleSelectItem = (id) => {
     const itemToToggle = cart.find(item => item.id === id);
-    
+    const storeStatus = isStoreOpen(itemToToggle.seller_id);
+
+    // Prevent selection if store is closed
+    if (!storeStatus.isOpen) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Store Closed',
+        text: storeStatus.message,
+        confirmButtonColor: '#3085d6'
+      });
+      return;
+    }
+
     if (selectedItems.includes(id)) {
       // Deselecting an item
       setSelectedItems((prev) => prev.filter((i) => i !== id));
@@ -341,11 +427,28 @@ const CartPage = () => {
     if (selectedItems.length === cart.length) {
       setSelectedItems([]);
     } else {
-      // Select all items from the first seller only
-      const firstSeller = cart[0].seller_id;
-      const itemsFromFirstSeller = cart
-        .filter(item => item.seller_id === firstSeller)
+      // Only select items from stores that are currently open
+      const openStoreItems = cart.filter(item => {
+        const storeStatus = isStoreOpen(item.seller_id);
+        return storeStatus.isOpen;
+      });
+
+      if (openStoreItems.length === 0) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'All Stores Closed',
+          text: 'All stores are currently closed. Cannot select items.',
+          confirmButtonColor: '#3085d6'
+        });
+        return;
+      }
+
+      // Select all items from the first open seller only
+      const firstOpenSeller = openStoreItems[0].seller_id;
+      const itemsFromFirstSeller = openStoreItems
+        .filter(item => item.seller_id === firstOpenSeller)
         .map(item => item.id);
+
       setSelectedItems(itemsFromFirstSeller);
     }
   };
@@ -415,7 +518,7 @@ const CartPage = () => {
     }
 
     setProofOfPayment(file);
-    
+
     const reader = new FileReader();
     reader.onloadend = () => {
       setProofPreview(reader.result);
@@ -556,7 +659,7 @@ const CartPage = () => {
       setProofOfPayment(null);
       setProofPreview(null);
       setOrderData({ name: "", address: "", contact: "", notes: "" });
-      
+
     } catch (err) {
       console.error("Order error:", err);
       Swal.fire({
@@ -573,7 +676,7 @@ const CartPage = () => {
   if (loading) {
     return (
       <div className="cart-page-wrapper">
-        <BuyerHeader 
+        <BuyerHeader
           searchTerm={searchTerm}
           onSearchChange={setSearchTerm}
         />
@@ -594,7 +697,7 @@ const CartPage = () => {
   if (cart.length === 0) {
     return (
       <div className="cart-page-wrapper">
-        <BuyerHeader 
+        <BuyerHeader
           searchTerm={searchTerm}
           onSearchChange={setSearchTerm}
         />
@@ -614,11 +717,11 @@ const CartPage = () => {
 
   return (
     <div className="cart-page-wrapper">
-      <BuyerHeader 
-  searchTerm={searchTerm}
-  onSearchChange={setSearchTerm}
-/>
-      
+      <BuyerHeader
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+      />
+
       <div className="cart-page">
         <div className="cart-header">
           <div className="header-title">
@@ -627,94 +730,6 @@ const CartPage = () => {
           </div>
         </div>
 
-        {/* Store Hours Display */}
-        <div className="store-hours-container">
-          <div className="store-hours-card">
-            <div className="store-hours-header">
-              <div className="header-left">
-                <FaClock size={20} />
-                <h3>Store Operating Hours</h3>
-              </div>
-              <div className="store-status-badge" style={{
-                background: currentStoreStatus.isOpen 
-                  ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' 
-                  : 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
-                color: 'white',
-                padding: '8px 18px',
-                borderRadius: '25px',
-                fontSize: '13px',
-                fontWeight: '800',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                boxShadow: currentStoreStatus.isOpen 
-                  ? '0 4px 12px rgba(16, 185, 129, 0.4)' 
-                  : '0 4px 12px rgba(239, 68, 68, 0.4)'
-              }}>
-                {currentStoreStatus.isOpen ? (
-                  <>
-                    <FaCheckCircle size={16} />
-                    <span>Open Now</span>
-                  </>
-                ) : (
-                  <>
-                    <FaTimesCircle size={16} />
-                    <span>Closed</span>
-                  </>
-                )}
-              </div>
-            </div>
-            
-            <div className="hours-grid">
-              {storeHours.length > 0 ? (
-                storeHours.map((hour, index) => {
-                  const isToday = new Date().toLocaleDateString('en-US', { weekday: 'long' }) === hour.day_of_week;
-                  
-                  return (
-                    <div 
-                      key={hour.day_of_week} 
-                      className={`hours-item ${isToday ? 'today' : ''} ${!hour.is_open ? 'closed' : ''}`}
-                    >
-                      <div className="day-label">
-                        {isToday && <span className="today-badge">Today</span>}
-                        <span className="day-name">{hour.day_of_week}</span>
-                      </div>
-                      
-                      {hour.is_open ? (
-                        <div className="time-display">
-                          <span className="open-indicator">●</span>
-                          <span className="time-text">
-                            {new Date(`2000-01-01T${hour.open_time}`).toLocaleTimeString('en-US', { 
-                              hour: 'numeric', 
-                              minute: '2-digit',
-                              hour12: true 
-                            })}
-                            {' - '}
-                            {new Date(`2000-01-01T${hour.close_time}`).toLocaleTimeString('en-US', { 
-                              hour: 'numeric', 
-                              minute: '2-digit',
-                              hour12: true 
-                            })}
-                          </span>
-                        </div>
-                      ) : (
-                        <div className="time-display closed-display">
-                          <span className="closed-indicator">●</span>
-                          <span className="closed-text">Closed</span>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })
-              ) : (
-                <div className="no-hours-set">
-                  <FaClock size={48} color="#94a3b8" />
-                  <p>Store hours information not available</p>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
 
         <div className="select-all-container">
           <label className="checkbox-label">
@@ -728,81 +743,106 @@ const CartPage = () => {
         </div>
 
         <div className="cart-items">
-          {cart.map((item) => (
-            <div
-              key={item.id}
-              className={`cart-item ${selectedItems.includes(item.id) ? 'selected' : ''}`}
-            >
-              <div className="item-checkbox">
-                <input
-                  type="checkbox"
-                  checked={selectedItems.includes(item.id)}
-                  onChange={() => toggleSelectItem(item.id)}
-                />
-              </div>
+          {cart.map((item) => {
+            const storeStatus = isStoreOpen(item.seller_id);
 
-              <div className="item-image">
-                {item.image_url ? (
-                  <img
-                    src={`${process.env.REACT_APP_SELLER_API_URL}/uploads/${item.image_url}`}
-                    alt={item.name}
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src = '/placeholder-fish.png';
-                    }}
-                  />
-                ) : (
-                  <div className="placeholder-img">🐟</div>
-                )}
-              </div>
-
-              <div className="item-details">
-                <h3 className="item-name">{item.name}</h3>
-                <div className="item-meta">
-                  <span className="category-badge">{item.category || "N/A"}</span>
-                  <span className={`stock-badge ${(item.stock || 0) < 5 ? "low" : ""}`}>
-                    Stock: {item.stock || "∞"}
-                  </span>
-                </div>
-                <p className="item-price">₱{Number(item.price).toFixed(2)} / {item.unit || "kg"}</p>
-              </div>
-
-              <div className="item-quantity">
-                <div className="quantity-controls">
-                  <button
-                    onClick={() => decrementQuantity(item.id)}
-                    disabled={item.quantity <= 1}
-                    className="qty-btn"
-                  >
-                    −
-                  </button>
-                  <span className="quantity-display">
-                    {item.quantity}
-                  </span>
-                  <button
-                    onClick={() => incrementQuantity(item.id)}
-                    disabled={item.quantity >= (item.stock || 999)}
-                    className="qty-btn"
-                  >
-                    +
-                  </button>
-                </div>
-              </div>
-
-              <div className="item-subtotal">
-                <p className="subtotal-label">Subtotal</p>
-                <p className="subtotal-amount">₱{(Number(item.price) * item.quantity).toFixed(2)}</p>
-              </div>
-
-              <button
-                onClick={() => removeFromCart(item.id)}
-                className="btn-remove"
-                title="Remove item"
+            return (
+              <div
+                key={item.id}
+                className={`cart-item ${selectedItems.includes(item.id) ? 'selected' : ''} ${!storeStatus.isOpen ? 'store-closed' : ''}`}
               >
-                ×
-              </button>
-            </div>
-          ))}
+                <div className="item-checkbox">
+                  <input
+                    type="checkbox"
+                    checked={selectedItems.includes(item.id)}
+                    onChange={() => toggleSelectItem(item.id)}
+                    disabled={!storeStatus.isOpen}
+                  />
+                </div>
+
+                <div className="item-image">
+                  {item.image_url ? (
+                    <img
+                      src={`${process.env.REACT_APP_SELLER_API_URL}/uploads/${item.image_url}`}
+                      alt={item.name}
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = '/placeholder-fish.png';
+                      }}
+                    />
+                  ) : (
+                    <div className="placeholder-img">🐟</div>
+                  )}
+                  {!storeStatus.isOpen && (
+                    <div className="store-closed-overlay">
+                      <FaTimesCircle />
+                    </div>
+                  )}
+                </div>
+
+                <div className="item-details">
+                  <h3 className="item-name">{item.name}</h3>
+                  <div className="item-meta">
+                    <span className="category-badge">{item.category || "N/A"}</span>
+                    <span className={`stock-badge ${(item.stock || 0) < 5 ? "low" : ""}`}>
+                      Stock: {item.stock || "∞"}
+                    </span>
+                  </div>
+                  <p className="item-price">₱{Number(item.price).toFixed(2)} / {item.unit || "kg"}</p>
+
+                  {/* Store Status Badge */}
+                  <div className={`store-status-badge ${storeStatus.isOpen ? 'open' : 'closed'}`}>
+                    {storeStatus.isOpen ? (
+                      <>
+                        <FaCheckCircle className="status-icon" />
+                        <span>{storeStatus.message}</span>
+                      </>
+                    ) : (
+                      <>
+                        <FaClock className="status-icon" />
+                        <span>{storeStatus.message}</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                <div className="item-quantity">
+                  <div className="quantity-controls">
+                    <button
+                      onClick={() => decrementQuantity(item.id)}
+                      disabled={item.quantity <= 1 || !storeStatus.isOpen}
+                      className="qty-btn"
+                    >
+                      −
+                    </button>
+                    <span className="quantity-display">
+                      {item.quantity}
+                    </span>
+                    <button
+                      onClick={() => incrementQuantity(item.id)}
+                      disabled={item.quantity >= (item.stock || 999) || !storeStatus.isOpen}
+                      className="qty-btn"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+
+                <div className="item-subtotal">
+                  <p className="subtotal-label">Subtotal</p>
+                  <p className="subtotal-amount">₱{(Number(item.price) * item.quantity).toFixed(2)}</p>
+                </div>
+
+                <button
+                  onClick={() => removeFromCart(item.id)}
+                  className="btn-remove"
+                  title="Remove item"
+                >
+                  ×
+                </button>
+              </div>
+            );
+          })}
         </div>
 
         <div className="cart-footer">
@@ -819,25 +859,6 @@ const CartPage = () => {
 
           <button
             onClick={() => {
-              if (!currentStoreStatus.isOpen) {
-                Swal.fire({
-                  icon: 'warning',
-                  title: 'Store Closed',
-                  html: `
-                    <div style="text-align: center;">
-                      <p style="font-size: 16px; margin-bottom: 16px;">We're currently closed.</p>
-                      <div style="background: #f8f9fa; padding: 16px; border-radius: 8px; margin-bottom: 12px;">
-                        <p style="font-weight: 600; margin-bottom: 8px;">Operating Hours:</p>
-                        <p style="font-size: 18px; color: #0066cc;">${currentStoreStatus.openingTime} - ${currentStoreStatus.closingTime}</p>
-                      </div>
-                      <p style="color: #666;">Please come back during our operating hours.</p>
-                    </div>
-                  `,
-                  confirmButtonColor: '#3085d6',
-                  confirmButtonText: 'Understood'
-                });
-                return;
-              }
               if (selectedCartItems.length === 0) {
                 Swal.fire({
                   icon: 'info',
@@ -847,6 +868,19 @@ const CartPage = () => {
                 });
                 return;
               }
+
+              // Check if any selected item's store is closed
+              const closedStores = selectedCartItems.filter(item => !isStoreOpen(item.seller_id).isOpen);
+              if (closedStores.length > 0) {
+                Swal.fire({
+                  icon: 'warning',
+                  title: 'Store Closed',
+                  text: 'Some selected items are from stores that are currently closed. Please remove them from your selection.',
+                  confirmButtonColor: '#3085d6'
+                });
+                return;
+              }
+
               const sellers = getSellersFromSelectedItems();
               if (sellers.length > 1) {
                 Swal.fire({
@@ -860,16 +894,9 @@ const CartPage = () => {
               setShowCheckoutModal(true);
             }}
             className="btn-checkout"
-            disabled={selectedCartItems.length === 0 || !currentStoreStatus.isOpen}
+            disabled={selectedCartItems.length === 0}
           >
-            {!currentStoreStatus.isOpen ? (
-              <>
-                <FaClock style={{ marginRight: '8px' }} />
-                Store Closed
-              </>
-            ) : (
-              'Proceed to Checkout'
-            )}
+            Proceed to Checkout
           </button>
         </div>
 
@@ -1009,7 +1036,7 @@ const CartPage = () => {
                     <p className="proof-instruction">
                       Upload screenshot of GCash payment receipt
                     </p>
-                    
+
                     {!proofPreview ? (
                       <div className="upload-area">
                         <input
@@ -1028,8 +1055,8 @@ const CartPage = () => {
                     ) : (
                       <div className="proof-preview">
                         <img src={proofPreview} alt="Proof" />
-                        <button 
-                          type="button" 
+                        <button
+                          type="button"
                           className="btn-remove-proof"
                           onClick={removeProofOfPayment}
                         >
@@ -1067,10 +1094,10 @@ const CartPage = () => {
                   onClick={placeOrder}
                   className="btn-confirm"
                   disabled={
-                    !confirmPayment || 
-                    selectedCartItems.length === 0 || 
-                    !orderData.name || 
-                    !orderData.address || 
+                    !confirmPayment ||
+                    selectedCartItems.length === 0 ||
+                    !orderData.name ||
+                    !orderData.address ||
                     !orderData.contact ||
                     !proofOfPayment ||
                     uploadingProof

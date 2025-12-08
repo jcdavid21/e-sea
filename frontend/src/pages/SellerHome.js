@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { Fish, Package, DollarSign, Clock, TrendingUp, TrendingDown, Minus, Calendar, User, Phone, MapPin, MessageCircle, Trophy, AlertTriangle, CheckCircle, List, BarChart3, Waves, ShoppingCart } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
 import './SellerHome.css';
-import StoreHoursModal from './StoreHoursModal';
 
 const SellerHome = () => {
   const [products, setProducts] = useState([]);
@@ -16,8 +15,6 @@ const SellerHome = () => {
   const [salesPeriod, setSalesPeriod] = useState('7days'); // 7days, 30days, 90days, all
   const [categoryFilter, setCategoryFilter] = useState('all'); // all, or specific category
   const [orderStatusFilter, setOrderStatusFilter] = useState('Pending');
-  const [showStoreHoursModal, setShowStoreHoursModal] = useState(false);
-  const [storeHours, setStoreHours] = useState([]);
 
   const SELLER_ID = localStorage.getItem("seller_unique_id");
 
@@ -55,21 +52,7 @@ const SellerHome = () => {
     fetchData();
   }, [SELLER_ID]);
 
-  useEffect(() => {
-    const fetchStoreHours = async () => {
-      try {
-        const response = await fetch(`${process.env.REACT_APP_SELLER_API_URL}/api/seller/store-hours/${SELLER_ID}`);
-        const data = await response.json();
-        setStoreHours(data);
-      } catch (err) {
-        console.error("Error fetching store hours:", err);
-      }
-    };
-    
-    if (SELLER_ID) {
-      fetchStoreHours();
-    }
-  }, [SELLER_ID, showStoreHoursModal]); // Refetch when modal closes
+
 
   // Get unique categories from products
   const getCategories = () => {
@@ -342,79 +325,6 @@ const SellerHome = () => {
         </div>
       </div>
 
-      {/* Store Hours Display */}
-      <div className="store-hours-container">
-        <div className="store-hours-card">
-          <div className="store-hours-header">
-            <div className="header-left">
-              <Clock size={20} />
-              <h3>Store Operating Hours</h3>
-            </div>
-            <button 
-              className="edit-hours-btn"
-              onClick={() => setShowStoreHoursModal(true)}
-            >
-              <Clock size={16} />
-              Edit Hours
-            </button>
-          </div>
-          
-          <div className="hours-grid">
-            {storeHours.map((hour, index) => {
-              const isToday = new Date().toLocaleDateString('en-US', { weekday: 'long' }) === hour.day_of_week;
-              
-              return (
-                <div 
-                  key={hour.day_of_week} 
-                  className={`hours-item ${isToday ? 'today' : ''} ${!hour.is_open ? 'closed' : ''}`}
-                >
-                  <div className="day-label">
-                    {isToday && <span className="today-badge">Today</span>}
-                    <span className="day-name">{hour.day_of_week}</span>
-                  </div>
-                  
-                  {hour.is_open ? (
-                    <div className="time-display">
-                      <span className="open-indicator">●</span>
-                      <span className="time-text">
-                        {new Date(`2000-01-01T${hour.open_time}`).toLocaleTimeString('en-US', { 
-                          hour: 'numeric', 
-                          minute: '2-digit',
-                          hour12: true 
-                        })}
-                        {' - '}
-                        {new Date(`2000-01-01T${hour.close_time}`).toLocaleTimeString('en-US', { 
-                          hour: 'numeric', 
-                          minute: '2-digit',
-                          hour12: true 
-                        })}
-                      </span>
-                    </div>
-                  ) : (
-                    <div className="time-display closed-display">
-                      <span className="closed-indicator">●</span>
-                      <span className="closed-text">Closed</span>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-          
-          {storeHours.length === 0 && (
-            <div className="no-hours-set">
-              <Clock size={48} color="#94a3b8" />
-              <p>No store hours set yet</p>
-              <button 
-                className="set-hours-btn"
-                onClick={() => setShowStoreHoursModal(true)}
-              >
-                Set Store Hours
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
 
       {/* Main Content Grid */}
       <div className="content-grid">
@@ -875,12 +785,6 @@ const SellerHome = () => {
           )}
         </div>
       </div>
-
-      <StoreHoursModal 
-        isOpen={showStoreHoursModal}
-        onClose={() => setShowStoreHoursModal(false)}
-        sellerId={SELLER_ID}
-      />
     </div>
   );
 };

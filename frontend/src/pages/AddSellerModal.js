@@ -41,7 +41,11 @@ const AddSellerModal = ({ onClose, onAddSeller }) => {
     }
 
     // Generate unique ID
-    const uniqueId = `SELLER-${Date.now()}`;
+    // 2 random letters + 4 random digits
+    const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const randomLetters = letters.charAt(Math.floor(Math.random() * letters.length)) + letters.charAt(Math.floor(Math.random() * letters.length));
+    const randomDigits = Math.floor(1000 + Math.random() * 9000);
+    const uniqueId = `SELLER-${randomLetters}${randomDigits}`;
     
     const dataToSend = {
       ...formData,
