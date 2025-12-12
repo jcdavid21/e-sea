@@ -79,8 +79,21 @@ const BuyerDashboard = () => {
       }
       
       const data = await res.json();
-      setRecentPurchases(data);
-      calculateStats(data);
+      
+      // ✅ Remove duplicates based on order_id and product_id
+      const uniquePurchases = data.reduce((acc, current) => {
+        const exists = acc.find(
+          item => item.order_id === current.order_id && 
+                  item.product_id === current.product_id
+        );
+        if (!exists) {
+          acc.push(current);
+        }
+        return acc;
+      }, []);
+      
+      setRecentPurchases(uniquePurchases);
+      calculateStats(uniquePurchases);
     } catch (err) {
       console.error("Error fetching purchases:", err);
       setRecentPurchases([]);

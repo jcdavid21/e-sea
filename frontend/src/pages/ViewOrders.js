@@ -41,6 +41,7 @@ export default function ViewOrders() {
   const limit = 10;
   const [filterStatus, setFilterStatus] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
   const sellerId = localStorage.getItem("seller_unique_id");
 
@@ -78,6 +79,13 @@ export default function ViewOrders() {
       fetchOrders(newPage);
     }
   };
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
 
   const handleStatusChange = async (orderId, newStatus) => {
     const result = await Swal.fire({
@@ -231,24 +239,39 @@ export default function ViewOrders() {
               )}
             </div>
 
-            <div className="status-filters">
-              <button
-                className={`filter-btn ${filterStatus === "All" ? "active" : ""}`}
-                onClick={() => setFilterStatus("All")}
+            {isMobile ? (
+              <select
+                className="status-select-mobile"
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
               >
-                All Orders
-              </button>
-              {STATUS_OPTIONS.map((status) => (
+                <option value="All">All Orders</option>
+                {STATUS_OPTIONS.map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <div className="status-filters">
                 <button
-                  key={status}
-                  className={`filter-btn ${filterStatus === status ? "active" : ""}`}
-                  onClick={() => setFilterStatus(status)}
+                  className={`filter-btn ${filterStatus === "All" ? "active" : ""}`}
+                  onClick={() => setFilterStatus("All")}
                 >
-                  {STATUS_ICONS[status]}
-                  <span>{status}</span>
+                  All Orders
                 </button>
-              ))}
-            </div>
+                {STATUS_OPTIONS.map((status) => (
+                  <button
+                    key={status}
+                    className={`filter-btn ${filterStatus === status ? "active" : ""}`}
+                    onClick={() => setFilterStatus(status)}
+                  >
+                    {STATUS_ICONS[status]}
+                    <span>{status}</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
            {filteredOrders.length === 0 ? (
      <div className="empty-state">
@@ -1075,6 +1098,7 @@ export default function ViewOrders() {
           gap: 0;
           background: #f8f9fa;
           max-height: 600px;
+          overflow: hidden; /* Add this */
         }
 
         .proof-details-section {
@@ -1082,6 +1106,7 @@ export default function ViewOrders() {
           overflow-y: auto;
           background: white;
           border-right: 1px solid #e9ecef;
+          max-height: 600px;
         }
 
         .proof-image-section {
@@ -1450,13 +1475,73 @@ export default function ViewOrders() {
   }
 
   .status-filters {
-    gap: 8px;
+    position: relative;
   }
 
   .filter-btn {
-    padding: 8px 14px;
-    font-size: 13px;
+    display: none;
   }
+
+  .filter-btn.active,
+  .filter-btn:first-child {
+    display: flex;
+  }
+
+  .status-filters::after {
+    content: '▼';
+    position: absolute;
+    right: 16px;
+    top: 12px;
+    pointer-events: none;
+    color: #495057;
+  }
+
+  .status-filters:focus-within .filter-btn {
+    display: flex;
+  }
+
+  .status-filters:focus-within {
+    position: absolute;
+    background: white;
+    border: 2px solid #1e3c72;
+    border-radius: 12px;
+    padding: 12px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    z-index: 100;
+    width: calc(100% - 32px);
+  }
+
+  /* Alternative: Use select dropdown */
+  .status-filters-mobile {
+    display: block;
+  }
+
+  .status-filters-desktop {
+    display: none;
+  }
+}
+
+.status-select-mobile {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #dee2e6;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #495057;
+  background: white;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23495057' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 12px;
+}
+
+.status-select-mobile:focus {
+  outline: none;
+  border-color: #1e3c72;
+  box-shadow: 0 0 0 3px rgba(30, 60, 114, 0.1);
 }
       `}</style>
     </div>

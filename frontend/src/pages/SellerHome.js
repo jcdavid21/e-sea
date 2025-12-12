@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Fish, Package, DollarSign, Clock, TrendingUp, TrendingDown, Minus, Calendar, User, Phone, MapPin, MessageCircle, Trophy, AlertTriangle, CheckCircle, List, BarChart3, Waves, ShoppingCart } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
 import './SellerHome.css';
+import SellerMapModal from './SellerMapModal';
 
 const SellerHome = () => {
   const [products, setProducts] = useState([]);
@@ -10,11 +11,15 @@ const SellerHome = () => {
   const [profile, setProfile] = useState({ logo: "" });
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
-  
+
   // Filter states
   const [salesPeriod, setSalesPeriod] = useState('7days'); // 7days, 30days, 90days, all
   const [categoryFilter, setCategoryFilter] = useState('all'); // all, or specific category
   const [orderStatusFilter, setOrderStatusFilter] = useState('Pending');
+
+  // Map Modal State
+  const [showMapModal, setShowMapModal] = useState(false);
+  const [storeLocation, setStoreLocation] = useState(null);
 
   const SELLER_ID = localStorage.getItem("seller_unique_id");
 
@@ -34,13 +39,14 @@ const SellerHome = () => {
         const infoData = await infoRes.json();
 
         setProducts(Array.isArray(prodData) ? prodData : []);
-        
+
         // Extract orders array from the response
         const ordersArray = orderData.orders || [];
         setOrders(Array.isArray(ordersArray) ? ordersArray : []);
-        
+
         setProfile(profileData || {});
         setSellerInfo(infoData || {});
+        await fetchStoreLocation();
       } catch (err) {
         console.error("Error fetching seller data:", err);
         setProducts([]);
@@ -66,6 +72,30 @@ const SellerHome = () => {
     return products.filter(p => p.category === categoryFilter);
   };
 
+  const fetchStoreLocation = async () => {
+    try {
+      const response = await fetch(
+        `${process.env.REACT_APP_SELLER_API_URL}/api/seller/location/${SELLER_ID}`
+      );
+      if (response.ok) {
+        const data = await response.json();
+        // API returns lat/lng directly, not latitude/longitude
+        if (data.lat && data.lng) {
+          setStoreLocation({
+            lat: parseFloat(data.lat),
+            lng: parseFloat(data.lng)
+          });
+        }
+      } else if (response.status === 404) {
+        // No location set yet
+        setStoreLocation(null);
+      }
+    } catch (error) {
+      console.error('Error fetching store location:', error);
+      setStoreLocation(null);
+    }
+  };
+
   // Get products by category for chart
   const getProductsByCategory = () => {
     const filteredProducts = getFilteredProducts();
@@ -74,7 +104,7 @@ const SellerHome = () => {
       const category = product.category || "Uncategorized";
       categoryCount[category] = (categoryCount[category] || 0) + 1;
     });
-    
+
     return Object.entries(categoryCount).map(([name, count]) => ({
       name,
       count
@@ -89,7 +119,7 @@ const SellerHome = () => {
       const category = product.category || "Uncategorized";
       categoryCount[category] = (categoryCount[category] || 0) + 1;
     });
-    
+
     return Object.entries(categoryCount).map(([name, value]) => ({
       name,
       value
@@ -113,24 +143,24 @@ const SellerHome = () => {
   };
 
   // Get orders by date for chart with period filter
-    const getOrdersByDate = () => {
-      const dateCount = {};
-      const revenueByDate = {};
-      
-      orders
-        .filter(order => order.status === 'Completed')
-        .forEach(order => {
-          const date = new Date(order.orderDate).toISOString().split('T')[0];
-          dateCount[date] = (dateCount[date] || 0) + 1;
-          revenueByDate[date] = (revenueByDate[date] || 0) + Number(order.total);
-        });
-    
+  const getOrdersByDate = () => {
+    const dateCount = {};
+    const revenueByDate = {};
+
+    orders
+      .filter(order => order.status === 'Completed')
+      .forEach(order => {
+        const date = new Date(order.orderDate).toISOString().split('T')[0];
+        dateCount[date] = (dateCount[date] || 0) + 1;
+        revenueByDate[date] = (revenueByDate[date] || 0) + Number(order.total);
+      });
+
     // Calculate days based on period
     let days = 7;
     if (salesPeriod === '30days') days = 30;
     else if (salesPeriod === '90days') days = 90;
     else if (salesPeriod === 'all') days = 365;
-    
+
     const result = [];
     for (let i = days - 1; i >= 0; i--) {
       const date = new Date();
@@ -142,7 +172,7 @@ const SellerHome = () => {
         revenue: revenueByDate[dateStr] || 0
       });
     }
-    
+
     return result;
   };
 
@@ -153,7 +183,7 @@ const SellerHome = () => {
       const status = order.status || "Unknown";
       statusCount[status] = (statusCount[status] || 0) + 1;
     });
-    
+
     return Object.entries(statusCount).map(([name, value]) => ({
       name,
       value
@@ -163,7 +193,7 @@ const SellerHome = () => {
   // Get top selling products (only from completed orders)
   const getTopSellingProducts = () => {
     const productSales = {};
-    
+
     // Only count completed orders
     orders
       .filter(order => order.status === 'Completed')
@@ -179,7 +209,7 @@ const SellerHome = () => {
           });
         }
       });
-    
+
     return Object.values(productSales)
       .sort((a, b) => b.quantity - a.quantity)
       .slice(0, 5);
@@ -214,23 +244,23 @@ const SellerHome = () => {
     const today = new Date();
     const lastWeek = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
     const twoWeeksAgo = new Date(today.getTime() - 14 * 24 * 60 * 60 * 1000);
-    
+
     const lastWeekOrders = orders.filter(o => {
       const orderDate = new Date(o.orderDate);
       return o.status === 'Completed' && orderDate >= lastWeek && orderDate < today;
     }).length;
-    
+
     const previousWeekOrders = orders.filter(o => {
       const orderDate = new Date(o.orderDate);
       return o.status === 'Completed' && orderDate >= twoWeeksAgo && orderDate < lastWeek;
     }).length;
-    
+
     if (previousWeekOrders === 0) return lastWeekOrders > 0 ? 100 : 0;
     return ((lastWeekOrders - previousWeekOrders) / previousWeekOrders * 100).toFixed(1);
   };
 
-  const pendingOrders = orderStatusFilter === 'all' 
-    ? orders 
+  const pendingOrders = orderStatusFilter === 'all'
+    ? orders
     : orders.filter(o => o.status === orderStatusFilter);
   const ordersForSelectedDate = getOrdersForDate(selectedDate);
   const orderGrowth = getOrderGrowth();
@@ -267,9 +297,40 @@ const SellerHome = () => {
             </p>
           </div>
         </div>
-        
+
         <div className="user-profile">
           <span className="seller-id">ID: {SELLER_ID}</span>
+          <button
+            onClick={() => setShowMapModal(true)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '10px 20px',
+              background: storeLocation 
+                ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
+                : 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+              color: 'white',
+              border: 'none',
+              borderRadius: '25px',
+              fontSize: '13px',
+              fontWeight: '700',
+              cursor: 'pointer',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
+              transition: 'all 0.3s'
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = '0 6px 16px rgba(0, 0, 0, 0.3)';
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.2)';
+            }}
+          >
+            <MapPin size={16} />
+            {storeLocation ? 'Update Location' : 'Set Location'}
+          </button>
         </div>
       </div>
 
@@ -288,7 +349,7 @@ const SellerHome = () => {
 
         <div className="stat-card stat-orders">
           <div className="stat-icon-wrapper">
-              <Package className="stat-icon" size={24} />
+            <Package className="stat-icon" size={24} />
           </div>
           <div className="stat-content">
             <p className="stat-label">Total Orders</p>
@@ -333,8 +394,8 @@ const SellerHome = () => {
           <div className="card-header">
             <h3><Waves size={18} style={{ display: 'inline', marginRight: '8px' }} /> Sales & Revenue Overview</h3>
             <div style={{ display: 'flex', gap: '8px' }}>
-              <select 
-                value={salesPeriod} 
+              <select
+                value={salesPeriod}
                 onChange={(e) => setSalesPeriod(e.target.value)}
                 className="chart-filter"
                 style={{
@@ -360,40 +421,40 @@ const SellerHome = () => {
                 <AreaChart data={getOrdersByDate()} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
                   <defs>
                     <linearGradient id="colorOrders" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#0891b2" stopOpacity={0.8}/>
-                      <stop offset="95%" stopColor="#0891b2" stopOpacity={0.1}/>
+                      <stop offset="5%" stopColor="#0891b2" stopOpacity={0.8} />
+                      <stop offset="95%" stopColor="#0891b2" stopOpacity={0.1} />
                     </linearGradient>
                     <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.8}/>
-                      <stop offset="95%" stopColor="#10b981" stopOpacity={0.1}/>
+                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.8} />
+                      <stop offset="95%" stopColor="#10b981" stopOpacity={0.1} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
-                  <XAxis 
-                    dataKey="date" 
-                    stroke="#6b7280" 
+                  <XAxis
+                    dataKey="date"
+                    stroke="#6b7280"
                     fontSize={11}
                     tickLine={false}
                     axisLine={{ stroke: '#e5e7eb' }}
                   />
-                  <YAxis 
+                  <YAxis
                     yAxisId="left"
-                    stroke="#6b7280" 
+                    stroke="#6b7280"
                     fontSize={11}
                     tickLine={false}
                     axisLine={{ stroke: '#e5e7eb' }}
                   />
-                  <YAxis 
+                  <YAxis
                     yAxisId="right"
                     orientation="right"
-                    stroke="#6b7280" 
+                    stroke="#6b7280"
                     fontSize={11}
                     tickLine={false}
                     axisLine={{ stroke: '#e5e7eb' }}
                   />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: 'white', 
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'white',
                       border: 'none',
                       borderRadius: '12px',
                       padding: '12px',
@@ -402,20 +463,20 @@ const SellerHome = () => {
                     labelStyle={{ fontSize: '12px', fontWeight: '600', color: '#0e7490' }}
                   />
                   <Legend />
-                  <Area 
+                  <Area
                     yAxisId="left"
-                    type="monotone" 
-                    dataKey="orders" 
-                    stroke="#0891b2" 
+                    type="monotone"
+                    dataKey="orders"
+                    stroke="#0891b2"
                     strokeWidth={2}
                     fill="url(#colorOrders)"
                     name="Orders"
                   />
-                  <Area 
+                  <Area
                     yAxisId="right"
-                    type="monotone" 
-                    dataKey="revenue" 
-                    stroke="#10b981" 
+                    type="monotone"
+                    dataKey="revenue"
+                    stroke="#10b981"
                     strokeWidth={2}
                     fill="url(#colorRevenue)"
                     name="Revenue (₱)"
@@ -450,17 +511,17 @@ const SellerHome = () => {
                       dataKey="value"
                     >
                       {getOrderStatusDistribution().map((entry, index) => (
-                        <Cell 
-                          key={`cell-${index}`} 
+                        <Cell
+                          key={`cell-${index}`}
                           fill={COLORS[index % COLORS.length]}
                           stroke="white"
                           strokeWidth={2}
                         />
                       ))}
                     </Pie>
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: 'white', 
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: 'white',
                         border: 'none',
                         borderRadius: '12px',
                         padding: '8px 12px',
@@ -473,8 +534,8 @@ const SellerHome = () => {
                 <div className="pie-legend">
                   {getOrderStatusDistribution().map((entry, index) => (
                     <div key={index} className="legend-item">
-                      <span 
-                        className="legend-color" 
+                      <span
+                        className="legend-color"
                         style={{ backgroundColor: COLORS[index % COLORS.length] }}
                       ></span>
                       <span className="legend-text">{entry.name}</span>
@@ -491,71 +552,71 @@ const SellerHome = () => {
           </div>
         </div>
       </div>
-              {/* Product Distribution with Filter */}
-        <div className="chart-card">
-          <div className="card-header">
-            <h3><Fish size={18} style={{ display: 'inline', marginRight: '8px' }} /> Products by Category</h3>
-            <select 
-              value={categoryFilter} 
-              onChange={(e) => setCategoryFilter(e.target.value)}
-              className="chart-filter"
-              style={{
-                padding: '6px 12px',
-                borderRadius: '8px',
-                border: '2px solid #cbd5e1',
-                fontSize: '12px',
-                fontWeight: '600',
-                cursor: 'pointer',
-                background: 'white'
-              }}
-            >
-              <option value="all">All Categories</option>
-              {getCategories().map(cat => (
-                <option key={cat} value={cat}>{cat}</option>
-              ))}
-            </select>
-          </div>
-          <div className="chart-content">
-            {products.length > 0 ? (
-              <ResponsiveContainer width="100%" height={220}>
-                <BarChart data={getProductsByCategory()} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
-                  <XAxis 
-                    dataKey="name" 
-                    stroke="#6b7280" 
-                    fontSize={11}
-                    tickLine={false}
-                    axisLine={{ stroke: '#e5e7eb' }}
-                  />
-                  <YAxis 
-                    stroke="#6b7280" 
-                    fontSize={11}
-                    tickLine={false}
-                    axisLine={{ stroke: '#e5e7eb' }}
-                  />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: 'white', 
-                      border: 'none',
-                      borderRadius: '12px',
-                      padding: '8px 12px',
-                      boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
-                    }}
-                  />
-                  <Bar 
-                    dataKey="count" 
-                    fill="#0891b2" 
-                    radius={[8, 8, 0, 0]}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="empty-state">
-                <p><Fish size={18} style={{ display: 'inline', marginRight: '8px' }} /> No product data</p>
-              </div>
-            )}
-          </div>
+      {/* Product Distribution with Filter */}
+      <div className="chart-card">
+        <div className="card-header">
+          <h3><Fish size={18} style={{ display: 'inline', marginRight: '8px' }} /> Products by Category</h3>
+          <select
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+            className="chart-filter"
+            style={{
+              padding: '6px 12px',
+              borderRadius: '8px',
+              border: '2px solid #cbd5e1',
+              fontSize: '12px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              background: 'white'
+            }}
+          >
+            <option value="all">All Categories</option>
+            {getCategories().map(cat => (
+              <option key={cat} value={cat}>{cat}</option>
+            ))}
+          </select>
         </div>
+        <div className="chart-content">
+          {products.length > 0 ? (
+            <ResponsiveContainer width="100%" height={220}>
+              <BarChart data={getProductsByCategory()} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
+                <XAxis
+                  dataKey="name"
+                  stroke="#6b7280"
+                  fontSize={11}
+                  tickLine={false}
+                  axisLine={{ stroke: '#e5e7eb' }}
+                />
+                <YAxis
+                  stroke="#6b7280"
+                  fontSize={11}
+                  tickLine={false}
+                  axisLine={{ stroke: '#e5e7eb' }}
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: 'white',
+                    border: 'none',
+                    borderRadius: '12px',
+                    padding: '8px 12px',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+                  }}
+                />
+                <Bar
+                  dataKey="count"
+                  fill="#0891b2"
+                  radius={[8, 8, 0, 0]}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="empty-state">
+              <p><Fish size={18} style={{ display: 'inline', marginRight: '8px' }} /> No product data</p>
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* Secondary Analytics Row */}
       <div className="content-grid">
@@ -654,7 +715,7 @@ const SellerHome = () => {
               </span>
             </div>
           </div>
-          
+
           <div className="orders-list">
             {ordersForSelectedDate.length > 0 ? (
               ordersForSelectedDate.map(order => (
@@ -690,8 +751,8 @@ const SellerHome = () => {
         <div className="section-header">
           <h3><List size={18} style={{ display: 'inline', marginRight: '8px' }} /> Orders</h3>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <select 
-              value={orderStatusFilter} 
+            <select
+              value={orderStatusFilter}
               onChange={(e) => setOrderStatusFilter(e.target.value)}
               style={{
                 padding: '8px 16px',
@@ -713,7 +774,7 @@ const SellerHome = () => {
             <span className="pending-count">{pendingOrders.length}</span>
           </div>
         </div>
-        
+
         <div className="pending-orders-grid">
           {pendingOrders.length > 0 ? (
             pendingOrders.map(order => (
@@ -721,30 +782,30 @@ const SellerHome = () => {
                 <div className="pending-order-header">
                   <div className="pending-order-id-section">
                     <span className="pending-order-number">#{order.orderId}</span>
-                    <span 
+                    <span
                       className="pending-badge"
                       style={{
                         color: '#fff',
-                        backgroundColor: 
+                        backgroundColor:
                           order.status === 'Completed' ? '#10b981' :
-                          order.status === 'Preparing' ? '#3ec7d1ff' :
-                          order.status === 'Ready for Pickup' ? '#3b82f6' :
-                          order.status === 'Cancelled' ? '#ef4444' :
-                          '#4e6986ff'
+                            order.status === 'Preparing' ? '#3ec7d1ff' :
+                              order.status === 'Ready for Pickup' ? '#3b82f6' :
+                                order.status === 'Cancelled' ? '#ef4444' :
+                                  '#4e6986ff'
                       }}
                     >
                       {order.status.toUpperCase()}
                     </span>
                   </div>
                 </div>
-                
+
                 <div className="pending-order-body">
                   <div className="customer-section">
                     <div className="customer-name-compact"><User size={14} style={{ display: 'inline', marginRight: '4px' }} /> {order.customerName}</div>
                     <div className="customer-detail"><Phone size={14} style={{ display: 'inline', marginRight: '4px' }} /> {order.contact}</div>
                     <div className="customer-detail"><MapPin size={14} style={{ display: 'inline', marginRight: '4px' }} /> {order.address}</div>
                   </div>
-                  
+
                   <div className="order-summary">
                     <div className="summary-row">
                       <span className="summary-label">Items:</span>
@@ -760,13 +821,13 @@ const SellerHome = () => {
                       </div>
                     )}
                   </div>
-                  
+
                   <div className="order-footer-info">
                     <span className="order-time">
-                      {new Date(order.orderDate).toLocaleDateString('en-US', { 
-                        month: 'short', 
+                      {new Date(order.orderDate).toLocaleDateString('en-US', {
+                        month: 'short',
                         day: 'numeric'
-                      })} • {new Date(order.orderDate).toLocaleTimeString('en-US', { 
+                      })} • {new Date(order.orderDate).toLocaleTimeString('en-US', {
                         hour: '2-digit',
                         minute: '2-digit'
                       })}
@@ -785,6 +846,18 @@ const SellerHome = () => {
           )}
         </div>
       </div>
+
+      {/* Map Modal */}
+      <SellerMapModal
+        isOpen={showMapModal}
+        onClose={() => setShowMapModal(false)}
+        sellerId={SELLER_ID}
+        currentLocation={storeLocation}
+        onSave={(location) => {
+          setStoreLocation(location);
+          fetchStoreLocation();
+        }}
+      />
     </div>
   );
 };

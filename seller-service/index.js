@@ -1,5 +1,5 @@
 const express = require("express");
-const mysql = require("mysql2");
+const mysql = require("mysql2/promise");
 const bcrypt = require("bcrypt");
 const cors = require("cors");
 const multer = require("multer");
@@ -68,16 +68,16 @@ const db = mysql.createPool({
   queueLimit: 0
 });
 
-// Test database connection
-db.getConnection((err, connection) => {
-  if (err) {
-    console.error("❌ Database connection failed:", err);
-    process.exit(1);
-  } else {
+// Test database connection (updated for promise version)
+db.getConnection()
+  .then(connection => {
     console.log("✅ Connected to MySQL database: e_sea_db");
     connection.release();
-  }
-});
+  })
+  .catch(err => {
+    console.error("❌ Database connection failed:", err);
+    process.exit(1);
+  });
 
 // =============================
 //  Constants & Validators
@@ -110,7 +110,7 @@ async function initializeDefaultCategories(seller_id) {
 
   try {
     for (const category of defaultCategories) {
-      await db.promise().query(
+      await db.query(
         "INSERT IGNORE INTO fish_categories (category_name, seller_id) VALUES (?, ?)",
         [category, seller_id]
       );
@@ -123,7 +123,7 @@ async function initializeDefaultCategories(seller_id) {
 // Insert notification helper
 async function insertNotification(seller_id, message, type = 'info') {
   try {
-    await db.promise().query(
+    await db.query(
       "INSERT INTO seller_notifications (seller_id, message, type) VALUES (?, ?, ?)",
       [seller_id, message, type]
     );
@@ -154,7 +154,7 @@ app.post("/api/admin/login", async (req, res) => {
   }
 
   try {
-    const [results] = await db.promise().query(
+    const [results] = await db.query(
       "SELECT * FROM admins WHERE username = ? AND admin_id = ?",
       [username, admin_id]
     );
@@ -197,7 +197,7 @@ app.post("/api/seller/register", async (req, res) => {
 
   try {
     // Check if ID exists in sellers table and is approved
-    const [sellerCheck] = await db.promise().query(
+    const [sellerCheck] = await db.query(
       "SELECT status FROM sellers WHERE unique_id = ?", 
       [unique_id]
     );
@@ -209,7 +209,7 @@ app.post("/api/seller/register", async (req, res) => {
       return res.status(403).json({ message: "Seller not approved." });
 
     // Check if already registered
-    const [credCheck] = await db.promise().query(
+    const [credCheck] = await db.query(
       "SELECT id FROM seller_credentials WHERE email = ? OR unique_id = ?", 
       [email, unique_id]
     );
@@ -219,7 +219,7 @@ app.post("/api/seller/register", async (req, res) => {
 
     // Hash password and insert
     const hash = await bcrypt.hash(password, SALT_ROUNDS);
-    await db.promise().query(
+    await db.query(
       "INSERT INTO seller_credentials (unique_id, email, password_hash) VALUES (?, ?, ?)",
       [unique_id, email, hash]
     );
@@ -241,7 +241,7 @@ app.post("/api/seller/login", async (req, res) => {
     return res.status(400).json({ message: "Both fields required" });
 
   try {
-    const [results] = await db.promise().query(
+    const [results] = await db.query(
       "SELECT password_hash FROM seller_credentials WHERE unique_id = ?", 
       [unique_id]
     );
@@ -294,7 +294,7 @@ app.post("/api/buyer/register", async (req, res) => {
       VALUES (?, ?, ?, ?, ?, ?, ?)
     `;
 
-    await db.promise().query(
+    await db.query(
       sql,
       [email, contact, lastName, firstName, middleName, username, hashedPassword]
     );
@@ -317,7 +317,7 @@ app.post("/api/buyer/login", async (req, res) => {
   }
 
   try {
-    const [results] = await db.promise().query(
+    const [results] = await db.query(
       "SELECT * FROM buyer_authentication WHERE email = ?", 
       [email]
     );
@@ -359,7 +359,7 @@ app.post("/api/buyer/login", async (req, res) => {
 
 app.get("/api/sellers", async (req, res) => {
   try {
-    const [results] = await db.promise().query(
+    const [results] = await db.query(
       "SELECT * FROM sellers ORDER BY date_added DESC"
     );
     return res.status(200).json(results);
@@ -387,7 +387,7 @@ app.post("/api/sellers", async (req, res) => {
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
     `;
 
-    await db.promise().query(query, [
+    await db.query(query, [
       unique_id, last_name, first_name, middle_name, shop_name,
       street, barangay, municipality, province,
       JSON.stringify(requirements), status || "pending"
@@ -409,7 +409,7 @@ app.put("/api/sellers/:id/status", async (req, res) => {
   }
 
   try {
-    const [result] = await db.promise().query(
+    const [result] = await db.query(
       "UPDATE sellers SET status = ? WHERE id = ?",
       [status, id]
     );
@@ -429,7 +429,7 @@ app.delete("/api/sellers/:id", async (req, res) => {
   const { id } = req.params;
   
   try {
-    await db.promise().query("DELETE FROM sellers WHERE id = ?", [id]);
+    await db.query("DELETE FROM sellers WHERE id = ?", [id]);
     return res.status(200).json({ message: "🗑️ Seller deleted successfully" });
   } catch (err) {
     console.error("❌ Error deleting seller:", err);
@@ -441,7 +441,7 @@ app.put("/api/sellers/:id/check-requirements", async (req, res) => {
   try {
     const sellerId = req.params.id;
     
-    const [seller] = await db.promise().query(
+    const [seller] = await db.query(
       "SELECT requirements, date_added, status FROM sellers WHERE id = ?",
       [sellerId]
     );
@@ -467,7 +467,7 @@ app.put("/api/sellers/:id/check-requirements", async (req, res) => {
     
     if (!isCompliant && daysSinceCreation >= 3) {
       newStatus = "rejected";
-      await db.promise().query(
+      await db.query(
         "UPDATE sellers SET status = ? WHERE id = ?",
         ["rejected", sellerId]
       );
@@ -494,7 +494,7 @@ app.put("/api/sellers/:id/requirements", async (req, res) => {
       return res.status(400).json({ message: "Requirements data required" });
     }
     
-    await db.promise().query(
+    await db.query(
       "UPDATE sellers SET requirements = ? WHERE id = ?",
       [JSON.stringify(requirements), sellerId]
     );
@@ -518,14 +518,14 @@ app.get("/api/seller/categories", async (req, res) => {
       return res.status(400).json({ message: "Seller ID required" });
     }
     
-    const [rows] = await db.promise().query(
+    const [rows] = await db.query(
       "SELECT id, category_name, created_at FROM fish_categories WHERE seller_id = ? ORDER BY category_name ASC",
       [seller_id]
     );
 
     if (rows.length === 0) {
       await initializeDefaultCategories(seller_id);
-      const [newRows] = await db.promise().query(
+      const [newRows] = await db.query(
         "SELECT id, category_name, created_at FROM fish_categories WHERE seller_id = ? ORDER BY category_name ASC",
         [seller_id]
       );
@@ -547,7 +547,7 @@ app.post("/api/seller/categories", async (req, res) => {
       return res.status(400).json({ message: "Category name and seller ID required" });
     }
 
-    const [existing] = await db.promise().query(
+    const [existing] = await db.query(
       "SELECT id FROM fish_categories WHERE category_name = ? AND seller_id = ?",
       [category_name, seller_id]
     );
@@ -556,7 +556,7 @@ app.post("/api/seller/categories", async (req, res) => {
       return res.status(409).json({ message: "You already have a category with this name" });
     }
 
-    await db.promise().query(
+    await db.query(
       "INSERT INTO fish_categories (category_name, seller_id) VALUES (?, ?)",
       [category_name, seller_id]
     );
@@ -577,7 +577,7 @@ app.delete("/api/seller/categories/:id", async (req, res) => {
       return res.status(400).json({ message: "Seller ID required" });
     }
 
-    const [category] = await db.promise().query(
+    const [category] = await db.query(
       "SELECT category_name, seller_id FROM fish_categories WHERE id = ?",
       [categoryId]
     );
@@ -590,7 +590,7 @@ app.delete("/api/seller/categories/:id", async (req, res) => {
       return res.status(403).json({ message: "You can only delete your own categories" });
     }
 
-    const [productsUsing] = await db.promise().query(
+    const [productsUsing] = await db.query(
       "SELECT COUNT(*) as count FROM fish_products WHERE category = ? AND seller_id = ?",
       [category[0].category_name, seller_id]
     );
@@ -601,7 +601,7 @@ app.delete("/api/seller/categories/:id", async (req, res) => {
       });
     }
 
-    await db.promise().query(
+    await db.query(
       "DELETE FROM fish_categories WHERE id = ? AND seller_id = ?",
       [categoryId, seller_id]
     );
@@ -629,7 +629,7 @@ app.get("/api/seller/fish", async (req, res) => {
     }
     sql += " ORDER BY created_at DESC";
     
-    const [rows] = await db.promise().query(sql, params);
+    const [rows] = await db.query(sql, params);
     res.json(rows);
   } catch (err) {
     console.error("❌ Fetch Fish Error:", err);
@@ -645,7 +645,7 @@ app.post("/api/seller/add-fish", upload.single("image"), async (req, res) => {
     if (!name || !price || !stock || !seller_id)
       return res.status(400).json({ message: "All required fields are missing." });
 
-    await db.promise().query(
+    await db.query(
       "INSERT INTO fish_products (name, category, unit, price, previous_price, stock, image_url, seller_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
       [name, category || "Freshwater", unit || "kg", price, null, stock, image_url, seller_id]
     );
@@ -663,7 +663,7 @@ app.put("/api/seller/fish/:id", upload.single("image"), async (req, res) => {
     const { name, category, unit, price, stock, seller_id, freshness } = req.body;
     const newImage = req.file ? req.file.filename : null;
 
-    const [existing] = await db.promise().query(
+    const [existing] = await db.query(
       "SELECT price, image_url FROM fish_products WHERE id = ?", 
       [fishId]
     );
@@ -674,17 +674,17 @@ app.put("/api/seller/fish/:id", upload.single("image"), async (req, res) => {
     const oldPrice = existing[0].price;
     const oldImage = existing[0].image_url;
 
-    await db.promise().query("START TRANSACTION");
+    await db.query("START TRANSACTION");
 
     if (price !== undefined && Number(price) !== Number(oldPrice)) {
       if (!seller_id) throw new Error("Seller ID required for price history logging.");
       
-      await db.promise().query(
+      await db.query(
         "INSERT INTO price_history (product_id, seller_id, old_price, new_price) VALUES (?, ?, ?, ?)",
         [fishId, seller_id, oldPrice, price]
       );
 
-      await db.promise().query(
+      await db.query(
         "UPDATE fish_products SET previous_price = ? WHERE id = ?",
         [oldPrice, fishId]
       );
@@ -702,15 +702,15 @@ app.put("/api/seller/fish/:id", upload.single("image"), async (req, res) => {
     if (newImage) { fields.push("image_url = ?"); params.push(newImage); }
 
     if (fields.length === 0) {
-      await db.promise().query("ROLLBACK");
+      await db.query("ROLLBACK");
       return res.status(400).json({ message: "No fields to update." });
     }
 
     params.push(fishId);
     const sql = `UPDATE fish_products SET ${fields.join(", ")} WHERE id = ?`;
-    await db.promise().query(sql, params);
+    await db.query(sql, params);
 
-    await db.promise().query("COMMIT");
+    await db.query("COMMIT");
     
     if (newImage && oldImage) {
       const oldPath = path.join(UPLOAD_DIR, oldImage);
@@ -721,7 +721,7 @@ app.put("/api/seller/fish/:id", upload.single("image"), async (req, res) => {
 
     res.json({ message: "Fish product updated successfully." });
   } catch (err) {
-    await db.promise().query("ROLLBACK");
+    await db.query("ROLLBACK");
     console.error("❌ Update Fish Error:", err);
     res.status(500).json({ message: "Server error while updating fish product" });
   }
@@ -730,7 +730,7 @@ app.put("/api/seller/fish/:id", upload.single("image"), async (req, res) => {
 app.delete("/api/seller/fish/:id", async (req, res) => {
   try {
     const fishId = req.params.id;
-    const [rows] = await db.promise().query(
+    const [rows] = await db.query(
       "SELECT image_url FROM fish_products WHERE id = ?", 
       [fishId]
     );
@@ -739,7 +739,7 @@ app.delete("/api/seller/fish/:id", async (req, res) => {
       return res.status(404).json({ message: "Fish not found." });
 
     const imageFilename = rows[0].image_url;
-    await db.promise().query("DELETE FROM fish_products WHERE id = ?", [fishId]);
+    await db.query("DELETE FROM fish_products WHERE id = ?", [fishId]);
 
     if (imageFilename) {
       const p = path.join(UPLOAD_DIR, imageFilename);
@@ -766,7 +766,7 @@ app.put("/api/seller/fish/:id/stock", async (req, res) => {
       return res.status(400).json({ message: "Valid stock value is required." });
     }
 
-    const [rows] = await db.promise().query(
+    const [rows] = await db.query(
       "SELECT stock FROM fish_products WHERE id = ?",
       [fishId]
     );
@@ -774,7 +774,7 @@ app.put("/api/seller/fish/:id/stock", async (req, res) => {
     if (rows.length === 0) 
       return res.status(404).json({ message: "Fish not found." });
 
-    await db.promise().query(
+    await db.query(
       "UPDATE fish_products SET stock = ? WHERE id = ?",
       [stock, fishId]
     );
@@ -799,7 +799,7 @@ app.get("/api/seller/price-analysis/:productId", async (req, res) => {
       return res.status(400).json({ message: "Product ID and Seller ID required" });
     }
 
-    const [product] = await db.promise().query(
+    const [product] = await db.query(
       "SELECT name, price FROM fish_products WHERE id = ? AND seller_id = ?",
       [productId, seller_id]
     );
@@ -811,7 +811,7 @@ app.get("/api/seller/price-analysis/:productId", async (req, res) => {
     const currentPrice = Number(product[0].price);
     const productName = product[0].name;
 
-    const [history] = await db.promise().query(
+    const [history] = await db.query(
       `SELECT id, old_price, new_price, change_date 
         FROM price_history 
         WHERE product_id = ? AND seller_id = ? 
@@ -883,7 +883,7 @@ app.put("/api/seller/fish-price/:id/accept-suggestion", async (req, res) => {
       return res.status(400).json({ message: "Valid new price and seller ID required." });
     }
 
-    const [existing] = await db.promise().query(
+    const [existing] = await db.query(
       "SELECT price FROM fish_products WHERE id = ? AND seller_id = ?", 
       [fishId, seller_id]
     );
@@ -895,12 +895,12 @@ app.put("/api/seller/fish-price/:id/accept-suggestion", async (req, res) => {
     const priceToSet = Number(new_price).toFixed(2);
     
     if (Number(priceToSet) !== Number(oldPrice)) {
-      await db.promise().query(
+      await db.query(
         "INSERT INTO price_history (product_id, seller_id, old_price, new_price) VALUES (?, ?, ?, ?)",
         [fishId, seller_id, oldPrice, priceToSet]
       );
       
-      await db.promise().query(
+      await db.query(
         "UPDATE fish_products SET previous_price = ?, price = ? WHERE id = ?",
         [oldPrice, priceToSet, fishId]
       );
@@ -921,7 +921,7 @@ app.get("/api/seller/info/:seller_id", async (req, res) => {
   const { seller_id } = req.params;
   
   try {
-    const [rows] = await db.promise().query(
+    const [rows] = await db.query(
       "SELECT unique_id, first_name, middle_name, last_name, shop_name, street, barangay, municipality, province FROM sellers WHERE unique_id = ?",
       [seller_id]
     );
@@ -941,7 +941,7 @@ app.get("/api/seller/profile/:seller_id", async (req, res) => {
   const { seller_id } = req.params;
   
   try {
-    const [rows] = await db.promise().query(
+    const [rows] = await db.query(
       "SELECT logo, qr FROM seller_profiles WHERE seller_id = ?",
       [seller_id]
     );
@@ -965,7 +965,7 @@ app.post("/api/seller/upload-logo/:seller_id", upload.single("logo"), async (req
   const filePath = "/uploads/" + req.file.filename;
 
   try {
-    await db.promise().query(
+    await db.query(
       `INSERT INTO seller_profiles (seller_id, logo) 
        VALUES (?, ?)
        ON DUPLICATE KEY UPDATE logo = VALUES(logo)`,
@@ -988,7 +988,7 @@ app.post("/api/seller/upload-qr/:seller_id", upload.single("qr"), async (req, re
   const filePath = "/uploads/" + req.file.filename;
 
   try {
-    await db.promise().query(
+    await db.query(
       `INSERT INTO seller_profiles (seller_id, qr) 
        VALUES (?, ?)
        ON DUPLICATE KEY UPDATE qr = VALUES(qr)`,
@@ -1010,7 +1010,7 @@ app.put("/api/seller/update-info/:seller_id", async (req, res) => {
       street, barangay, municipality, province 
     } = req.body;
 
-    const [existing] = await db.promise().query(
+    const [existing] = await db.query(
       "SELECT unique_id FROM sellers WHERE unique_id = ?",
       [seller_id]
     );
@@ -1038,7 +1038,7 @@ app.put("/api/seller/update-info/:seller_id", async (req, res) => {
     params.push(seller_id);
     const sql = `UPDATE sellers SET ${fields.join(", ")} WHERE unique_id = ?`;
     
-    const [result] = await db.promise().query(sql, params);
+    const [result] = await db.query(sql, params);
 
     if (result.affectedRows === 0) {
       return res.status(404).json({ message: "Failed to update seller information." });
@@ -1104,7 +1104,7 @@ app.post("/api/orders", async (req, res) => {
   }
 
   try {
-    const [buyerInfo] = await db.promise().query(
+    const [buyerInfo] = await db.query(
       "SELECT first_name, last_name, contact FROM buyer_authentication WHERE id = ?",
       [buyer_id]
     );
@@ -1119,8 +1119,15 @@ app.post("/api/orders", async (req, res) => {
       buyerInfo[0].contact
     ).replace(/\s/g, "");
 
-    console.log(`🔍 Creating order for buyer_id: ${buyer_id}`);
-    console.log(`🔍 Notification ID: ${notificationCustomerId}`);
+    console.log(`📦 Creating order for buyer_id: ${buyer_id}`);
+    console.log(`📍 Notification ID: ${notificationCustomerId}`);
+    
+    // ✅ Extract delivery location from customer object
+    const deliveryLat = customer.delivery_latitude || null;
+    const deliveryLng = customer.delivery_longitude || null;
+    const distanceKm = customer.distance_km || null;
+    
+    console.log(`📍 Location data:`, { deliveryLat, deliveryLng, distanceKm });
 
     const ordersBySeller = {};
     for (const item of cart) {
@@ -1147,13 +1154,14 @@ app.post("/api/orders", async (req, res) => {
     
     const insertedOrderIds = [];
 
-    await db.promise().query("START TRANSACTION");
+    await db.query("START TRANSACTION");
 
     for (const sellerOrder of Object.values(ordersBySeller)) {
-      const [orderResult] = await db.promise().query(
+      // ✅ Updated INSERT with location fields
+      const [orderResult] = await db.query(
         `INSERT INTO orders 
-        (seller_id, customer_name, address, contact, notes, total, payment_mode, paid, proof_of_payment, customer_id)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        (seller_id, customer_name, address, contact, notes, total, payment_mode, paid, proof_of_payment, customer_id, delivery_latitude, delivery_longitude, distance_km)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           sellerOrder.seller_id,
           customer.name,
@@ -1164,7 +1172,10 @@ app.post("/api/orders", async (req, res) => {
           payment_mode || "Gcash QR",
           paid ? 1 : 0,
           proof_of_payment,
-          notificationCustomerId
+          notificationCustomerId,
+          deliveryLat,      // ✅ Added
+          deliveryLng,      // ✅ Added
+          distanceKm        // ✅ Added
         ]
       );
 
@@ -1172,12 +1183,12 @@ app.post("/api/orders", async (req, res) => {
       insertedOrderIds.push(orderId);
 
       for (const item of sellerOrder.items) {
-        await db.promise().query(
+        await db.query(
           "INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)",
           [orderId, item.id, item.quantity, item.price]
         );
 
-        const [prod] = await db.promise().query(
+        const [prod] = await db.query(
           "SELECT stock FROM fish_products WHERE id = ?", 
           [item.id]
         );
@@ -1191,14 +1202,14 @@ app.post("/api/orders", async (req, res) => {
           throw new Error(`Not enough stock for product ${item.id}`);
         }
 
-        await db.promise().query(
+        await db.query(
           "UPDATE fish_products SET stock = ? WHERE id = ?", 
           [newStock, item.id]
         );
       }
       
       const message = `You have a new order (#${orderId}) from ${customer.name}.`;
-      await db.promise().query(
+      await db.query(
         "INSERT INTO seller_notifications (seller_id, message, type) VALUES (?, ?, ?)",
         [sellerOrder.seller_id, message, 'order']
       );
@@ -1206,7 +1217,7 @@ app.post("/api/orders", async (req, res) => {
       console.log(`✅ Order ${orderId} created for seller: ${sellerOrder.seller_id}`);
     }
 
-    await db.promise().query("COMMIT");
+    await db.query("COMMIT");
 
     return res.json({
       message: `${Object.keys(ordersBySeller).length} order(s) placed successfully! Your proof of payment has been received.`,
@@ -1215,7 +1226,7 @@ app.post("/api/orders", async (req, res) => {
     });
 
   } catch (err) {
-    await db.promise().query("ROLLBACK");
+    await db.query("ROLLBACK");
     console.error("❌ Place Order Error:", err.message);
     return res.status(500).json({ 
       message: err.message.startsWith("Not enough stock") ? err.message : "Server error while processing order." 
@@ -1246,6 +1257,9 @@ app.get("/api/orders", async (req, res) => {
       o.proof_of_payment,
       o.order_date,
       o.status,
+      o.delivery_latitude,
+      o.delivery_longitude,
+      o.distance_km,
       oi.id AS item_id,
       oi.product_id,
       oi.quantity,
@@ -1262,8 +1276,8 @@ app.get("/api/orders", async (req, res) => {
   const countSql = `SELECT COUNT(DISTINCT o.id) as total FROM orders o WHERE o.seller_id = ?`;
 
   try {
-    const [result] = await db.promise().query(sql, [sellerId, limit, offset]);
-    const [countResult] = await db.promise().query(countSql, [sellerId]);
+    const [result] = await db.query(sql, [sellerId, limit, offset]);
+    const [countResult] = await db.query(countSql, [sellerId]);
     
     const ordersMap = {};
 
@@ -1281,6 +1295,9 @@ app.get("/api/orders", async (req, res) => {
           proofOfPayment: row.proof_of_payment,
           orderDate: row.order_date,
           status: row.status,
+          delivery_latitude: row.delivery_latitude,
+          delivery_longitude: row.delivery_longitude,
+          distance_km: row.distance_km,
           items: []
         };
       }
@@ -1329,7 +1346,7 @@ app.put("/api/orders/:id/status", async (req, res) => {
   }
 
   try {
-    const [orderDetails] = await db.promise().query(
+    const [orderDetails] = await db.query(
       "SELECT customer_id FROM orders WHERE id = ? AND seller_id = ?",
       [orderId, seller_id]
     );
@@ -1340,7 +1357,7 @@ app.put("/api/orders/:id/status", async (req, res) => {
 
     const storedCustomerId = orderDetails[0].customer_id;
 
-    const [result] = await db.promise().query(
+    const [result] = await db.query(
       "UPDATE orders SET status = ? WHERE id = ? AND seller_id = ?",
       [status, orderId, seller_id]
     );
@@ -1352,7 +1369,7 @@ app.put("/api/orders/:id/status", async (req, res) => {
     if (storedCustomerId) {
       const notificationMessage = `Your order #${orderId} status has been updated to: ${status}`;
       
-      await db.promise().query(
+      await db.query(
         `INSERT INTO buyer_notifications (customer_id, order_id, seller_id, message) 
          VALUES (?, ?, ?, ?)`,
         [storedCustomerId, orderId, seller_id, notificationMessage]
@@ -1393,7 +1410,7 @@ app.get("/api/seller/notifications", async (req, res) => {
   sql += " ORDER BY created_at DESC";
 
   try {
-    const [notifications] = await db.promise().query(sql, params);
+    const [notifications] = await db.query(sql, params);
     res.json(notifications);
   } catch (err) {
     console.error("❌ Fetch Notifications Error:", err);
@@ -1410,7 +1427,7 @@ app.put("/api/seller/notifications/:id/read", async (req, res) => {
   }
 
   try {
-    const [result] = await db.promise().query(
+    const [result] = await db.query(
       "UPDATE seller_notifications SET is_read = 1 WHERE id = ? AND seller_id = ?",
       [notificationId, seller_id]
     );
@@ -1432,7 +1449,7 @@ app.get("/api/buyer/:customerId/notifications", async (req, res) => {
   console.log(`📬 Fetching notifications for buyer_id: ${numericalCustomerId}`);
 
   try {
-    const [buyer] = await db.promise().query(
+    const [buyer] = await db.query(
       "SELECT first_name, last_name, contact FROM buyer_authentication WHERE id = ?",
       [numericalCustomerId]
     );
@@ -1470,7 +1487,7 @@ app.get("/api/buyer/:customerId/notifications", async (req, res) => {
       LIMIT 50
     `;
 
-    const [notifications] = await db.promise().query(notifSql, [notificationIdString]);
+    const [notifications] = await db.query(notifSql, [notificationIdString]);
 
     console.log(`📊 Found ${notifications.length} notifications for: ${notificationIdString}`);
 
@@ -1509,20 +1526,28 @@ app.get("/api/buyer/:customerId/notifications", async (req, res) => {
 
 app.put("/api/buyer/notifications/:id/read", async (req, res) => {
   const notificationId = req.params.id;
-  const { customer_id: numericalCustomerId } = req.body; 
+  const { buyer_id } = req.body;
 
-  if (!numericalCustomerId) {
-    return res.status(400).json({ message: "Customer ID required for verification." });
+  console.log(`📌 Mark as read request - Notification ID: ${notificationId}, Buyer ID: ${buyer_id}`);
+  console.log(`📌 Notification ID type: ${typeof notificationId}`);
+  console.log(`📌 Buyer ID type: ${typeof buyer_id}`);
+
+  if (!buyer_id) {
+    return res.status(400).json({ message: "Buyer ID required for verification." });
   }
 
   try {
-    const [buyer] = await db.promise().query(
+    // Get buyer info to construct notification ID
+    const [buyer] = await db.query(
       "SELECT first_name, last_name, contact FROM buyer_authentication WHERE id = ?",
-      [numericalCustomerId]
+      [buyer_id]
     );
     
+    console.log(`📌 Buyer query result:`, buyer);
+    
     if (buyer.length === 0) {
-      return res.status(404).json({ message: "Invalid customer ID." });
+      console.log(`❌ Invalid buyer ID: ${buyer_id}`);
+      return res.status(404).json({ message: "Invalid buyer ID." });
     }
 
     const notificationIdString = (
@@ -1531,18 +1556,48 @@ app.put("/api/buyer/notifications/:id/read", async (req, res) => {
       buyer[0].contact
     ).replace(/\s/g, "");
 
-    const [result] = await db.promise().query(
-      "UPDATE buyer_notifications SET is_read = TRUE WHERE id = ? AND customer_id = ?",
-      [notificationId, notificationIdString]
-    );
+    console.log(`🔍 Constructed notification ID: ${notificationIdString}`);
 
-    if (result.affectedRows === 0) {
+    // First, let's check if the notification exists
+    const [checkNotif] = await db.query(
+      "SELECT * FROM buyer_notifications WHERE id = ?",
+      [notificationId]
+    );
+    
+    console.log(`🔍 Notification exists check:`, checkNotif);
+
+    if (checkNotif.length === 0) {
+      console.log(`❌ No notification found with ID ${notificationId}`);
       return res.status(404).json({ 
-        message: "Notification not found or does not belong to this customer." 
+        message: `Notification with ID ${notificationId} does not exist.` 
       });
     }
 
-    console.log(`✅ Notification ${notificationId} marked as read`);
+    console.log(`🔍 Notification customer_id from DB: ${checkNotif[0].customer_id}`);
+    console.log(`🔍 Expected customer_id: ${notificationIdString}`);
+    console.log(`🔍 Do they match? ${checkNotif[0].customer_id === notificationIdString}`);
+
+    // Update the notification
+    const [result] = await db.query(
+      "UPDATE buyer_notifications SET is_read = 1 WHERE id = ? AND customer_id = ?",
+      [notificationId, notificationIdString]
+    );
+
+    console.log(`📊 Update result - affectedRows: ${result.affectedRows}`);
+
+    if (result.affectedRows === 0) {
+      console.log(`❌ No notification found with ID ${notificationId} for customer ${notificationIdString}`);
+      return res.status(404).json({ 
+        message: "Notification not found or does not belong to this customer.",
+        debug: {
+          notificationId,
+          expectedCustomerId: notificationIdString,
+          actualCustomerId: checkNotif[0].customer_id
+        }
+      });
+    }
+
+    console.log(`✅ Notification ${notificationId} marked as read successfully`);
 
     res.json({ 
       message: `Notification ${notificationId} marked as read.`,
@@ -1560,14 +1615,17 @@ app.put("/api/buyer/notifications/:id/read", async (req, res) => {
 app.put("/api/buyer/:customerId/notifications/read-all", async (req, res) => {
   const { customerId: numericalCustomerId } = req.params;
 
+  console.log(`📌 Mark all as read request for buyer ID: ${numericalCustomerId}`);
+
   try {
-    const [buyer] = await db.promise().query(
+    const [buyer] = await db.query(
       "SELECT first_name, last_name, contact FROM buyer_authentication WHERE id = ?",
       [numericalCustomerId]
     );
     
     if (buyer.length === 0) {
-      return res.status(404).json({ message: "Invalid customer ID." });
+      console.log(`❌ Invalid buyer ID: ${numericalCustomerId}`);
+      return res.status(404).json({ message: "Invalid buyer ID." });
     }
 
     const notificationIdString = (
@@ -1576,8 +1634,10 @@ app.put("/api/buyer/:customerId/notifications/read-all", async (req, res) => {
       buyer[0].contact
     ).replace(/\s/g, "");
 
-    const [result] = await db.promise().query(
-      "UPDATE buyer_notifications SET is_read = TRUE WHERE customer_id = ? AND is_read = FALSE",
+    console.log(`🔍 Constructed notification ID: ${notificationIdString}`);
+
+    const [result] = await db.query(
+      "UPDATE buyer_notifications SET is_read = 1 WHERE customer_id = ? AND is_read = 0",
       [notificationIdString]
     );
 
@@ -1605,7 +1665,7 @@ app.get("/api/seller/store-hours/:seller_id", async (req, res) => {
   const { seller_id } = req.params;
   
   try {
-    const [hours] = await db.promise().query(
+    const [hours] = await db.query(
       `SELECT day_of_week, is_open, open_time, close_time 
        FROM store_hours 
        WHERE seller_id = ? 
@@ -1640,25 +1700,25 @@ app.post("/api/seller/store-hours/:seller_id", async (req, res) => {
   }
   
   try {
-    await db.promise().query("START TRANSACTION");
+    await db.query("START TRANSACTION");
     
     // Delete existing hours for this seller
-    await db.promise().query("DELETE FROM store_hours WHERE seller_id = ?", [seller_id]);
+    await db.query("DELETE FROM store_hours WHERE seller_id = ?", [seller_id]);
     
     // Insert new hours
     for (const hour of hours) {
-      await db.promise().query(
+      await db.query(
         `INSERT INTO store_hours (seller_id, day_of_week, is_open, open_time, close_time) 
          VALUES (?, ?, ?, ?, ?)`,
         [seller_id, hour.day_of_week, hour.is_open ? 1 : 0, hour.open_time, hour.close_time]
       );
     }
     
-    await db.promise().query("COMMIT");
+    await db.query("COMMIT");
     
     res.json({ message: "Store hours updated successfully" });
   } catch (err) {
-    await db.promise().query("ROLLBACK");
+    await db.query("ROLLBACK");
     console.error("Error updating store hours:", err);
     res.status(500).json({ message: "Error updating store hours" });
   }
@@ -1671,7 +1731,7 @@ app.post("/api/seller/store-hours/:seller_id", async (req, res) => {
 app.get("/api/store-hours/global", async (req, res) => {
   try {
     // Get any seller's hours (since it's global for all)
-    const [hours] = await db.promise().query(
+    const [hours] = await db.query(
       `SELECT day_of_week, is_open, open_time, close_time 
        FROM store_hours 
        LIMIT 7`
@@ -1716,7 +1776,7 @@ app.get("/api/buyer/profile/:buyer_id", async (req, res) => {
       WHERE id = ?
     `;
     
-    const [results] = await db.promise().query(sql, [buyer_id]);
+    const [results] = await db.query(sql, [buyer_id]);
     
     if (results.length === 0) {
       console.log("❌ Buyer not found with ID:", buyer_id);
@@ -1774,7 +1834,7 @@ app.put("/api/buyer/profile/:buyer_id", async (req, res) => {
       WHERE (username = ? OR email = ?) AND id != ?
     `;
     
-    const [existing] = await db.promise().query(checkSql, [username, email, buyer_id]);
+    const [existing] = await db.query(checkSql, [username, email, buyer_id]);
     
     if (existing.length > 0) {
       return res.status(400).json({ message: "Username or email already exists." });
@@ -1786,7 +1846,7 @@ app.put("/api/buyer/profile/:buyer_id", async (req, res) => {
       WHERE id = ?
     `;
     
-    const [result] = await db.promise().query(
+    const [result] = await db.query(
       updateSql, 
       [username, email, contact, first_name, middle_name || null, last_name, buyer_id]
     );
@@ -1803,7 +1863,7 @@ app.put("/api/buyer/profile/:buyer_id", async (req, res) => {
       WHERE id = ?
     `;
     
-    const [updated] = await db.promise().query(selectSql, [buyer_id]);
+    const [updated] = await db.query(selectSql, [buyer_id]);
     
     return res.status(200).json({
       message: "Profile updated successfully!",
@@ -1836,7 +1896,7 @@ app.get("/api/buyer/purchases", async (req, res) => {
   }
 
   try {
-    const [buyer] = await db.promise().query(
+    const [buyer] = await db.query(
       "SELECT first_name, last_name, contact FROM buyer_authentication WHERE id = ?",
       [buyer_id]
     );
@@ -1853,8 +1913,9 @@ app.get("/api/buyer/purchases", async (req, res) => {
 
     console.log(`🔍 Searching for purchases using customer_id: ${notificationCustomerId}`);
 
+    // ✅ Fixed query - removes duplicate joins and uses DISTINCT
     const sql = `
-      SELECT 
+      SELECT DISTINCT
         oi.id AS purchase_id,
         oi.product_id,
         fp.name AS product_name,
@@ -1866,20 +1927,17 @@ app.get("/api/buyer/purchases", async (req, res) => {
         o.status,
         fp.image_url,
         fp.freshness,
-        ph.old_price,
-        ph.new_price,
         fp.previous_price,
         0 AS rating
       FROM orders o
-      JOIN order_items oi ON o.id = oi.order_id
+      INNER JOIN order_items oi ON o.id = oi.order_id
       LEFT JOIN fish_products fp ON oi.product_id = fp.id
-      LEFT JOIN price_history ph ON oi.product_id = ph.product_id
       WHERE o.customer_id = ?
-      ORDER BY o.order_date DESC
+      ORDER BY o.order_date DESC, oi.id ASC
       LIMIT 10
     `;
 
-    const [results] = await db.promise().query(sql, [notificationCustomerId]);
+    const [results] = await db.query(sql, [notificationCustomerId]);
     
     console.log(`✅ Found ${results.length} purchases`);
     
@@ -1901,7 +1959,7 @@ app.get("/api/buyer/orders", async (req, res) => {
   }
 
   try {
-    const [buyer] = await db.promise().query(
+    const [buyer] = await db.query(
       "SELECT first_name, last_name, contact FROM buyer_authentication WHERE id = ?",
       [buyer_id]
     );
@@ -1936,7 +1994,7 @@ app.get("/api/buyer/orders", async (req, res) => {
       ORDER BY o.order_date DESC
     `;
 
-    const [results] = await db.promise().query(sql, [notificationCustomerId]);
+    const [results] = await db.query(sql, [notificationCustomerId]);
     
     console.log(`✅ Found ${results.length} orders`);
     
@@ -1959,7 +2017,7 @@ app.get("/api/buyer/orders/:orderId", async (req, res) => {
   }
 
   try {
-    const [buyer] = await db.promise().query(
+    const [buyer] = await db.query(
       "SELECT first_name, last_name, contact FROM buyer_authentication WHERE id = ?",
       [buyer_id]
     );
@@ -1983,7 +2041,7 @@ app.get("/api/buyer/orders/:orderId", async (req, res) => {
       WHERE o.id = ? AND o.customer_id = ?
     `;
 
-    const [orders] = await db.promise().query(orderSql, [orderId, notificationCustomerId]);
+    const [orders] = await db.query(orderSql, [orderId, notificationCustomerId]);
 
     if (orders.length === 0) {
       return res.status(404).json({ message: "Order not found." });
@@ -1999,7 +2057,7 @@ app.get("/api/buyer/orders/:orderId", async (req, res) => {
       WHERE oi.order_id = ?
     `;
 
-    const [items] = await db.promise().query(itemsSql, [orderId]);
+    const [items] = await db.query(itemsSql, [orderId]);
 
     return res.status(200).json({
       order: orders[0],
@@ -2034,7 +2092,7 @@ app.post("/api/buyer/cart", async (req, res) => {
       ON DUPLICATE KEY UPDATE quantity = quantity + VALUES(quantity)
     `;
 
-    await db.promise().query(sql, [buyer_id, product_id, quantity]);
+    await db.query(sql, [buyer_id, product_id, quantity]);
     
     return res.status(200).json({ message: "Item added to cart successfully." });
   } catch (err) {
@@ -2064,7 +2122,7 @@ app.get("/api/buyer/cart/:buyer_id", async (req, res) => {
       WHERE c.buyer_id = ?
     `;
 
-    const [results] = await db.promise().query(sql, [buyer_id]);
+    const [results] = await db.query(sql, [buyer_id]);
     return res.status(200).json(results);
   } catch (err) {
     console.error("Error fetching cart:", err);
@@ -2085,13 +2143,13 @@ app.get("/api/shop", async (req, res) => {
       WHERE s.status = 'accepted'
     `;
     
-    const [sellers] = await db.promise().query(sellerSql);
+    const [sellers] = await db.query(sellerSql);
 
     if (!sellers || sellers.length === 0) {
       return res.json([]);
     }
 
-    const [products] = await db.promise().query("SELECT * FROM fish_products");
+    const [products] = await db.query("SELECT * FROM fish_products");
 
     const shopMap = {};
     
@@ -2127,14 +2185,14 @@ app.get("/api/shop/:shopId/products", async (req, res) => {
       WHERE unique_id = ? AND status = 'accepted'
     `;
     
-    const [sellers] = await db.promise().query(checkSql, [shopId]);
+    const [sellers] = await db.query(checkSql, [shopId]);
 
     if (sellers.length === 0) {
       return res.status(404).json({ message: "Shop not found or not active." });
     }
 
     const productSql = "SELECT * FROM fish_products WHERE seller_id = ?";
-    const [products] = await db.promise().query(productSql, [shopId]);
+    const [products] = await db.query(productSql, [shopId]);
 
     return res.status(200).json({ 
       shop_name: sellers[0].shop_name,
@@ -2164,7 +2222,7 @@ app.get("/api/products/by-category", async (req, res) => {
       ORDER BY fp.created_at DESC
     `;
     
-    const [rows] = await db.promise().query(sql, [category]);
+    const [rows] = await db.query(sql, [category]);
     res.json(rows);
   } catch (err) {
     console.error("❌ Fetch Products by Category Error:", err);
@@ -2187,20 +2245,20 @@ app.get("/api/products/best-sellers", async (req, res) => {
         fp.freshness,
         s.shop_name,
         fp.previous_price,
-        COALESCE(SUM(oi.quantity), 0) AS total_sold
+        COALESCE(SUM(CASE WHEN o.status = 'Completed' THEN oi.quantity ELSE 0 END), 0) AS total_sold
       FROM fish_products fp
-      LEFT JOIN order_items oi ON fp.id = oi.product_id
-      LEFT JOIN orders o ON oi.order_id = o.id AND o.status = 'Completed'
       LEFT JOIN sellers s ON fp.seller_id = s.unique_id
+      LEFT JOIN order_items oi ON fp.id = oi.product_id
+      LEFT JOIN orders o ON oi.order_id = o.id
       WHERE s.status = 'accepted' AND fp.stock > 0
       GROUP BY fp.id, fp.name, fp.category, fp.price, fp.stock, fp.unit, 
-               fp.image_url, fp.seller_id, fp.freshness, s.shop_name, fp.previous_price
+              fp.image_url, fp.seller_id, fp.freshness, s.shop_name, fp.previous_price
       HAVING total_sold > 0
       ORDER BY total_sold DESC
       LIMIT 4
     `;
     
-    const [products] = await db.promise().query(sql);
+    const [products] = await db.query(sql);
     
     // If no best sellers, get random recommended products
     if (products.length === 0) {
@@ -2224,7 +2282,7 @@ app.get("/api/products/best-sellers", async (req, res) => {
         ORDER BY RAND()
         LIMIT 4
       `;
-      const [recommended] = await db.promise().query(recommendedSql);
+      const [recommended] = await db.query(recommendedSql);
       return res.status(200).json(recommended || []);
     }
     
@@ -2253,7 +2311,7 @@ app.post("/api/products/details", async (req, res) => {
       WHERE id IN (${placeholders})
     `;
     
-    const [products] = await db.promise().query(sql, product_ids);
+    const [products] = await db.query(sql, product_ids);
 
     return res.status(200).json(products);
   } catch (err) {
@@ -2290,7 +2348,7 @@ app.post("/api/products/search-suggestions", async (req, res) => {
     `;
     
     const searchPattern = `%${searchTerm}%`;
-    const [products] = await db.promise().query(sql, [searchPattern]);
+    const [products] = await db.query(sql, [searchPattern]);
     
     return res.status(200).json(products);
   } catch (err) {
@@ -2308,7 +2366,7 @@ app.get("/api/seller/:sellerId/qr", async (req, res) => {
 
   try {
     const sql = "SELECT qr FROM seller_profiles WHERE seller_id = ?";
-    const [results] = await db.promise().query(sql, [sellerId]);
+    const [results] = await db.query(sql, [sellerId]);
 
     if (results.length === 0 || !results[0].qr) {
       return res.status(404).json({ 
@@ -2347,7 +2405,7 @@ app.get("/api/admin/all-sellers", async (req, res) => {
       ORDER BY s.date_added DESC
     `;
 
-    const [results] = await db.promise().query(sql);
+    const [results] = await db.query(sql);
     
     console.log(`📊 Total sellers found: ${results.length}`);
     return res.status(200).json(results);
@@ -2368,17 +2426,17 @@ app.get("/api/admin/seller-products", async (req, res) => {
   }
 
   try {
-    const [products] = await db.promise().query(
+    const [products] = await db.query(
       "SELECT * FROM fish_products WHERE seller_id = ? ORDER BY created_at DESC",
       [seller_id]
     );
 
-    const [categories] = await db.promise().query(
+    const [categories] = await db.query(
       "SELECT id, category_name, created_at FROM fish_categories WHERE seller_id = ? ORDER BY category_name ASC",
       [seller_id]
     );
 
-    const [sellerInfo] = await db.promise().query(
+    const [sellerInfo] = await db.query(
       "SELECT shop_name FROM sellers WHERE unique_id = ?",
       [seller_id]
     );
@@ -2427,7 +2485,7 @@ app.get("/api/admin/analytics/orders", async (req, res) => {
     `;
     
     const params = seller_id && seller_id !== "all" ? [seller_id] : [];
-    const [orders] = await db.promise().query(sql, params);
+    const [orders] = await db.query(sql, params);
     
     const ordersMap = {};
     orders.forEach(row => {
@@ -2471,7 +2529,7 @@ app.get("/api/all-sellers", async (req, res) => {
       ORDER BY date_registered DESC
     `;
     
-    const [results] = await db.promise().query(sql);
+    const [results] = await db.query(sql);
     return res.status(200).json(results);
   } catch (err) {
     console.error("❌ Error fetching sellers from seller_credentials:", err);
@@ -2487,7 +2545,7 @@ app.get("/api/all-buyers", async (req, res) => {
       ORDER BY created_at DESC
     `;
     
-    const [results] = await db.promise().query(sql);
+    const [results] = await db.query(sql);
     return res.status(200).json(results);
   } catch (err) {
     console.error("❌ Error fetching buyers:", err);
@@ -2514,7 +2572,7 @@ app.get("/api/users/notifications", async (req, res) => {
       ORDER BY created_at DESC
     `;
     
-    const [results] = await db.promise().query(sql);
+    const [results] = await db.query(sql);
     return res.status(200).json(results);
   } catch (err) {
     console.error("❌ Error fetching user notifications:", err);
@@ -2536,7 +2594,7 @@ app.get("/api/sellers/notifications", async (req, res) => {
       ORDER BY created_at DESC
     `;
     
-    const [results] = await db.promise().query(sql);
+    const [results] = await db.query(sql);
     return res.status(200).json(results);
   } catch (err) {
     console.error("❌ Error fetching seller notifications:", err);
@@ -2559,7 +2617,7 @@ app.get("/api/orders/completed", async (req, res) => {
       ORDER BY o.order_date DESC
     `;
     
-    const [results] = await db.promise().query(sql);
+    const [results] = await db.query(sql);
     return res.status(200).json(results);
   } catch (err) {
     console.error("❌ Error fetching completed orders:", err);
@@ -2575,7 +2633,7 @@ app.get("/api/buyer/debug/notification-id/:buyer_id", async (req, res) => {
   const { buyer_id } = req.params;
   
   try {
-    const [buyer] = await db.promise().query(
+    const [buyer] = await db.query(
       "SELECT id, first_name, last_name, contact FROM buyer_authentication WHERE id = ?",
       [buyer_id]
     );
@@ -2586,12 +2644,12 @@ app.get("/api/buyer/debug/notification-id/:buyer_id", async (req, res) => {
     
     const notificationId = (buyer[0].first_name + buyer[0].last_name + buyer[0].contact).replace(/\s/g, "");
     
-    const [notifications] = await db.promise().query(
+    const [notifications] = await db.query(
       "SELECT COUNT(*) as count FROM buyer_notifications WHERE customer_id = ?",
       [notificationId]
     );
     
-    const [allCustomerIds] = await db.promise().query(
+    const [allCustomerIds] = await db.query(
       "SELECT DISTINCT customer_id FROM buyer_notifications LIMIT 20"
     );
     
@@ -2609,7 +2667,7 @@ app.get("/api/buyer/debug/notification-id/:buyer_id", async (req, res) => {
 
 app.get("/api/buyer/debug/all-notifications", async (req, res) => {
   try {
-    const [notifications] = await db.promise().query(
+    const [notifications] = await db.query(
       `SELECT 
         id, 
         customer_id, 
@@ -2635,7 +2693,7 @@ app.get("/api/buyer/debug/all-notifications", async (req, res) => {
 
 app.get("/api/buyer/debug/buyers", async (req, res) => {
   try {
-    const [buyers] = await db.promise().query(
+    const [buyers] = await db.query(
       "SELECT id, first_name, last_name, contact, email FROM buyer_authentication LIMIT 20"
     );
     
@@ -2648,6 +2706,98 @@ app.get("/api/buyer/debug/buyers", async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
+  }
+});
+
+
+// Seller location routes
+app.post('/api/seller/location/:seller_id', async (req, res) => {
+  const { seller_id } = req.params;
+  const { latitude, longitude } = req.body;
+
+  try {
+    const [result] = await db.query(
+      `INSERT INTO seller_locations (seller_id, latitude, longitude) 
+       VALUES (?, ?, ?) 
+       ON DUPLICATE KEY UPDATE 
+       latitude = VALUES(latitude), 
+       longitude = VALUES(longitude), 
+       updated_at = CURRENT_TIMESTAMP`,
+      [seller_id, latitude, longitude]
+    );
+    
+    console.log(`📍 Location saved for seller ${seller_id}`);
+    res.json({ 
+      success: true, 
+      message: 'Location saved successfully',
+      data: { latitude, longitude }
+    });
+  } catch (error) {
+    console.error('Error saving location:', error);
+    res.status(500).json({ 
+      error: 'Failed to save location',
+      details: error.message 
+    });
+  }
+});
+
+// Get seller location
+app.get('/api/seller/location/:seller_id', async (req, res) => {
+  const { seller_id } = req.params;
+
+  try {
+    const [rows] = await db.query(
+      'SELECT latitude, longitude, updated_at FROM seller_locations WHERE seller_id = ?',
+      [seller_id]
+    );
+    
+    if (rows.length > 0) {
+      console.log(`📍 Location retrieved for seller ${seller_id}`);
+      res.json({
+        lat: parseFloat(rows[0].latitude),
+        lng: parseFloat(rows[0].longitude),
+        updated_at: rows[0].updated_at
+      });
+    } else {
+      res.status(404).json({ message: 'Location not found' });
+    }
+  } catch (error) {
+    console.error('Error fetching location:', error);
+    res.status(500).json({ 
+      error: 'Failed to fetch location',
+      details: error.message 
+    });
+  }
+});
+
+// Delete seller location
+app.delete('/api/seller/location/:seller_id', async (req, res) => {
+  const { seller_id } = req.params;
+
+  try {
+    const [result] = await db.query(
+      'DELETE FROM seller_locations WHERE seller_id = ?', 
+      [seller_id]
+    );
+    
+    if (result.affectedRows > 0) {
+      console.log(`🗑️ Location deleted for seller ${seller_id}`);
+      res.json({ 
+        success: true, 
+        message: 'Location deleted successfully' 
+      });
+    } else {
+      res.status(404).json({ 
+        success: false, 
+        message: 'Location not found' 
+      });
+    }
+  } catch (error) {
+    console.error('Error deleting location:', error);
+    res.status(500).json({ 
+      error: 'Failed to delete location',
+      details: error.message 
+    });
   }
 });
 
@@ -2672,6 +2822,9 @@ app.listen(PORT, () => {
 ╚═══════════════════════════════════════════╝
   `);
 });
+
+
+
 
 // Handle server errors
 app.on('error', (err) => {

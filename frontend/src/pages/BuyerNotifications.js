@@ -27,7 +27,7 @@ export default function BuyerNotifications() {
         `${process.env.REACT_APP_BUYER_API_URL}/api/buyer/${buyerId}/notifications`,
         {
           method: 'GET',
-          credentials: 'include',
+          // Remove credentials: 'include' - not needed
         }
       );
 
@@ -62,53 +62,70 @@ export default function BuyerNotifications() {
 
   const markAsRead = async (notificationId) => {
     try {
+      console.log(`📌 Marking notification ${notificationId} as read for buyer ${buyerId}`);
+      
       const res = await fetch(
         `${process.env.REACT_APP_BUYER_API_URL}/api/buyer/notifications/${notificationId}/read`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ customer_id: buyerId }),
-          credentials: 'include',
+          body: JSON.stringify({ buyer_id: buyerId }),
+          // Remove credentials: 'include' - not needed
         }
       );
 
+      const result = await res.json();
+
       if (!res.ok) {
-        throw new Error("Failed to mark notification as read");
+        throw new Error(result.message || "Failed to mark notification as read");
       }
 
+      console.log("✅ Notification marked as read:", result);
+
+      // Update local state
       setNotifications(prev =>
         prev.map(n =>
-          n.id === notificationId ? { ...n, is_read: true } : n
+          parseInt(n.id) === parseInt(notificationId) ? { ...n, is_read: true } : n
         )
       );
       
       setUnreadCount(prev => Math.max(0, prev - 1));
     } catch (err) {
       console.error("Error marking notification as read:", err);
+      alert(`Failed to mark notification as read: ${err.message}`);
     }
   };
 
+
   const markAllAsRead = async () => {
     try {
+      console.log(`📌 Marking all notifications as read for buyer ${buyerId}`);
+      
       const res = await fetch(
         `${process.env.REACT_APP_BUYER_API_URL}/api/buyer/${buyerId}/notifications/read-all`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          credentials: 'include',
+          // Remove credentials: 'include' - not needed
         }
       );
 
+      const result = await res.json();
+
       if (!res.ok) {
-        throw new Error("Failed to mark all notifications as read");
+        throw new Error(result.message || "Failed to mark all notifications as read");
       }
 
+      console.log("✅ All notifications marked as read:", result);
+
+      // Update local state
       setNotifications(prev =>
         prev.map(n => ({ ...n, is_read: true }))
       );
       setUnreadCount(0);
     } catch (err) {
       console.error("Error marking all notifications as read:", err);
+      alert(`Failed to mark all notifications as read: ${err.message}`);
     }
   };
 
@@ -204,6 +221,7 @@ export default function BuyerNotifications() {
                 key={notification.id}
                 className={`notif-item ${notification.is_read ? 'read' : 'unread'}`}
                 onClick={() => !notification.is_read && markAsRead(notification.id)}
+                style={{ cursor: notification.is_read ? 'default' : 'pointer' }}
               >
                 <div className="notif-icon">
                   {notification.is_read ? (
