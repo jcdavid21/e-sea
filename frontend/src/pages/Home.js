@@ -22,7 +22,7 @@ const Home = () => {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/shop`);
+      const response = await fetch(`${process.env.REACT_APP_BUYER_API_URL}/api/shop`);
       const shops = await response.json();
       
       // Extract unique categories from all products
@@ -47,7 +47,7 @@ const Home = () => {
 
   const fetchBestSellers = async () => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/products/best-sellers`);
+      const response = await fetch(`${process.env.REACT_APP_BUYER_API_URL}/api/products/best-sellers`);
       const data = await response.json();
       setBestSellers(data);
     } catch (error) {
@@ -59,7 +59,7 @@ const Home = () => {
     setLoading(true);
     try {
       if (category === "All") {
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/shop`);
+        const response = await fetch(`${process.env.REACT_APP_BUYER_API_URL}/api/shop`);
         const shops = await response.json();
         const allProducts = shops.flatMap(shop => 
           shop.products.map(p => ({ ...p, shop_name: shop.shop_name }))
@@ -67,7 +67,7 @@ const Home = () => {
         setProducts(allProducts.filter(p => p.stock > 0));
       } else {
         const response = await fetch(
-          `${process.env.REACT_APP_API_URL}/api/products/by-category?category=${category}`
+          `${process.env.REACT_APP_BUYER_API_URL}/api/products/by-category?category=${category}`
         );
         const data = await response.json();
         setProducts(data);
@@ -111,7 +111,7 @@ const Home = () => {
       <img
         src={
           product.image_url
-            ? `${process.env.REACT_APP_API_URL}/uploads/${product.image_url}`
+            ? `${process.env.REACT_APP_BUYER_API_URL}/uploads/${product.image_url}`
             : "https://via.placeholder.com/150?text=No+Image"
         }
         alt={product.name}
