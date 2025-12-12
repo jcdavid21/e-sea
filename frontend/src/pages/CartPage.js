@@ -175,7 +175,7 @@ const CartPage = () => {
     }
   }, [showCheckoutModal]);
 
-  // Auto-calculate distance when delivery location or seller location changes
+  // Auto-calculate distance location or seller location changes
   const calculateAndSetDistance = useCallback(() => {
     if (deliveryLocation && sellerLocation && !deliveryLocation.distance) {
       const dist = calculateDistance(
@@ -334,13 +334,13 @@ const CartPage = () => {
 
   useEffect(() => {
     if (sellerLocation) {
-      console.log('🪧 Seller location loaded:', sellerLocation);
+      console.log('🪧 Pickup location loaded:', sellerLocation);
     }
   }, [sellerLocation]);
 
   useEffect(() => {
     if (deliveryLocation) {
-      console.log('📍 Delivery location updated:', deliveryLocation);
+      console.log('📍 Customer location updated:', deliveryLocation);
     }
   }, [deliveryLocation]);
 
@@ -725,7 +725,7 @@ const CartPage = () => {
       Swal.fire({
         icon: 'warning',
         title: 'Incomplete Information',
-        text: "Please fill in all required delivery information.",
+        text: "Please fill in all required personal information.",
         confirmButtonColor: '#3085d6'
       });
       return;
@@ -753,7 +753,7 @@ const CartPage = () => {
           Swal.fire({
             icon: 'warning',
             title: 'Location Required',
-            text: 'Please enable location services or select your delivery location on the map.',
+            text: 'Please enable location services or select your location on the map.',
             confirmButtonColor: '#3085d6'
           });
           return;
@@ -762,7 +762,7 @@ const CartPage = () => {
         Swal.fire({
           icon: 'warning',
           title: 'Location Required',
-          text: 'Please select your delivery location on the map.',
+          text: 'Please select your location on the map.',
           confirmButtonColor: '#3085d6'
         });
         return;
@@ -1098,7 +1098,7 @@ const CartPage = () => {
                           alignItems: 'center',
                           gap: '8px'
                         }}>
-                          📍 Delivery Location
+                          📍 Customer Location
                         </h3>
 
                         <div style={{ marginBottom: '16px' }}>
@@ -1242,7 +1242,7 @@ const CartPage = () => {
 
                     {(showAddressForm || savedAddresses.length === 0) && (
                       <div className="checkout-form">
-                        <h3>Delivery Information</h3>
+                        <h3>Personal Information</h3>
 
                         <div className="form-group">
                           <label>Full Name *</label>
@@ -1256,7 +1256,7 @@ const CartPage = () => {
                         </div>
 
                         <div className="form-group">
-                          <label>Delivery Address *</label>
+                          <label>Your Address *</label>
                           <textarea
                             value={orderData.address}
                             onChange={(e) => setOrderData({ ...orderData, address: e.target.value })}
@@ -1335,7 +1335,7 @@ const CartPage = () => {
                               <FaTimesCircle /> No Location Selected
                             </div>
                             <div style={{ fontSize: '13px', color: '#991b1b', marginTop: '4px' }}>
-                              Please select your delivery location on the map above before saving.
+                              Please select your location on the map above before saving.
                             </div>
                           </div>
                         )}
@@ -1439,7 +1439,7 @@ const CartPage = () => {
                       marginBottom: '16px',
                       fontWeight: '600'
                     }}>
-                      📍 Select Your Delivery Location
+                      📍 Select Your Location
                     </h3>
                     <MapPicker
                       sellerLocation={sellerLocation}

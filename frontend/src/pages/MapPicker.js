@@ -377,7 +377,7 @@ const MapPicker = ({ sellerLocation, onLocationSelect, initialPosition = null })
             }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
                     <FaMapMarkerAlt style={{ fontSize: '18px', color: '#667eea' }} />
-                    <strong>Search or click on the map to set delivery location</strong>
+                    <strong>Search or click on the map to set your location</strong>
                 </div>
                 {sellerLocation && (
                     <div style={{ fontSize: '13px', color: '#666', marginLeft: '26px', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -590,7 +590,7 @@ const MapPicker = ({ sellerLocation, onLocationSelect, initialPosition = null })
                             <Popup>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                     <FaMapMarkerAlt style={{ color: '#3b82f6' }} />
-                                    <strong>Your Delivery Location</strong>
+                                    <strong>Your Location</strong>
                                 </div>
                                 Drag to adjust or click map
                             </Popup>

@@ -148,7 +148,7 @@ const Home = () => {
   );
 
   return (
-    <div className="home-wrapper" style={{ backgroundImage: `url(${background})` }}>
+    <div className="home-wrapper" >
       <header className="home-header">
         <img src={logo} alt="Sea Merkado Logo" className="home-logo" />
       </header>

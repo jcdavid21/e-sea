@@ -62,7 +62,7 @@ const db = mysql.createPool({
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DATABASE_NAME,
-  port: process.env.DB_PORT,
+  // port: process.env.DB_PORT,
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0
@@ -1122,7 +1122,6 @@ app.post("/api/orders", async (req, res) => {
     console.log(`📦 Creating order for buyer_id: ${buyer_id}`);
     console.log(`📍 Notification ID: ${notificationCustomerId}`);
     
-    // ✅ Extract delivery location from customer object
     const deliveryLat = customer.delivery_latitude || null;
     const deliveryLng = customer.delivery_longitude || null;
     const distanceKm = customer.distance_km || null;

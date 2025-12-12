@@ -11,6 +11,8 @@
   font-family: 'Poppins', sans-serif;
   color: #fff;
   overflow-x: hidden;
+
+  background: url("../assets/front_landscape.jpg") repeat center center/contain;
 }
 
 /* Enhanced gradient overlay with smoother transition */
@@ -317,7 +319,7 @@
 .product-img {
   width: 100%;
   height: 140px;
-  object-fit: cover;
+  object-fit: contain;
   border-radius: 12px;
   margin-bottom: 12px;
   background: #f5f7fa;
