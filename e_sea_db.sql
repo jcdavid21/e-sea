@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Dec 12, 2025 at 10:00 AM
+-- Generation Time: Dec 13, 2025 at 12:45 PM
 -- Server version: 10.4.28-MariaDB
 -- PHP Version: 8.0.28
 
@@ -40,7 +40,8 @@ CREATE TABLE `admins` (
 --
 
 INSERT INTO `admins` (`id`, `username`, `admin_id`, `password_hash`, `created_at`) VALUES
-(2, '001-Admin', 'A123456', '$2b$10$joXmfCRYtICMZPbvjW03SuVnz5J7K0qAaoFNoyN5JqL56kcOMusma', '2025-11-28 14:21:54');
+(2, '001-Admin', 'A123456', '$2b$10$joXmfCRYtICMZPbvjW03SuVnz5J7K0qAaoFNoyN5JqL56kcOMusma', '2025-11-28 14:21:54'),
+(3, 'adminjc', 'admin1234', '$2b$10$1h60SeCHYocvJcAfDjwg..ok.RIbL61Twd4W5fSh6I0zLeI/6X3r6', '2025-12-13 11:10:22');
 
 -- --------------------------------------------------------
 
@@ -86,13 +87,6 @@ CREATE TABLE `buyer_notifications` (
   `is_read` tinyint(1) DEFAULT 0,
   `created_at` timestamp NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `buyer_notifications`
---
-
-INSERT INTO `buyer_notifications` (`id`, `customer_id`, `order_id`, `seller_id`, `message`, `is_read`, `created_at`) VALUES
-(1, 'KianAndreiPortes09090909090', 4, 'SELL-GFGDHQ', 'Your order #4 status has been updated to: Preparing', 1, '2025-12-12 08:15:31');
 
 -- --------------------------------------------------------
 
@@ -206,13 +200,6 @@ CREATE TABLE `orders` (
   `status` varchar(50) NOT NULL DEFAULT 'Pending'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `orders`
---
-
-INSERT INTO `orders` (`id`, `seller_id`, `customer_name`, `address`, `delivery_latitude`, `delivery_longitude`, `distance_km`, `contact`, `customer_id`, `notes`, `total`, `payment_mode`, `paid`, `proof_of_payment`, `order_date`, `status`) VALUES
-(4, 'SELL-GFGDHQ', 'Juancarlo David', 'Loraine Street', 14.74711720, 121.05051980, 0.63, '09565535401', 'KianAndreiPortes09090909090', '', 200.00, 'Gcash QR', 1, '/uploads/1765522129751-Screenshot_2025-12-12_at_2.14.53â¯PM.png', '2025-12-12 06:48:49', 'Preparing');
-
 -- --------------------------------------------------------
 
 --
@@ -226,13 +213,6 @@ CREATE TABLE `order_items` (
   `quantity` int(11) NOT NULL,
   `price` decimal(10,2) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `order_items`
---
-
-INSERT INTO `order_items` (`id`, `order_id`, `product_id`, `quantity`, `price`) VALUES
-(4, 4, 10, 1, 200.00);
 
 -- --------------------------------------------------------
 
@@ -248,29 +228,6 @@ CREATE TABLE `price_history` (
   `new_price` decimal(10,2) NOT NULL,
   `change_date` timestamp NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `price_history`
---
-
-INSERT INTO `price_history` (`id`, `product_id`, `seller_id`, `old_price`, `new_price`, `change_date`) VALUES
-(1, 13, 'SELL-GFGDHQ', 120.00, 140.00, '2025-11-24 06:40:11'),
-(2, 13, 'SELL-GFGDHQ', 140.00, 160.00, '2025-11-24 06:40:29'),
-(3, 13, 'SELL-GFGDHQ', 160.00, 153.33, '2025-11-24 06:42:07'),
-(4, 11, 'SELL-GFGDHQ', 150.00, 155.00, '2025-11-24 07:47:10'),
-(5, 11, 'SELL-GFGDHQ', 155.00, 160.00, '2025-11-24 07:47:26'),
-(6, 12, 'SELL-GFGDHQ', 120.00, 130.00, '2025-11-26 01:51:15'),
-(7, 12, 'SELL-GFGDHQ', 130.00, 140.00, '2025-11-26 01:51:37'),
-(8, 14, 'SELL-GFGDHQ', 99.97, 50.00, '2025-12-02 14:55:48'),
-(9, 14, 'SELL-GFGDHQ', 50.00, 50.01, '2025-12-03 04:47:52'),
-(10, 14, 'SELL-GFGDHQ', 50.01, 51.51, '2025-12-03 05:31:12'),
-(11, 10, 'SELL-GFGDHQ', 222.00, 210.00, '2025-12-03 05:32:49'),
-(12, 10, 'SELL-GFGDHQ', 210.00, 200.00, '2025-12-03 05:32:58'),
-(13, 9, 'SELL-GFGDHQ', 122.00, 120.00, '2025-12-04 07:38:48'),
-(14, 9, 'SELL-GFGDHQ', 120.00, 130.00, '2025-12-04 07:40:47'),
-(15, 14, 'SELL-GFGDHQ', 51.51, 49.00, '2025-12-05 14:05:53'),
-(16, 14, 'SELL-GFGDHQ', 49.00, 49.02, '2025-12-05 14:08:51'),
-(17, 14, 'SELL-GFGDHQ', 49.02, 52.25, '2025-12-05 14:09:05');
 
 -- --------------------------------------------------------
 
@@ -347,13 +304,6 @@ CREATE TABLE `seller_locations` (
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `seller_locations`
---
-
-INSERT INTO `seller_locations` (`id`, `seller_id`, `latitude`, `longitude`, `created_at`, `updated_at`) VALUES
-(7, 'SELL-GFGDHQ', 14.74894987, 121.04492784, '2025-12-12 04:30:24', '2025-12-12 04:30:24');
-
 -- --------------------------------------------------------
 
 --
@@ -368,14 +318,6 @@ CREATE TABLE `seller_notifications` (
   `is_read` tinyint(1) DEFAULT 0,
   `created_at` timestamp NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `seller_notifications`
---
-
-INSERT INTO `seller_notifications` (`id`, `seller_id`, `message`, `type`, `is_read`, `created_at`) VALUES
-(3, 'SELL-GFGDHQ', 'You have a new order (#3) from Juancarlo David.', 'order', 0, '2025-12-12 06:39:35'),
-(4, 'SELL-GFGDHQ', 'You have a new order (#4) from Juancarlo David.', 'order', 0, '2025-12-12 06:48:49');
 
 -- --------------------------------------------------------
 
@@ -536,7 +478,7 @@ ALTER TABLE `store_hours`
 -- AUTO_INCREMENT for table `admins`
 --
 ALTER TABLE `admins`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `buyer_authentication`

@@ -390,3 +390,36 @@
     padding: 6px 12px;
   }
 }
+
+/* Add Admin Button */
+.add-admin-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(30, 60, 114, 0.3);
+}
+
+.add-admin-btn:hover {
+  background: linear-gradient(135deg, #385fa5 0%, #3e6fc2 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(30, 60, 114, 0.4);
+}
+
+/* Form Input Focus State */
+.modal input:focus {
+  outline: none;
+  border-color: #1e3c72;
+}
+
+.modal input:focus + .help-text {
+  color: #1e3c72;
+}

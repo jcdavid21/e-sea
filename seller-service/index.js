@@ -2552,6 +2552,69 @@ app.get("/api/all-buyers", async (req, res) => {
   }
 });
 
+app.get("/api/all-admins", async (req, res) => {
+  try {
+    const sql = `
+      SELECT id, username, admin_id, created_at
+      FROM admins
+      ORDER BY created_at DESC
+    `;
+    
+    const [results] = await db.query(sql);
+    return res.status(200).json(results);
+  } catch (err) {
+    console.error("❌ Error fetching admins:", err);
+    return res.status(500).json({ message: "Error fetching admins" });
+  }
+});
+
+app.put("/api/admin/update-password", async (req, res) => {
+  const { admin_id, old_password, new_password } = req.body;
+
+  if (!admin_id || !old_password || !new_password) {
+    return res.status(400).json({ message: "All fields are required" });
+  }
+
+  if (new_password.length < 8) {
+    return res.status(400).json({ message: "New password must be at least 8 characters long" });
+  }
+
+  try {
+    // Verify admin exists and old password is correct
+    const [results] = await db.query(
+      "SELECT * FROM admins WHERE admin_id = ?",
+      [admin_id]
+    );
+    
+    if (results.length === 0) {
+      return res.status(404).json({ message: "Admin not found" });
+    }
+
+    const admin = results[0];
+    const match = await bcrypt.compare(old_password, admin.password_hash);
+    
+    if (!match) {
+      return res.status(401).json({ message: "Current password is incorrect" });
+    }
+
+    // Hash new password and update
+    const newHash = await bcrypt.hash(new_password, SALT_ROUNDS);
+    await db.query(
+      "UPDATE admins SET password_hash = ? WHERE admin_id = ?",
+      [newHash, admin_id]
+    );
+
+    console.log("✅ Password updated for admin:", admin_id);
+    
+    return res.status(200).json({
+      message: "Password updated successfully"
+    });
+  } catch (err) {
+    console.error("❌ Update password error:", err);
+    return res.status(500).json({ message: "Database error during password update" });
+  }
+});
+
 // =============================
 //  ADMIN NOTIFICATION ROUTES
 // =============================
@@ -2576,6 +2639,48 @@ app.get("/api/users/notifications", async (req, res) => {
   } catch (err) {
     console.error("❌ Error fetching user notifications:", err);
     return res.status(500).json({ message: "Error fetching notifications" });
+  }
+});
+
+app.post("/api/admin/register", async (req, res) => {
+  console.log("📝 Admin registration request received");
+  
+  const { username, admin_id, password } = req.body;
+  
+  if (!username || !admin_id || !password) {
+    return res.status(400).json({ message: "All fields are required" });
+  }
+
+  if (password.length < 8) {
+    return res.status(400).json({ message: "Password must be at least 8 characters long" });
+  }
+
+  try {
+    // Check if username or admin_id already exists
+    const [existing] = await db.query(
+      "SELECT * FROM admins WHERE username = ? OR admin_id = ?",
+      [username, admin_id]
+    );
+    
+    if (existing.length > 0) {
+      return res.status(409).json({ message: "Username or Admin ID already exists" });
+    }
+
+    // Hash password and insert
+    const hash = await bcrypt.hash(password, SALT_ROUNDS);
+    await db.query(
+      "INSERT INTO admins (username, admin_id, password_hash) VALUES (?, ?, ?)",
+      [username, admin_id, hash]
+    );
+
+    console.log("✅ Admin registered successfully:", username);
+    
+    return res.status(201).json({
+      message: "✅ Admin registered successfully"
+    });
+  } catch (err) {
+    console.error("❌ Registration error:", err);
+    return res.status(500).json({ message: "Database error during registration" });
   }
 });
 

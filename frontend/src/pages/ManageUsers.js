@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { FiUsers, FiEye, FiSearch, FiFilter, FiShoppingBag, FiUser, FiDownload, FiChevronLeft, FiChevronRight, FiChevronsLeft, FiChevronsRight } from "react-icons/fi";
+import { FiEye, FiSearch, FiShoppingBag, FiUser, FiDownload, FiChevronLeft, FiChevronRight, FiChevronsLeft, FiChevronsRight, FiUserPlus, FiX, FiEdit2, FiShield } from "react-icons/fi";
 import "./ManageUsers.css";
 import Swal from "sweetalert2";
 
@@ -16,21 +16,96 @@ const ManageUsers = () => {
   const [activeTab, setActiveTab] = useState("buyers");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
+  const [showAddAdminModal, setShowAddAdminModal] = useState(false);
+  const [adminForm, setAdminForm] = useState({
+    username: "",
+    admin_id: "",
+    password: ""
+  });
+
+  const [admins, setAdmins] = useState([]);
+  const [filteredAdmins, setFilteredAdmins] = useState([]);
+  const [selectedAdmin, setSelectedAdmin] = useState(null);
+  const [showUpdatePasswordModal, setShowUpdatePasswordModal] = useState(false);
+  const [passwordForm, setPasswordForm] = useState({
+    admin_id: "",
+    old_password: "",
+    new_password: "",
+    confirm_password: ""
+  });
 
   useEffect(() => {
     fetchBuyers();
     fetchSellers();
+    fetchAdmins();
   }, []);
 
   useEffect(() => {
-    filterBuyers();
+    const filterBuyersData = () => {
+      if (!searchTerm.trim()) {
+        setFilteredBuyers(buyers);
+        return;
+      }
+
+      const filtered = buyers.filter(buyer => {
+        const fullName = `${buyer.first_name} ${buyer.middle_name} ${buyer.last_name}`.toLowerCase();
+        const username = buyer.username?.toLowerCase() || "";
+        const email = buyer.email?.toLowerCase() || "";
+        const search = searchTerm.toLowerCase();
+
+        return fullName.includes(search) || username.includes(search) || email.includes(search);
+      });
+
+      setFilteredBuyers(filtered);
+    };
+
+    filterBuyersData();
     setCurrentPage(1);
   }, [buyers, searchTerm]);
 
   useEffect(() => {
-    filterSellers();
+    const filterSellersData = () => {
+      if (!searchTerm.trim()) {
+        setFilteredSellers(sellers);
+        return;
+      }
+
+      const filtered = sellers.filter(seller => {
+        const uniqueId = seller.unique_id?.toLowerCase() || "";
+        const email = seller.email?.toLowerCase() || "";
+        const search = searchTerm.toLowerCase();
+
+        return uniqueId.includes(search) || email.includes(search);
+      });
+
+      setFilteredSellers(filtered);
+    };
+
+    filterSellersData();
     setCurrentPage(1);
   }, [sellers, searchTerm]);
+
+  useEffect(() => {
+    const filterAdminsData = () => {
+      if (!searchTerm.trim()) {
+        setFilteredAdmins(admins);
+        return;
+      }
+
+      const filtered = admins.filter(admin => {
+        const username = admin.username?.toLowerCase() || "";
+        const adminId = admin.admin_id?.toLowerCase() || "";
+        const search = searchTerm.toLowerCase();
+
+        return username.includes(search) || adminId.includes(search);
+      });
+
+      setFilteredAdmins(filtered);
+    };
+
+    filterAdminsData();
+    setCurrentPage(1);
+  }, [admins, searchTerm]);
 
   const fetchBuyers = async () => {
     setLoading(true);
@@ -53,40 +128,106 @@ const ManageUsers = () => {
     }
   };
 
-  const filterBuyers = () => {
-    if (!searchTerm.trim()) {
-      setFilteredBuyers(buyers);
-      return;
-    }
+  const fetchAdmins = async () => {
+  try {
+    const res = await axios.get(`${process.env.REACT_APP_ADMIN_API_URL}/api/all-admins`);
+    setAdmins(res.data);
+  } catch (error) {
+    console.error("Error fetching admins:", error);
+  }
+};
 
-    const filtered = buyers.filter(buyer => {
-      const fullName = `${buyer.first_name} ${buyer.middle_name} ${buyer.last_name}`.toLowerCase();
-      const username = buyer.username?.toLowerCase() || "";
-      const email = buyer.email?.toLowerCase() || "";
-      const search = searchTerm.toLowerCase();
+const filterAdmins = () => {
+  if (!searchTerm.trim()) {
+    setFilteredAdmins(admins);
+    return;
+  }
 
-      return fullName.includes(search) || username.includes(search) || email.includes(search);
+  const filtered = admins.filter(admin => {
+    const username = admin.username?.toLowerCase() || "";
+    const adminId = admin.admin_id?.toLowerCase() || "";
+    const search = searchTerm.toLowerCase();
+
+    return username.includes(search) || adminId.includes(search);
+  });
+
+  setFilteredAdmins(filtered);
+};
+
+const handleViewAdmin = (admin) => {
+  setSelectedAdmin(admin);
+};
+
+const handlePasswordFormChange = (e) => {
+  setPasswordForm({
+    ...passwordForm,
+    [e.target.name]: e.target.value
+  });
+};
+
+const handleUpdatePassword = async (e) => {
+  e.preventDefault();
+
+  if (!passwordForm.admin_id || !passwordForm.old_password || !passwordForm.new_password || !passwordForm.confirm_password) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Validation Error',
+      text: 'All fields are required!',
+    });
+    return;
+  }
+
+  if (passwordForm.new_password.length < 8) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Weak Password',
+      text: 'New password must be at least 8 characters long!',
+    });
+    return;
+  }
+
+  if (passwordForm.new_password !== passwordForm.confirm_password) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Password Mismatch',
+      text: 'New password and confirm password do not match!',
+    });
+    return;
+  }
+
+  try {
+    const response = await axios.put(
+      `${process.env.REACT_APP_ADMIN_API_URL}/api/admin/update-password`,
+      {
+        admin_id: passwordForm.admin_id,
+        old_password: passwordForm.old_password,
+        new_password: passwordForm.new_password
+      }
+    );
+
+    Swal.fire({
+      icon: 'success',
+      title: 'Success!',
+      text: response.data.message || 'Password updated successfully!',
     });
 
-    setFilteredBuyers(filtered);
-  };
-
-  const filterSellers = () => {
-    if (!searchTerm.trim()) {
-      setFilteredSellers(sellers);
-      return;
-    }
-
-    const filtered = sellers.filter(seller => {
-      const uniqueId = seller.unique_id?.toLowerCase() || "";
-      const email = seller.email?.toLowerCase() || "";
-      const search = searchTerm.toLowerCase();
-
-      return uniqueId.includes(search) || email.includes(search);
+    setPasswordForm({
+      admin_id: "",
+      old_password: "",
+      new_password: "",
+      confirm_password: ""
     });
+    setShowUpdatePasswordModal(false);
+  } catch (error) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: error.response?.data?.message || 'Failed to update password. Please try again.',
+    });
+  }
+};
 
-    setFilteredSellers(filtered);
-  };
+
 
   const formatDate = (dateString) => {
     if (!dateString || dateString === "N/A") return "N/A";
@@ -113,8 +254,73 @@ const ManageUsers = () => {
     }
   };
 
+  const handleAdminFormChange = (e) => {
+    setAdminForm({
+      ...adminForm,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  const handleAddAdmin = async (e) => {
+    e.preventDefault();
+
+    // Validation
+    if (!adminForm.username || !adminForm.admin_id || !adminForm.password) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Validation Error',
+        text: 'All fields are required!',
+      });
+      return;
+    }
+
+    if (adminForm.password.length < 8) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Weak Password',
+        text: 'Password must be at least 8 characters long!',
+      });
+      return;
+    }
+
+    try {
+      const response = await axios.post(
+        `${process.env.REACT_APP_ADMIN_API_URL}/api/admin/register`,
+        adminForm
+      );
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Success!',
+        text: response.data.message || 'Admin added successfully!',
+      });
+
+      // Reset form and close modal
+      setAdminForm({
+        username: "",
+        admin_id: "",
+        password: ""
+      });
+      setShowAddAdminModal(false);
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: error.response?.data?.message || 'Failed to add admin. Please try again.',
+      });
+    }
+    fetchAdmins();
+  };
+
   const exportToCSV = () => {
-    const dataToExport = activeTab === "buyers" ? filteredBuyers : filteredSellers;
+    let dataToExport;
+    if (activeTab === "buyers") {
+      dataToExport = filteredBuyers;
+    } else if (activeTab === "sellers") {
+      dataToExport = filteredSellers;
+    } else {
+      dataToExport = filteredAdmins;
+    }
 
     if (dataToExport.length === 0) {
       Swal.fire({
@@ -125,7 +331,6 @@ const ManageUsers = () => {
       return;
     }
 
-    // ask first for confirmation
     Swal.fire({
       title: 'Export to CSV',
       text: `Are you sure you want to export the current ${activeTab} data to a CSV file?`,
@@ -149,13 +354,21 @@ const ManageUsers = () => {
             formatDate(buyer.created_at),
             buyer.id
           ]);
-        } else {
+        } else if (activeTab === "sellers") {
           headers = ["Unique ID", "Email", "Date Registered", "Account ID"];
           rows = dataToExport.map(seller => [
             seller.unique_id,
             seller.email || "N/A",
             formatDate(seller.date_registered),
             seller.id
+          ]);
+        } else {
+          headers = ["Username", "Admin ID", "Date Created", "Account ID"];
+          rows = dataToExport.map(admin => [
+            admin.username,
+            admin.admin_id,
+            formatDate(admin.created_at),
+            admin.id
           ]);
         }
 
@@ -177,12 +390,9 @@ const ManageUsers = () => {
         document.body.removeChild(link);
       }
     });
-
-    
   };
 
-  // Pagination calculations
-  const currentData = activeTab === "buyers" ? filteredBuyers : filteredSellers;
+  const currentData = activeTab === "buyers" ? filteredBuyers : activeTab === "sellers" ? filteredSellers : filteredAdmins;
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = currentData.slice(indexOfFirstItem, indexOfLastItem);
@@ -205,8 +415,18 @@ const ManageUsers = () => {
         <div>
           <h2>Manage Users</h2>
           <p className="header-subtitle">
-            View and manage all registered users • {buyers.length} Buyers • {sellers.length} Sellers
+            View and manage all registered users • {buyers.length} Buyers • {sellers.length} Sellers • {admins.length} Admins
           </p>
+        </div>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <button className="add-admin-btn" onClick={() => setShowUpdatePasswordModal(true)} style={{ background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)' }}>
+            <FiEdit2 size={18} />
+            Update Password
+          </button>
+          <button className="add-admin-btn" onClick={() => setShowAddAdminModal(true)}>
+            <FiUserPlus size={18} />
+            Add Admin
+          </button>
         </div>
       </div>
 
@@ -246,6 +466,16 @@ const ManageUsers = () => {
             >
               <FiShoppingBag size={16} />
               Sellers ({filteredSellers.length})
+            </button>
+            <button
+              className={activeTab === "admins" ? "active" : ""}
+              onClick={() => {
+                setActiveTab("admins");
+                setCurrentPage(1);
+              }}
+            >
+              <FiShield size={16} />
+              Admins ({filteredAdmins.length})
             </button>
           </div>
         </div>
@@ -446,6 +676,321 @@ const ManageUsers = () => {
         </div>
       )}
 
+      {/* Admins Table */}
+      {activeTab === "admins" && (
+        <div className="table-card">
+          <table className="users-table">
+            <thead>
+              <tr>
+                <th>Username</th>
+                <th>Admin ID</th>
+                <th>Date Created</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {currentItems.length > 0 ? (
+                currentItems.map((admin) => (
+                  <tr key={admin.id}>
+                    <td>{admin.username}</td>
+                    <td>{admin.admin_id}</td>
+                    <td>{formatDate(admin.created_at)}</td>
+                    <td>
+                      <button
+                        className="view-btn"
+                        onClick={() => handleViewAdmin(admin)}
+                      >
+                        <FiEye size={16} />
+                        View
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="4" className="no-data">
+                    No admins found
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+
+          {filteredAdmins.length > itemsPerPage && (
+            <div style={styles.pagination}>
+              <button
+                onClick={() => handlePageChange(1)}
+                disabled={currentPage === 1}
+                style={{
+                  ...styles.paginationBtn,
+                  ...(currentPage === 1 ? styles.paginationBtnDisabled : {})
+                }}
+                title="First Page"
+              >
+                <FiChevronsLeft size={18} />
+              </button>
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                style={{
+                  ...styles.paginationBtn,
+                  ...(currentPage === 1 ? styles.paginationBtnDisabled : {})
+                }}
+                title="Previous Page"
+              >
+                <FiChevronLeft size={18} />
+              </button>
+              <span style={styles.paginationInfo}>
+                Page <strong>{currentPage}</strong> of <strong>{totalPages}</strong>
+                <span style={styles.paginationCount}>
+                  ({indexOfFirstItem + 1}-{Math.min(indexOfLastItem, filteredAdmins.length)} of {filteredAdmins.length})
+                </span>
+              </span>
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                style={{
+                  ...styles.paginationBtn,
+                  ...(currentPage === totalPages ? styles.paginationBtnDisabled : {})
+                }}
+                title="Next Page"
+              >
+                <FiChevronRight size={18} />
+              </button>
+              <button
+                onClick={() => handlePageChange(totalPages)}
+                disabled={currentPage === totalPages}
+                style={{
+                  ...styles.paginationBtn,
+                  ...(currentPage === totalPages ? styles.paginationBtnDisabled : {})
+                }}
+                title="Last Page"
+              >
+                <FiChevronsRight size={18} />
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Add Admin Modal */}
+      {showAddAdminModal && (
+        <div style={styles.modalOverlay} onClick={() => setShowAddAdminModal(false)}>
+          <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
+            <div style={styles.modalHeader}>
+              <div style={styles.headerContent}>
+                <FiUserPlus size={24} style={{ color: '#fff' }} />
+                <h3 style={styles.modalTitle}>Add New Admin</h3>
+              </div>
+              <button style={styles.closeButton} onClick={() => setShowAddAdminModal(false)}>
+                <FiX size={24} />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddAdmin}>
+              <div style={styles.modalBody}>
+                <div style={styles.formGroup}>
+                  <label style={styles.formLabel}>Username *</label>
+                  <input
+                    type="text"
+                    name="username"
+                    value={adminForm.username}
+                    onChange={handleAdminFormChange}
+                    style={styles.formInput}
+                    placeholder="Enter username"
+                    required
+                  />
+                </div>
+
+                <div style={styles.formGroup}>
+                  <label style={styles.formLabel}>Admin ID *</label>
+                  <input
+                    type="text"
+                    name="admin_id"
+                    value={adminForm.admin_id}
+                    onChange={handleAdminFormChange}
+                    style={styles.formInput}
+                    placeholder="Enter admin ID (e.g., A123456)"
+                    required
+                  />
+                </div>
+
+                <div style={styles.formGroup}>
+                  <label style={styles.formLabel}>Password *</label>
+                  <input
+                    type="password"
+                    name="password"
+                    value={adminForm.password}
+                    onChange={handleAdminFormChange}
+                    style={styles.formInput}
+                    placeholder="Enter password (min. 8 characters)"
+                    required
+                  />
+                  <small style={styles.helpText}>Password must be at least 8 characters long</small>
+                </div>
+              </div>
+
+              <div style={styles.modalFooter}>
+                <button
+                  type="button"
+                  onClick={() => setShowAddAdminModal(false)}
+                  style={styles.cancelButton}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  style={styles.submitButton}
+                >
+                  <FiUserPlus size={18} />
+                  Add Admin
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Update Password Modal */}
+      {showUpdatePasswordModal && (
+        <div style={styles.modalOverlay} onClick={() => setShowUpdatePasswordModal(false)}>
+          <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
+            <div style={styles.modalHeader}>
+              <div style={styles.headerContent}>
+                <FiEdit2 size={24} style={{ color: '#fff' }} />
+                <h3 style={styles.modalTitle}>Update Admin Password</h3>
+              </div>
+              <button style={styles.closeButton} onClick={() => setShowUpdatePasswordModal(false)}>
+                <FiX size={24} />
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdatePassword}>
+              <div style={styles.modalBody}>
+                <div style={styles.formGroup}>
+                  <label style={styles.formLabel}>Admin ID *</label>
+                  <input
+                    type="text"
+                    name="admin_id"
+                    value={passwordForm.admin_id}
+                    onChange={handlePasswordFormChange}
+                    style={styles.formInput}
+                    placeholder="Enter your admin ID"
+                    required
+                  />
+                </div>
+
+                <div style={styles.formGroup}>
+                  <label style={styles.formLabel}>Old Password *</label>
+                  <input
+                    type="password"
+                    name="old_password"
+                    value={passwordForm.old_password}
+                    onChange={handlePasswordFormChange}
+                    style={styles.formInput}
+                    placeholder="Enter current password"
+                    required
+                  />
+                </div>
+
+                <div style={styles.formGroup}>
+                  <label style={styles.formLabel}>New Password *</label>
+                  <input
+                    type="password"
+                    name="new_password"
+                    value={passwordForm.new_password}
+                    onChange={handlePasswordFormChange}
+                    style={styles.formInput}
+                    placeholder="Enter new password (min. 8 characters)"
+                    required
+                  />
+                </div>
+
+                <div style={styles.formGroup}>
+                  <label style={styles.formLabel}>Confirm New Password *</label>
+                  <input
+                    type="password"
+                    name="confirm_password"
+                    value={passwordForm.confirm_password}
+                    onChange={handlePasswordFormChange}
+                    style={styles.formInput}
+                    placeholder="Confirm new password"
+                    required
+                  />
+                  <small style={styles.helpText}>Password must be at least 8 characters long</small>
+                </div>
+              </div>
+
+              <div style={styles.modalFooter}>
+                <button
+                  type="button"
+                  onClick={() => setShowUpdatePasswordModal(false)}
+                  style={styles.cancelButton}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  style={{...styles.submitButton, background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)'}}
+                >
+                  <FiEdit2 size={18} />
+                  Update Password
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Admin Modal */}
+      {selectedAdmin && (
+        <div style={styles.modalOverlay} onClick={() => setSelectedAdmin(null)}>
+          <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
+            <div style={styles.modalHeader}>
+              <div style={styles.headerContent}>
+                <FiShield size={24} style={{ color: '#fff' }} />
+                <h3 style={styles.modalTitle}>Admin Information</h3>
+              </div>
+              <button style={styles.closeButton} onClick={() => setSelectedAdmin(null)}>
+                <FiX size={24} />
+              </button>
+            </div>
+
+            <div style={styles.modalBody}>
+              <div style={styles.section}>
+                <div style={styles.infoGrid}>
+                  <div style={styles.infoItem}>
+                    <span style={styles.infoLabel}>Username:</span>
+                    <span style={styles.infoValue}>{selectedAdmin.username}</span>
+                  </div>
+                  <div style={styles.infoItem}>
+                    <span style={styles.infoLabel}>Admin ID:</span>
+                    <span style={styles.infoValue}>{selectedAdmin.admin_id}</span>
+                  </div>
+                  <div style={styles.infoItem}>
+                    <span style={styles.infoLabel}>Date Created:</span>
+                    <span style={styles.infoValue}>{formatDate(selectedAdmin.created_at)}</span>
+                  </div>
+                  <div style={styles.infoItem}>
+                    <span style={styles.infoLabel}>Account ID:</span>
+                    <span style={styles.infoValue}>#{selectedAdmin.id}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div style={styles.modalFooter}>
+              <button
+                onClick={() => setSelectedAdmin(null)}
+                style={styles.closeButtonFooter}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Buyer Modal */}
       {selectedBuyer && (
         <div style={styles.modalOverlay} onClick={() => setSelectedBuyer(null)}>
@@ -456,7 +1001,7 @@ const ManageUsers = () => {
                 <h3 style={styles.modalTitle}>Buyer Information</h3>
               </div>
               <button style={styles.closeButton} onClick={() => setSelectedBuyer(null)}>
-                ×
+                <FiX size={24} />
               </button>
             </div>
 
@@ -515,7 +1060,7 @@ const ManageUsers = () => {
                 <h3 style={styles.modalTitle}>Seller Information</h3>
               </div>
               <button style={styles.closeButton} onClick={() => setSelectedSeller(null)}>
-                ×
+                <FiX size={24} />
               </button>
             </div>
 
@@ -614,7 +1159,7 @@ const styles = {
     background: '#fff',
     borderRadius: '16px',
     width: '100%',
-    maxWidth: '700px',
+    maxWidth: '600px',
     maxHeight: '90vh',
     overflow: 'hidden',
     boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
@@ -662,6 +1207,31 @@ const styles = {
     overflowY: 'auto',
     flex: 1,
   },
+  formGroup: {
+    marginBottom: '20px',
+  },
+  formLabel: {
+    display: 'block',
+    marginBottom: '8px',
+    fontSize: '0.9rem',
+    fontWeight: '600',
+    color: '#333',
+  },
+  formInput: {
+    width: '100%',
+    padding: '12px 16px',
+    fontSize: '1rem',
+    border: '2px solid #e0f2fe',
+    borderRadius: '8px',
+    transition: 'border-color 0.2s ease',
+    fontFamily: 'Poppins, sans-serif',
+  },
+  helpText: {
+    display: 'block',
+    marginTop: '6px',
+    fontSize: '0.8rem',
+    color: '#666',
+  },
   section: {
     marginBottom: '20px',
   },
@@ -693,6 +1263,31 @@ const styles = {
     display: 'flex',
     justifyContent: 'flex-end',
     gap: '12px',
+  },
+  cancelButton: {
+    padding: '12px 32px',
+    background: '#f0f0f0',
+    color: '#333',
+    border: 'none',
+    borderRadius: '8px',
+    fontSize: '0.95rem',
+    fontWeight: '600',
+    cursor: 'pointer',
+    transition: 'background 0.3s ease',
+  },
+  submitButton: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '8px',
+    padding: '12px 32px',
+    background: 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '8px',
+    fontSize: '0.95rem',
+    fontWeight: '600',
+    cursor: 'pointer',
+    transition: 'background 0.3s ease',
   },
   closeButtonFooter: {
     padding: '12px 32px',

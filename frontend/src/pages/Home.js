@@ -203,7 +203,8 @@ const Home = () => {
             )}
           </div>
 
-          <div className="category-filter">
+          {/* Desktop Category Filter */}
+          <div className="category-filter desktop-only">
             {categories.map((category) => (
               <button
                 key={category}
@@ -213,6 +214,21 @@ const Home = () => {
                 {category}
               </button>
             ))}
+          </div>
+
+          {/* Mobile Category Select */}
+          <div className="category-select-mobile mobile-only">
+            <select 
+              value={selectedCategory}
+              onChange={(e) => handleCategoryChange(e.target.value)}
+              className="category-select"
+            >
+              {categories.map((category) => (
+                <option key={category} value={category}>
+                  {category}
+                </option>
+              ))}
+            </select>
           </div>
 
           {loading ? (

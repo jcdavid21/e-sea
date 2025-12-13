@@ -244,7 +244,7 @@ function PriceAnalysis() {
               <FiDollarSign />
             </div>
             <div className="stat-info">
-              <span className="stat-label">Current Price</span>
+              <span className="stat-label-price">Current Price</span>
               <span className="stat-value">₱{parseFloat(currentPrice).toFixed(2)}<small>/kg</small></span>
             </div>
           </div>
@@ -900,6 +900,11 @@ function PriceAnalysis() {
         .stat-info {
           display: flex;
           flex-direction: column;
+        }
+
+        .stat-info .stat-label-price {
+          color: white;
+          font-size: 11px;
         }
 
         .stat-label {
