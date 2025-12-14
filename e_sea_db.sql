@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Dec 13, 2025 at 12:45 PM
+-- Generation Time: Dec 14, 2025 at 05:19 AM
 -- Server version: 10.4.28-MariaDB
 -- PHP Version: 8.0.28
 
@@ -40,8 +40,7 @@ CREATE TABLE `admins` (
 --
 
 INSERT INTO `admins` (`id`, `username`, `admin_id`, `password_hash`, `created_at`) VALUES
-(2, '001-Admin', 'A123456', '$2b$10$joXmfCRYtICMZPbvjW03SuVnz5J7K0qAaoFNoyN5JqL56kcOMusma', '2025-11-28 14:21:54'),
-(3, 'adminjc', 'admin1234', '$2b$10$1h60SeCHYocvJcAfDjwg..ok.RIbL61Twd4W5fSh6I0zLeI/6X3r6', '2025-12-13 11:10:22');
+(2, '001-Admin', 'A123456', '$2b$10$joXmfCRYtICMZPbvjW03SuVnz5J7K0qAaoFNoyN5JqL56kcOMusma', '2025-11-28 14:21:54');
 
 -- --------------------------------------------------------
 
@@ -115,32 +114,6 @@ CREATE TABLE `fish_categories` (
   `created_at` timestamp NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `fish_categories`
---
-
-INSERT INTO `fish_categories` (`id`, `category_name`, `seller_id`, `created_at`) VALUES
-(1, 'Freshwater', 'SELL-GFGDHQ', '2025-11-22 09:31:30'),
-(2, 'Saltwater', 'SELL-GFGDHQ', '2025-11-22 09:31:30'),
-(3, 'Shellfish', 'SELL-GFGDHQ', '2025-11-22 09:31:30'),
-(4, 'Crustaceans', 'SELL-GFGDHQ', '2025-11-22 09:31:30'),
-(5, 'Premium Fish', 'SELL-GFGDHQ', '2025-11-22 09:31:30'),
-(6, 'Freshwater', 'SELL-7LED1Z', '2025-11-23 07:39:17'),
-(7, 'Saltwater', 'SELL-7LED1Z', '2025-11-23 07:39:17'),
-(8, 'Shellfish', 'SELL-7LED1Z', '2025-11-23 07:39:17'),
-(9, 'Crustaceans', 'SELL-7LED1Z', '2025-11-23 07:39:17'),
-(10, 'Premium Fish', 'SELL-7LED1Z', '2025-11-23 07:39:17'),
-(51, 'Freshwater', 'SELL-7H8FD1', '2025-11-28 03:26:08'),
-(52, 'Saltwater', 'SELL-7H8FD1', '2025-11-28 03:26:08'),
-(53, 'Shellfish', 'SELL-7H8FD1', '2025-11-28 03:26:08'),
-(54, 'Crustaceans', 'SELL-7H8FD1', '2025-11-28 03:26:08'),
-(55, 'Premium Fish', 'SELL-7H8FD1', '2025-11-28 03:26:08'),
-(57, 'Freshwater', 'SELLER-YY1722', '2025-12-08 05:31:55'),
-(58, 'Saltwater', 'SELLER-YY1722', '2025-12-08 05:31:55'),
-(59, 'Shellfish', 'SELLER-YY1722', '2025-12-08 05:31:55'),
-(60, 'Crustaceans', 'SELLER-YY1722', '2025-12-08 05:31:55'),
-(61, 'Premium Fish', 'SELLER-YY1722', '2025-12-08 05:31:55');
-
 -- --------------------------------------------------------
 
 --
@@ -160,20 +133,6 @@ CREATE TABLE `fish_products` (
   `created_at` timestamp NULL DEFAULT current_timestamp(),
   `freshness` enum('Fresh','Chilled','Frozen') NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `fish_products`
---
-
-INSERT INTO `fish_products` (`id`, `name`, `category`, `unit`, `price`, `previous_price`, `stock`, `image_url`, `seller_id`, `created_at`, `freshness`) VALUES
-(6, 'lapu-lapu', 'Saltwater', 'kg', 400.00, 400.00, 2, '1763831019396-tilapia.jpg', 'SELL-GFGDHQ', '2025-11-16 15:23:06', 'Fresh'),
-(7, 'salmon', 'Saltwater', 'kg', 160.00, NULL, 6, '1763525116684-sea-merkado-logo.png', 'SELL-7LED1Z', '2025-11-19 04:04:21', 'Fresh'),
-(8, 'fish', 'Saltwater', 'kg', 100.00, 100.00, 47, '1763830997168-tilapia.jpg', 'SELL-GFGDHQ', '2025-11-19 07:12:38', 'Fresh'),
-(9, 'hhh', 'Shellfish', 'kg', 130.00, 120.00, 6, '1763830974903-tilapia.jpg', 'SELL-GFGDHQ', '2025-11-19 10:26:46', 'Fresh'),
-(10, 'aaaaaa', 'Freshwater', 'kg', 200.00, 210.00, 16, '1763830947773-tilapia.jpg', 'SELL-GFGDHQ', '2025-11-20 07:06:00', 'Fresh'),
-(11, 'ccccc', 'Freshwater', 'kg', 160.00, 155.00, 0, '1763830920234-tilapia.jpg', 'SELL-GFGDHQ', '2025-11-22 09:37:59', 'Fresh'),
-(12, 'Tilapia', 'Freshwater', 'kg', 140.00, 130.00, 6, '1763830898903-tilapia.jpg', 'SELL-GFGDHQ', '2025-11-22 16:27:34', 'Fresh'),
-(13, 'Tilapia', 'Freshwater', 'kg', 153.33, 160.00, 16, '1763830577822-tilapia.jpg', 'SELL-GFGDHQ', '2025-11-22 16:45:14', 'Fresh');
 
 -- --------------------------------------------------------
 
@@ -251,19 +210,6 @@ CREATE TABLE `sellers` (
   `date_added` timestamp NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `sellers`
---
-
-INSERT INTO `sellers` (`id`, `unique_id`, `last_name`, `first_name`, `middle_name`, `shop_name`, `street`, `barangay`, `municipality`, `province`, `requirements`, `status`, `date_added`) VALUES
-(1, 'SELL-ZQ0Z5K', 'Closa', 'Catherine Grace', 'Belarmino', 'Cath Shop', 'Sitio Looban', 'Teresita', 'Mansalay', 'Oriental Mindoro', '{\"idProof\": true, \"businessPermit\": true, \"barangayClearance\": true}', 'accepted', '2025-11-05 04:33:56'),
-(2, 'SELL-THMDAW', 'Closa', 'Mabel', 'Belarmino', 'Mabel Shop', 'Teresita, Mansalay, Oriental Mindoro', 'Teresita', 'Mansalay', 'oriental Mindoro', '\"{\\\"businessPermit\\\":true,\\\"barangayClearance\\\":true,\\\"idProof\\\":true}\"', 'accepted', '2025-11-11 02:18:33'),
-(3, 'SELL-GVPSB6', 'Closa', 'Junior', 'Belarmino', 'Junior Shop', 'Sitio Labasan', 'Teresita', 'Mansalay', 'Oriental Mindoro', '{\"idProof\": true, \"businessPermit\": false, \"barangayClearance\": true}', 'accepted', '2025-11-11 02:26:10'),
-(4, 'SELL-GFGDHQ', 'Portes', 'Kian', 'P.', 'Fishfish', 'dto', 'saan', 'sila', 'kanila', '{\"idProof\": false, \"businessPermit\": true, \"barangayClearance\": false}', 'accepted', '2025-11-15 15:36:44'),
-(5, 'SELL-7LED1Z', 'Portes', 'Andrei', 'Pascual', 'keyshop', 'San Nicolas', 'Libtong', 'Roxas', 'Oriental Mindoro', '{\"idProof\": true, \"businessPermit\": true, \"barangayClearance\": true}', 'accepted', '2025-11-19 03:58:19'),
-(6, 'SELL-7H8FD1', 'Baluntong', 'Jean', 'Tijulan', 'Jean Shop', 'Sitio Labasan', 'Teresita', 'Mansalay', 'Oriental Mindoro', '{\"idProof\": true, \"businessPermit\": true, \"barangayClearance\": true}', 'accepted', '2025-11-28 03:22:59'),
-(10, 'SELLER-YY1722', 'David', 'Juancarlo', '', 'doys', 'Loraine Street', 'doys', 'doys', 'Bulacan', '{\"barangayClearance\":true,\"businessPermit\":true,\"idProof\":true}', 'accepted', '2025-12-08 05:30:42');
-
 -- --------------------------------------------------------
 
 --
@@ -277,17 +223,6 @@ CREATE TABLE `seller_credentials` (
   `password_hash` varchar(255) NOT NULL,
   `date_registered` timestamp NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `seller_credentials`
---
-
-INSERT INTO `seller_credentials` (`id`, `unique_id`, `email`, `password_hash`, `date_registered`) VALUES
-(1, 'SELL-ZQ0Z5K', 'catherinegraceclosa@gmail.com', '$2b$10$gXZiWpUua7Gce39iTDpxdeoIw1yMwkzbtqOaVZkdaKUmG1nIOJ6/.', '2025-11-11 07:51:19'),
-(2, 'SELL-GFGDHQ', 'kian@gmail.com', '$2b$10$GC69jjr2p8Ty6LRtYmoGsexVtin8xPthi/s5KlTlTpy2MnYwBIhAy', '2025-11-15 15:37:05'),
-(3, 'SELL-7LED1Z', 'kian123@gmail.com', '$2b$10$gXglwI4dKMRDl2tZrW68muNxqFX1Pz4z2l3q0mP8/3y4bKuXid2g.', '2025-11-19 04:00:03'),
-(4, 'SELL-7H8FD1', 'jean@gmail.com', '$2b$10$hCT8NoekvrJ6kLGCm5p/8Oy1IJQJtq2LCS6W2RaMDJKA09HVLaSDy', '2025-11-28 03:26:08'),
-(5, 'SELLER-YY1722', 'jcdavid@gmail.com', '$2b$10$H3XFD2IQumyv2AigVG952u9ZQyHfRK1a0nNTMsGO6/ZVQNzuSkww.', '2025-12-08 05:31:55');
 
 -- --------------------------------------------------------
 
@@ -334,14 +269,6 @@ CREATE TABLE `seller_profiles` (
   `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `seller_profiles`
---
-
-INSERT INTO `seller_profiles` (`id`, `seller_id`, `logo`, `qr`, `created_at`, `updated_at`) VALUES
-(1, 'SELL-GFGDHQ', '/uploads/1764741573081-1763954589043-shop_logo.jpg', '/uploads/1764742012626-front_landscape.jpg', '2025-11-22 11:29:06', '2025-12-03 06:06:52'),
-(3, 'SELL-7LED1Z', '/uploads/1763954589043-shop_logo.jpg', NULL, '2025-11-24 03:23:09', '2025-11-24 03:23:09');
-
 -- --------------------------------------------------------
 
 --
@@ -358,26 +285,6 @@ CREATE TABLE `store_hours` (
   `created_at` timestamp NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `store_hours`
---
-
-INSERT INTO `store_hours` (`id`, `seller_id`, `day_of_week`, `is_open`, `open_time`, `close_time`, `created_at`, `updated_at`) VALUES
-(29, 'SELLER-YY1722', 'Monday', 1, '09:00:00', '22:00:00', '2025-12-08 05:33:32', '2025-12-08 05:33:32'),
-(30, 'SELLER-YY1722', 'Tuesday', 0, '09:00:00', '17:00:00', '2025-12-08 05:33:32', '2025-12-08 05:33:32'),
-(31, 'SELLER-YY1722', 'Wednesday', 0, '09:00:00', '17:00:00', '2025-12-08 05:33:32', '2025-12-08 05:33:32'),
-(32, 'SELLER-YY1722', 'Thursday', 0, '09:00:00', '17:00:00', '2025-12-08 05:33:32', '2025-12-08 05:33:32'),
-(33, 'SELLER-YY1722', 'Friday', 0, '09:00:00', '17:00:00', '2025-12-08 05:33:32', '2025-12-08 05:33:32'),
-(34, 'SELLER-YY1722', 'Saturday', 0, '09:00:00', '17:00:00', '2025-12-08 05:33:32', '2025-12-08 05:33:32'),
-(35, 'SELLER-YY1722', 'Sunday', 0, '09:00:00', '17:00:00', '2025-12-08 05:33:32', '2025-12-08 05:33:32'),
-(57, 'SELL-GFGDHQ', 'Monday', 1, '07:00:00', '23:00:00', '2025-12-11 09:12:32', '2025-12-11 09:12:32'),
-(58, 'SELL-GFGDHQ', 'Tuesday', 1, '09:00:00', '23:00:00', '2025-12-11 09:12:32', '2025-12-11 09:12:32'),
-(59, 'SELL-GFGDHQ', 'Wednesday', 1, '09:00:00', '23:00:00', '2025-12-11 09:12:32', '2025-12-11 09:12:32'),
-(60, 'SELL-GFGDHQ', 'Thursday', 1, '09:00:00', '23:00:00', '2025-12-11 09:12:32', '2025-12-11 09:12:32'),
-(61, 'SELL-GFGDHQ', 'Friday', 1, '09:00:00', '23:00:00', '2025-12-11 09:12:32', '2025-12-11 09:12:32'),
-(62, 'SELL-GFGDHQ', 'Saturday', 1, '09:00:00', '23:00:00', '2025-12-11 09:12:32', '2025-12-11 09:12:32'),
-(63, 'SELL-GFGDHQ', 'Sunday', 1, '09:00:00', '11:00:00', '2025-12-11 09:12:32', '2025-12-11 09:12:32');
 
 --
 -- Indexes for dumped tables
@@ -461,7 +368,8 @@ ALTER TABLE `seller_notifications`
 -- Indexes for table `seller_profiles`
 --
 ALTER TABLE `seller_profiles`
-  ADD PRIMARY KEY (`id`);
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `unique_seller_id` (`seller_id`);
 
 --
 -- Indexes for table `store_hours`
@@ -496,13 +404,13 @@ ALTER TABLE `buyer_notifications`
 -- AUTO_INCREMENT for table `fish_categories`
 --
 ALTER TABLE `fish_categories`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=62;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `fish_products`
 --
 ALTER TABLE `fish_products`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `orders`
@@ -526,13 +434,13 @@ ALTER TABLE `price_history`
 -- AUTO_INCREMENT for table `sellers`
 --
 ALTER TABLE `sellers`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `seller_credentials`
 --
 ALTER TABLE `seller_credentials`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `seller_locations`
@@ -544,19 +452,19 @@ ALTER TABLE `seller_locations`
 -- AUTO_INCREMENT for table `seller_notifications`
 --
 ALTER TABLE `seller_notifications`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `seller_profiles`
 --
 ALTER TABLE `seller_profiles`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `store_hours`
 --
 ALTER TABLE `store_hours`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=64;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- Constraints for dumped tables
