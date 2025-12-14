@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { 
-  FiUser, 
-  FiMapPin, 
-  FiImage, 
-  FiCreditCard, 
-  FiUpload, 
+import {
+  FiUser,
+  FiMapPin,
+  FiImage,
+  FiCreditCard,
+  FiUpload,
   FiCheck,
   FiAlertCircle,
   FiInfo,
@@ -67,7 +67,7 @@ function SellerProfile() {
         `${process.env.REACT_APP_SELLER_API_URL}/api/seller/info/${seller_id}`
       );
       const infoData = await infoRes.json();
-      
+
       if (infoRes.ok) {
         setSellerInfo(infoData);
         setEditedInfo(infoData);
@@ -77,7 +77,7 @@ function SellerProfile() {
         `${process.env.REACT_APP_SELLER_API_URL}/api/seller/profile/${seller_id}`
       );
       const profileData = await profileRes.json();
-      
+
       setProfileImages({
         logo: profileData.logo || "",
         qr: profileData.qr || "",
@@ -171,7 +171,7 @@ function SellerProfile() {
           timer: 2000,
           showConfirmButton: false
         });
-        
+
         setSellerInfo(editedInfo);
         setEditMode(false);
       } else {
@@ -225,16 +225,19 @@ function SellerProfile() {
         showConfirmButton: false
       });
 
+      // Clear selections and reload
       if (type === "logo") {
-        setProfileImages((prev) => ({ ...prev, logo: data.logo }));
         setSelectedLogo(null);
         setLogoPreview(null);
       }
       if (type === "qr") {
-        setProfileImages((prev) => ({ ...prev, qr: data.qr }));
         setSelectedQr(null);
         setQrPreview(null);
       }
+
+      // Reload profile data to get fresh image
+      await loadSellerData();
+
     } catch (err) {
       console.error(`${type} upload failed:`, err);
       Swal.fire({
@@ -249,7 +252,8 @@ function SellerProfile() {
   const getFileUrl = (path) => {
     if (!path) return null;
     const normalized = path.startsWith("/") ? path : "/" + path;
-    return `${process.env.REACT_APP_SELLER_API_URL}${normalized}`;
+    const cacheBuster = `?t=${Date.now()}`;
+    return `${process.env.REACT_APP_SELLER_API_URL}${normalized}${cacheBuster}`;
   };
 
   const getFullAddress = () => {
@@ -295,277 +299,277 @@ function SellerProfile() {
           </div>
         </div>
       </div>
-              {/* Personal Information Card */}
-        <div className="profile-card">
-          <div className="card-header">
-            <div className="header-title">
-              <FiUser size={20} />
-              <h3>Personal Information</h3>
-            </div>
-            {!editMode ? (
-              <button className="edit-btn" onClick={handleEditToggle}>
-                <FiEdit3 />
-                Edit Info
+      {/* Personal Information Card */}
+      <div className="profile-card">
+        <div className="card-header">
+          <div className="header-title">
+            <FiUser size={20} />
+            <h3>Personal Information</h3>
+          </div>
+          {!editMode ? (
+            <button className="edit-btn" onClick={handleEditToggle}>
+              <FiEdit3 />
+              Edit Info
+            </button>
+          ) : (
+            <div className="edit-actions">
+              <button className="cancel-btn" onClick={handleEditToggle} disabled={saving}>
+                <FiX />
+                Cancel
               </button>
-            ) : (
-              <div className="edit-actions">
-                <button className="cancel-btn" onClick={handleEditToggle} disabled={saving}>
-                  <FiX />
-                  Cancel
-                </button>
-                <button className="save-btn" onClick={handleSaveChanges} disabled={saving}>
-                  <FiSave />
-                  {saving ? 'Saving...' : 'Save Changes'}
-                </button>
-              </div>
-            )}
-          </div>
-          
-          <div className="info-grid">
-            <div className="info-item">
-              <label>Seller ID</label>
-              <div className="info-value readonly">{sellerInfo.unique_id || "N/A"}</div>
-            </div>
-            
-            {editMode ? (
-              <>
-                <div className="info-item">
-                  <label>First Name</label>
-                  <input
-                    type="text"
-                    className="info-input"
-                    value={editedInfo.first_name || ''}
-                    onChange={(e) => handleInputChange('first_name', e.target.value)}
-                  />
-                </div>
-                
-                <div className="info-item">
-                  <label>Middle Name</label>
-                  <input
-                    type="text"
-                    className="info-input"
-                    value={editedInfo.middle_name || ''}
-                    onChange={(e) => handleInputChange('middle_name', e.target.value)}
-                    placeholder="Optional"
-                  />
-                </div>
-                
-                <div className="info-item">
-                  <label>Last Name</label>
-                  <input
-                    type="text"
-                    className="info-input"
-                    value={editedInfo.last_name || ''}
-                    onChange={(e) => handleInputChange('last_name', e.target.value)}
-                  />
-                </div>
-                
-                <div className="info-item full-width">
-                  <label>Shop Name</label>
-                  <input
-                    type="text"
-                    className="info-input shop-input"
-                    value={editedInfo.shop_name || ''}
-                    onChange={(e) => handleInputChange('shop_name', e.target.value)}
-                  />
-                </div>
-                
-                <div className="info-item full-width">
-                  <label>Street</label>
-                  <input
-                    type="text"
-                    className="info-input"
-                    value={editedInfo.street || ''}
-                    onChange={(e) => handleInputChange('street', e.target.value)}
-                  />
-                </div>
-                
-                <div className="info-item">
-                  <label>Barangay</label>
-                  <input
-                    type="text"
-                    className="info-input"
-                    value={editedInfo.barangay || ''}
-                    onChange={(e) => handleInputChange('barangay', e.target.value)}
-                  />
-                </div>
-                
-                <div className="info-item">
-                  <label>Municipality</label>
-                  <input
-                    type="text"
-                    className="info-input"
-                    value={editedInfo.municipality || ''}
-                    onChange={(e) => handleInputChange('municipality', e.target.value)}
-                  />
-                </div>
-                
-                <div className="info-item full-width">
-                  <label>Province</label>
-                  <input
-                    type="text"
-                    className="info-input"
-                    value={editedInfo.province || ''}
-                    onChange={(e) => handleInputChange('province', e.target.value)}
-                  />
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="info-item">
-                  <label>Full Name</label>
-                  <div className="info-value">{getFullName()}</div>
-                </div>
-                
-                <div className="info-item full-width">
-                  <label>Shop Name</label>
-                  <div className="info-value shop-name">
-                    <FiShoppingBag size={16} />
-                    {sellerInfo.shop_name || "N/A"}
-                  </div>
-                </div>
-                
-                <div className="info-item full-width">
-                  <label>Address</label>
-                  <div className="info-value address">
-                    <FiMapPin size={16} />
-                    {getFullAddress()}
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
-          
-          {!editMode && (
-            <div className="notice-box info">
-              <FiInfo size={18} />
-              <p>Click "Edit Info" to update your personal details. Your Seller ID cannot be changed.</p>
+              <button className="save-btn" onClick={handleSaveChanges} disabled={saving}>
+                <FiSave />
+                {saving ? 'Saving...' : 'Save Changes'}
+              </button>
             </div>
           )}
         </div>
-        <div className="content-grid">
-          {/* Shop Logo Card */}
-          <div className="profile-card">
-            <div className="card-header">
-              <div className="header-title">
-                <FiImage size={20} />
-                <h3>Shop Logo</h3>
-              </div>
-            </div>
-            
-            <div className="upload-section">
-              <div className="preview-container logo-preview">
-                {logoPreview || getFileUrl(profileImages.logo) ? (
-                  <img
-                    src={logoPreview || getFileUrl(profileImages.logo)}
-                    alt="Shop Logo"
-                    className="preview-image"
-                  />
-                ) : (
-                  <div className="preview-placeholder">
-                    <FiImage size={48} />
-                    <p>No logo uploaded</p>
-                  </div>
-                )}
-              </div>
-              
-              <div className="upload-controls">
+
+        <div className="info-grid">
+          <div className="info-item">
+            <label>Seller ID</label>
+            <div className="info-value readonly">{sellerInfo.unique_id || "N/A"}</div>
+          </div>
+
+          {editMode ? (
+            <>
+              <div className="info-item">
+                <label>First Name</label>
                 <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => setSelectedLogo(e.target.files[0])}
-                  id="logo-input"
-                  className="file-input"
-                  
+                  type="text"
+                  className="info-input"
+                  value={editedInfo.first_name || ''}
+                  onChange={(e) => handleInputChange('first_name', e.target.value)}
                 />
-                <label htmlFor="logo-input" className="file-label">
-                  <FiUpload />
-                  Choose Logo
-                </label>
-                
-                {selectedLogo && (
-                  <div className="selected-file" // the file name are overflowing
-                  style={{ maxWidth: "150px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                    <FiCheck />
-                    <span>{selectedLogo.name}</span>
-                  </div>
-                )}
-                
-                <button
-                  onClick={() => uploadFile(selectedLogo, "logo")}
-                  className="upload-btn"
-                  disabled={!selectedLogo}
-                >
-                  <FiUpload />
-                  Upload Logo
-                </button>
               </div>
+
+              <div className="info-item">
+                <label>Middle Name</label>
+                <input
+                  type="text"
+                  className="info-input"
+                  value={editedInfo.middle_name || ''}
+                  onChange={(e) => handleInputChange('middle_name', e.target.value)}
+                  placeholder="Optional"
+                />
+              </div>
+
+              <div className="info-item">
+                <label>Last Name</label>
+                <input
+                  type="text"
+                  className="info-input"
+                  value={editedInfo.last_name || ''}
+                  onChange={(e) => handleInputChange('last_name', e.target.value)}
+                />
+              </div>
+
+              <div className="info-item full-width">
+                <label>Shop Name</label>
+                <input
+                  type="text"
+                  className="info-input shop-input"
+                  value={editedInfo.shop_name || ''}
+                  onChange={(e) => handleInputChange('shop_name', e.target.value)}
+                />
+              </div>
+
+              <div className="info-item full-width">
+                <label>Street</label>
+                <input
+                  type="text"
+                  className="info-input"
+                  value={editedInfo.street || ''}
+                  onChange={(e) => handleInputChange('street', e.target.value)}
+                />
+              </div>
+
+              <div className="info-item">
+                <label>Barangay</label>
+                <input
+                  type="text"
+                  className="info-input"
+                  value={editedInfo.barangay || ''}
+                  onChange={(e) => handleInputChange('barangay', e.target.value)}
+                />
+              </div>
+
+              <div className="info-item">
+                <label>Municipality</label>
+                <input
+                  type="text"
+                  className="info-input"
+                  value={editedInfo.municipality || ''}
+                  onChange={(e) => handleInputChange('municipality', e.target.value)}
+                />
+              </div>
+
+              <div className="info-item full-width">
+                <label>Province</label>
+                <input
+                  type="text"
+                  className="info-input"
+                  value={editedInfo.province || ''}
+                  onChange={(e) => handleInputChange('province', e.target.value)}
+                />
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="info-item">
+                <label>Full Name</label>
+                <div className="info-value">{getFullName()}</div>
+              </div>
+
+              <div className="info-item full-width">
+                <label>Shop Name</label>
+                <div className="info-value shop-name">
+                  <FiShoppingBag size={16} />
+                  {sellerInfo.shop_name || "N/A"}
+                </div>
+              </div>
+
+              <div className="info-item full-width">
+                <label>Address</label>
+                <div className="info-value address">
+                  <FiMapPin size={16} />
+                  {getFullAddress()}
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+
+        {!editMode && (
+          <div className="notice-box info">
+            <FiInfo size={18} />
+            <p>Click "Edit Info" to update your personal details. Your Seller ID cannot be changed.</p>
+          </div>
+        )}
+      </div>
+      <div className="content-grid">
+        {/* Shop Logo Card */}
+        <div className="profile-card">
+          <div className="card-header">
+            <div className="header-title">
+              <FiImage size={20} />
+              <h3>Shop Logo</h3>
             </div>
           </div>
 
-          {/* GCash QR Code Card */}
-          <div className="profile-card">
-            <div className="card-header">
-              <div className="header-title">
-                <FiCreditCard size={20} />
-                <h3>GCash QR Code</h3>
-              </div>
-            </div>
-            
-            <div className="upload-section">
-              <div className="preview-container qr-preview">
-                {qrPreview || getFileUrl(profileImages.qr) ? (
-                  <img
-                    src={qrPreview || getFileUrl(profileImages.qr)}
-                    alt="GCash QR"
-                    className="preview-image"
-                  />
-                ) : (
-                  <div className="preview-placeholder">
-                    <FiCreditCard size={48} />
-                    <p>No QR code uploaded</p>
-                  </div>
-                )}
-              </div>
-              
-              <div className="upload-controls">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => setSelectedQr(e.target.files[0])}
-                  id="qr-input"
-                  className="file-input"
+          <div className="upload-section">
+            <div className="preview-container logo-preview">
+              {logoPreview || getFileUrl(profileImages.logo) ? (
+                <img
+                  src={logoPreview || getFileUrl(profileImages.logo)}
+                  alt="Shop Logo"
+                  className="preview-image"
                 />
-                <label htmlFor="qr-input" className="file-label">
-                  <FiUpload />
-                  Choose QR Code
-                </label>
-                
-                {selectedQr && (
-                  <div className="selected-file" // the file name are overflowing
-                  style={{ maxWidth: "150px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                    <FiCheck />
-                    <span>{selectedQr.name}</span>
-                  </div>
-                )}
-                
-                <button
-                  onClick={() => uploadFile(selectedQr, "qr")}
-                  className="upload-btn"
-                  disabled={!selectedQr}
-                >
-                  <FiUpload />
-                  Upload QR Code
-                </button>
-              </div>
+              ) : (
+                <div className="preview-placeholder">
+                  <FiImage size={48} />
+                  <p>No logo uploaded</p>
+                </div>
+              )}
             </div>
-            
-            <div className="notice-box success">
-              <FiAlertCircle size={18} />
-              <p>Upload your GCash QR code so customers can pay directly when placing orders.</p>
+
+            <div className="upload-controls">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setSelectedLogo(e.target.files[0])}
+                id="logo-input"
+                className="file-input"
+
+              />
+              <label htmlFor="logo-input" className="file-label">
+                <FiUpload />
+                Choose Logo
+              </label>
+
+              {selectedLogo && (
+                <div className="selected-file" // the file name are overflowing
+                  style={{ maxWidth: "150px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  <FiCheck />
+                  <span>{selectedLogo.name}</span>
+                </div>
+              )}
+
+              <button
+                onClick={() => uploadFile(selectedLogo, "logo")}
+                className="upload-btn"
+                disabled={!selectedLogo}
+              >
+                <FiUpload />
+                Upload Logo
+              </button>
             </div>
           </div>
         </div>
+
+        {/* GCash QR Code Card */}
+        <div className="profile-card">
+          <div className="card-header">
+            <div className="header-title">
+              <FiCreditCard size={20} />
+              <h3>GCash QR Code</h3>
+            </div>
+          </div>
+
+          <div className="upload-section">
+            <div className="preview-container qr-preview">
+              {qrPreview || getFileUrl(profileImages.qr) ? (
+                <img
+                  src={qrPreview || getFileUrl(profileImages.qr)}
+                  alt="GCash QR"
+                  className="preview-image"
+                />
+              ) : (
+                <div className="preview-placeholder">
+                  <FiCreditCard size={48} />
+                  <p>No QR code uploaded</p>
+                </div>
+              )}
+            </div>
+
+            <div className="upload-controls">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setSelectedQr(e.target.files[0])}
+                id="qr-input"
+                className="file-input"
+              />
+              <label htmlFor="qr-input" className="file-label">
+                <FiUpload />
+                Choose QR Code
+              </label>
+
+              {selectedQr && (
+                <div className="selected-file" // the file name are overflowing
+                  style={{ maxWidth: "150px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  <FiCheck />
+                  <span>{selectedQr.name}</span>
+                </div>
+              )}
+
+              <button
+                onClick={() => uploadFile(selectedQr, "qr")}
+                className="upload-btn"
+                disabled={!selectedQr}
+              >
+                <FiUpload />
+                Upload QR Code
+              </button>
+            </div>
+          </div>
+
+          <div className="notice-box success">
+            <FiAlertCircle size={18} />
+            <p>Upload your GCash QR code so customers can pay directly when placing orders.</p>
+          </div>
+        </div>
+      </div>
 
       <style>{`
         * {

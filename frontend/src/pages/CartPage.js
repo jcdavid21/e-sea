@@ -984,7 +984,7 @@ const CartPage = () => {
                   )}
                   {!storeStatus.isOpen && (
                     <div className="store-closed-overlay">
-                      <FaTimesCircle />
+                      
                     </div>
                   )}
                 </div>

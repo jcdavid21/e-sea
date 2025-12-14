@@ -85,7 +85,7 @@ const BuyerProfile = () => {
     sessionStorage.removeItem("buyerName");
 
     console.log("Session cleared.");
-    navigate("/buyer/login");
+    navigate("/");
   };
 
   const handleEditToggle = () => {
@@ -186,7 +186,7 @@ const BuyerProfile = () => {
             <div className="error-message">{error}</div>
             <button 
               className="btn-back" 
-              onClick={() => navigate("/buyer/login")}
+              onClick={() => navigate("/")}
             >
               Back to Login
             </button>

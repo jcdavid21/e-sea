@@ -891,6 +891,49 @@
 }
 
 /* Responsive Design */
+@media (max-width: 900px) {
+  .cart-item {
+    grid-template-columns: 35px 120px 1fr;
+    gap: 16px;
+    padding: 20px;
+  }
+
+  .store-status-badge{
+    max-width: 200px !important;
+  }
+
+  .item-image {
+    width: 120px;
+    height: 120px;
+  }
+
+  .item-name {
+    font-size: 1rem;
+  }
+
+  .item-quantity {
+    grid-column: 2 / 4;
+    margin-top: 12px;
+    justify-content: flex-start;
+  }
+
+  .item-subtotal {
+    grid-column: 2 / 4;
+    text-align: right;
+    margin-top: 12px;
+    padding-right: 0;
+  }
+
+  .subtotal-amount {
+    font-size: 1.3rem;
+  }
+
+  .btn-remove {
+    top: 16px;
+    right: 16px;
+  }
+}
+
 @media (max-width: 768px) {
   .cart-page {
     padding: 16px 12px 180px;
@@ -898,6 +941,10 @@
 
   .cart-header h1 {
     font-size: 1.3rem;
+  }
+
+  .store-closed-overlay svg{
+    margin-top: 90px;
   }
 
   /* Select All */
@@ -1516,14 +1563,29 @@
 
 /* Store Status Badge */
 .store-status-badge {
-  display: inline-flex;
-  align-items: center;
+  display: flex;
+  align-items: flex-start;
   gap: 6px;
-  padding: 6px 12px;
+  padding: 8px 12px;
   border-radius: 20px;
   font-size: 12px;
   font-weight: 600;
   margin-top: 8px;
+  max-width: 100%;
+  width: fit-content;
+}
+
+.store-status-badge span {
+  flex: 1;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
+  line-height: 1.4;
+}
+
+.store-status-badge .status-icon {
+  flex-shrink: 0;
+  margin-top: 2px;
 }
 
 .store-status-badge.open {
@@ -1541,6 +1603,42 @@
 
 .store-status-badge .status-icon {
   font-size: 14px;
+}
+
+
+
+/* Store Status Badge - Force wrapping */
+.item-details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0; /* Critical for text wrapping */
+  overflow: hidden;
+}
+
+.store-status-badge {
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 20px;
+  font-size: 11px !important;
+  font-weight: 600;
+  margin-top: 8px;
+  max-width: 100%;
+  width: fit-content;
+  white-space: normal !important;
+  line-height: 1.5 !important;
+}
+
+.store-status-badge > span {
+  display: inline !important;
+  word-wrap: break-word !important;
+  word-break: break-word !important;
+  overflow-wrap: break-word !important;
+  white-space: normal !important;
+  flex: 1;
+  min-width: 0;
 }
 
 .cart-item.store-closed {

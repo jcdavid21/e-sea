@@ -245,8 +245,10 @@ const Home = () => {
           ) : (
             <div className="empty-state">
               <FaFish className="empty-icon" />
-              <p>No products available in this category</p>
-              <span>Try selecting a different category</span>
+              <div>
+                <p>No products available in this category</p>
+                <span>Try selecting a different category</span>
+              </div>
             </div>
           )}
         </section>
