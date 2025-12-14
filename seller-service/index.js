@@ -965,6 +965,22 @@ app.post("/api/seller/upload-logo/:seller_id", upload.single("logo"), async (req
   const filePath = "/uploads/" + req.file.filename;
 
   try {
+    // Get existing logo to delete old file
+    const [existing] = await db.query(
+      "SELECT logo FROM seller_profiles WHERE seller_id = ?",
+      [seller_id]
+    );
+    
+    // Delete old logo file if exists
+    if (existing.length > 0 && existing[0].logo) {
+      const oldFileName = existing[0].logo.replace('/uploads/', '');
+      const oldPath = path.join(UPLOAD_DIR, oldFileName);
+      fs.unlink(oldPath, (err) => {
+        if (err) console.warn("⚠️ Could not delete old logo:", err.message);
+      });
+    }
+
+    // Insert or update logo
     await db.query(
       `INSERT INTO seller_profiles (seller_id, logo) 
        VALUES (?, ?)
@@ -972,9 +988,15 @@ app.post("/api/seller/upload-logo/:seller_id", upload.single("logo"), async (req
       [seller_id, filePath]
     );
     
-    res.json({ message: "Logo uploaded successfully", logo: filePath });
+    console.log(`✅ Logo uploaded for seller: ${seller_id}`);
+    
+    res.json({ 
+      message: "Logo uploaded successfully", 
+      logo: filePath,
+      timestamp: Date.now() 
+    });
   } catch (err) {
-    console.error(err);
+    console.error("❌ Logo upload error:", err);
     res.status(500).json({ message: "Error uploading logo" });
   }
 });
@@ -988,6 +1010,22 @@ app.post("/api/seller/upload-qr/:seller_id", upload.single("qr"), async (req, re
   const filePath = "/uploads/" + req.file.filename;
 
   try {
+    // Get existing QR to delete old file
+    const [existing] = await db.query(
+      "SELECT qr FROM seller_profiles WHERE seller_id = ?",
+      [seller_id]
+    );
+    
+    // Delete old QR file if exists
+    if (existing.length > 0 && existing[0].qr) {
+      const oldFileName = existing[0].qr.replace('/uploads/', '');
+      const oldPath = path.join(UPLOAD_DIR, oldFileName);
+      fs.unlink(oldPath, (err) => {
+        if (err) console.warn("⚠️ Could not delete old QR:", err.message);
+      });
+    }
+
+    // Insert or update QR
     await db.query(
       `INSERT INTO seller_profiles (seller_id, qr) 
        VALUES (?, ?)
@@ -995,9 +1033,15 @@ app.post("/api/seller/upload-qr/:seller_id", upload.single("qr"), async (req, re
       [seller_id, filePath]
     );
     
-    res.json({ message: "QR uploaded successfully", qr: filePath });
+    console.log(`✅ QR uploaded for seller: ${seller_id}`);
+    
+    res.json({ 
+      message: "QR uploaded successfully", 
+      qr: filePath,
+      timestamp: Date.now() 
+    });
   } catch (err) {
-    console.error(err);
+    console.error("❌ QR upload error:", err);
     res.status(500).json({ message: "Error uploading QR" });
   }
 });
