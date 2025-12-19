@@ -1,7 +1,7 @@
 /* Contact Page Styles */
 .contact-wrapper {
   min-height: 100vh;
-  background: url("../assets/front_landscape.jpg") repeat top center/contain;
+  background: url("../assets/bg-2.avif") repeat top center/contain;
   position: relative;
   overflow-x: hidden;
 }

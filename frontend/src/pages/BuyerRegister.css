@@ -2,13 +2,27 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
-  background: linear-gradient(135deg, #1e3c72, #2a5298);
+  height: 100vh;
+  background: url("../assets/bg-2.avif") repeat top center/contain;
   font-family: 'Poppins', sans-serif;
+  position: relative;
   padding: 20px;
 }
 
+.buyer-register-container::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg,
+      rgba(20, 17, 78, 0.5) 0%,
+      rgba(0, 0, 0, 0.6) 50%,
+      rgba(33, 20, 96, 0.7) 100%);
+  z-index: 1;
+}
+
 .buyer-register-card {
+  position: relative;
+  z-index: 2;
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(12px);
   border-radius: 16px;
@@ -71,7 +85,7 @@
 .buyer-register-btn {
   padding: 10px;
   font-size: 0.9rem;
-  background: #34238b;
+  background: #23408b;
   color: #fff;
   font-weight: 600;
   border: none;
@@ -81,7 +95,7 @@
 }
 
 .buyer-register-btn:hover {
-  background: #2d115b;
+  background: #1e3c72;
   transform: translateY(-2px);
 }
 

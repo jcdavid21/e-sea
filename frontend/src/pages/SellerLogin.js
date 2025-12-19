@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import "./SellerLogin.css";
+import Navbar from "./Navbar";
 
 const SellerLogin = () => {
   const [formData, setFormData] = useState({
@@ -41,11 +42,13 @@ const SellerLogin = () => {
   };
 
   return (
-    <div className="seller-container">
-      <div className="seller-card">
-        <h2>Seller Login</h2>
-        <form onSubmit={handleSubmit}>
-          <label htmlFor="uniqueId">Generated ID</label>
+    <div>
+      <Navbar />
+      <div className="seller-container">
+        <div className="seller-card">
+          <h2>Seller Login</h2>
+          <form onSubmit={handleSubmit}>
+            <label htmlFor="uniqueId">Generated ID</label>
           <input
             type="text"
             id="uniqueId"
@@ -77,6 +80,7 @@ const SellerLogin = () => {
         <Link to="/seller/register" className="seller-link">
           New seller? Register here.
         </Link>
+      </div>
       </div>
     </div>
   );

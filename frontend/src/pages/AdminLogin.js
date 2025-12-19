@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "./AdminLogin.css";
+import Navbar from "./Navbar";
 
 const AdminLogin = () => {
   const [username, setUsername] = useState("");
@@ -27,46 +28,49 @@ const AdminLogin = () => {
   };
 
   return (
-    <div className="admin-container">
-      <div className="admin-card">
-        <h2>Admin Login</h2>
-        <form onSubmit={handleLogin}>
-          <label htmlFor="username">Username</label>
-          <input
-            type="text"
-            id="username"
-            placeholder="Enter your username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            required
-          />
+    <div>
+      <Navbar />
+      <div className="admin-container">
+        <div className="admin-card">
+          <h2>Admin Login</h2>
+          <form onSubmit={handleLogin}>
+            <label htmlFor="username">Username</label>
+            <input
+              type="text"
+              id="username"
+              placeholder="Enter your username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+            />
 
-          <label htmlFor="adminID">Admin ID</label>
-          <input
-            type="text"
-            id="adminID"
-            placeholder="Enter your Admin ID"
-            value={adminID}
-            onChange={(e) => setAdminID(e.target.value)}
-            required
-          />
+            <label htmlFor="adminID">Admin ID</label>
+            <input
+              type="text"
+              id="adminID"
+              placeholder="Enter your Admin ID"
+              value={adminID}
+              onChange={(e) => setAdminID(e.target.value)}
+              required
+            />
 
-          <label htmlFor="password">Password</label>
-          <input
-            type="password"
-            id="password"
-            placeholder="Enter your password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
+            <label htmlFor="password">Password</label>
+            <input
+              type="password"
+              id="password"
+              placeholder="Enter your password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
 
-          <button type="submit" className="admin-btn">
-            Login
-          </button>
-        </form>
+            <button type="submit" className="admin-btn">
+              Login
+            </button>
+          </form>
 
-        {error && <p className="admin-message">{error}</p>}
+          {error && <p className="admin-message">{error}</p>}
+        </div>
       </div>
     </div>
   );

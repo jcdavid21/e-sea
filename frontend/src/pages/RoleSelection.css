@@ -4,7 +4,7 @@
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background-image: url('../assets/front.jpg'); /* Mobile default */
+  background-image: url('../assets/bg-2.avif'); /* Mobile default */
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -18,7 +18,7 @@
 /* Desktop background override */
 @media screen and (min-width: 768px) {
   .role-container {
-    background-image: url('../assets/front_landscape.jpg');
+    background-image: url('../assets/bg-2.avif');
   }
 }
 
@@ -86,7 +86,7 @@
   cursor: pointer;
   transition: all 0.3s ease;
   color: #fff;
-  background: #14114e; /* Deep navy */
+  background: #1d387a; /* Deep navy */
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
 }
 

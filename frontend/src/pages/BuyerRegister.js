@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import "./BuyerRegister.css";
+import Navbar from "./Navbar";
 
 const BuyerRegister = () => {
   const [formData, setFormData] = useState({
@@ -49,85 +50,88 @@ const BuyerRegister = () => {
   };
 
   return (
-    <div className="buyer-register-container">
-      <div className="buyer-register-card">
-        <h2>Create Your Account</h2>
-        <form onSubmit={handleSubmit}>
-          <label>Email</label>
-          <input
-            type="email"
-            name="email"
-            onChange={handleChange}
-            required
-            placeholder="Enter your email"
-          />
+    <div>
+      <Navbar />
+      <div className="buyer-register-container">
+        <div className="buyer-register-card">
+          <h2>Create Your Account</h2>
+          <form onSubmit={handleSubmit}>
+            <label>Email</label>
+            <input
+              type="email"
+              name="email"
+              onChange={handleChange}
+              required
+              placeholder="Enter your email"
+            />
 
-          <label>Contact Number</label>
-          <input
-            type="text"
-            name="contact"
-            onChange={handleChange}
-            required
-            placeholder="Enter your contact number"
-          />
+            <label>Contact Number</label>
+            <input
+              type="text"
+              name="contact"
+              onChange={handleChange}
+              required
+              placeholder="Enter your contact number"
+            />
 
-          <label>Last Name</label>
-          <input
-            type="text"
-            name="lastName"
-            onChange={handleChange}
-            required
-            placeholder="Enter your last name"
-          />
+            <label>Last Name</label>
+            <input
+              type="text"
+              name="lastName"
+              onChange={handleChange}
+              required
+              placeholder="Enter your last name"
+            />
 
-          <label>First Name</label>
-          <input
-            type="text"
-            name="firstName"
-            onChange={handleChange}
-            required
-            placeholder="Enter your first name"
-          />
+            <label>First Name</label>
+            <input
+              type="text"
+              name="firstName"
+              onChange={handleChange}
+              required
+              placeholder="Enter your first name"
+            />
 
-          <label>Middle Name</label>
-          <input
-            type="text"
-            name="middleName"
-            onChange={handleChange}
-            placeholder="Enter your middle name"
-          />
+            <label>Middle Name</label>
+            <input
+              type="text"
+              name="middleName"
+              onChange={handleChange}
+              placeholder="Enter your middle name"
+            />
 
-          <label>Username</label>
-          <input
-            type="text"
-            name="username"
-            onChange={handleChange}
-            required
-            placeholder="Choose a username"
-          />
+            <label>Username</label>
+            <input
+              type="text"
+              name="username"
+              onChange={handleChange}
+              required
+              placeholder="Choose a username"
+            />
 
-          <label>Password</label>
-          <input
-            type="password"
-            name="password"
-            onChange={handleChange}
-            required
-            placeholder="Create a strong password"
-          />
+            <label>Password</label>
+            <input
+              type="password"
+              name="password"
+              onChange={handleChange}
+              required
+              placeholder="Create a strong password"
+            />
 
-          <button type="submit" className="buyer-register-btn">
-            Register
-          </button>
-        </form>
+            <button type="submit" className="buyer-register-btn">
+              Register
+            </button>
+          </form>
 
-        {message && <p className="buyer-register-message">{message}</p>}
+          {message && <p className="buyer-register-message">{message}</p>}
 
-        <p>
-          Already have an account?{" "}
-          <Link to="/buyer/login" className="buyer-register-link">
-            Login here.
-          </Link>
-        </p>
+          <p>
+            Already have an account?{" "}
+            <Link to="/buyer/login" className="buyer-register-link">
+              Login here.
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );

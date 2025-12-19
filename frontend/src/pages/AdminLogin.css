@@ -4,11 +4,23 @@
   align-items: center;
   justify-content: center;
   height: 100vh;
-  background: linear-gradient(135deg, #1e3c72, #2a5298); /* same gradient */
+  background: url("../assets/bg-2.avif") repeat top center/contain;
   font-family: 'Poppins', sans-serif;
   position: relative;
   padding: 20px;
 }
+
+.admin-container::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg,
+      rgba(20, 17, 78, 0.5) 0%,
+      rgba(0, 0, 0, 0.6) 50%,
+      rgba(33, 20, 96, 0.7) 100%);
+  z-index: 1;
+}
+
 
 /* Card */
 .admin-card {
@@ -71,7 +83,7 @@
 /* Button */
 .admin-btn {
   padding: 12px;
-  background: #34238b;
+  background: #23408b;
   color: #fff;
   font-weight: 600;
   border: none;
@@ -81,7 +93,7 @@
 }
 
 .admin-btn:hover {
-  background: #2d115b;
+  background: #1e3c72;
   transform: translateY(-2px);
 }
 

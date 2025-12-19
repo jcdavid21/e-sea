@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import "./BuyerLogin.css";
+import Navbar from "./Navbar";
 
 const BuyerLogin = () => {
   const [email, setEmail] = useState("");
@@ -81,35 +82,38 @@ const BuyerLogin = () => {
   };
 
   return (
-    <div className="buyer-container">
-      <div className="buyer-card">
-        <h2>Customer Login</h2>
-        <form onSubmit={handleLogin}>
-          <label>Email</label>
-          <input
-            type="email"
-            value={email}
-            placeholder="Enter your email"
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-          <label>Password</label>
-          <input
-            type="password"
-            value={password}
-            placeholder="Enter your password"
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-          <button type="submit" className="buyer-btn">Login</button>
-        </form>
-        {message && <p className="buyer-message">{message}</p>}
-        <p>
-          Don't have an account?{" "}
-          <Link to="/buyer/register" className="buyer-link">
-            Register here.
-          </Link>
-        </p>
+    <div>
+      <Navbar />
+      <div className="buyer-container">
+        <div className="buyer-card">
+          <h2>Customer Login</h2>
+          <form onSubmit={handleLogin}>
+            <label>Email</label>
+            <input
+              type="email"
+              value={email}
+              placeholder="Enter your email"
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+            <label>Password</label>
+            <input
+              type="password"
+              value={password}
+              placeholder="Enter your password"
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+            <button type="submit" className="buyer-btn">Login</button>
+          </form>
+          {message && <p className="buyer-message">{message}</p>}
+          <p>
+            Don't have an account?{" "}
+            <Link to="/buyer/register" className="buyer-link">
+              Register here.
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );

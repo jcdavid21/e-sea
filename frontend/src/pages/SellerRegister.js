@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import "./SellerRegister.css";
+import Navbar from "./Navbar";
 
 const SellerRegister = () => {
   const [formData, setFormData] = useState({
@@ -43,53 +44,56 @@ const SellerRegister = () => {
   };
 
   return (
-    <div className="sellerreg-container">
-      <div className="sellerreg-card">
-        <h2>Seller Registration</h2>
-        <form onSubmit={handleSubmit}>
-          <label htmlFor="email">Email</label>
-          <input
-            type="email"
-            id="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            placeholder="Enter your email"
-            required
-          />
+    <div>
+      <Navbar />
+      <div className="sellerreg-container">
+        <div className="sellerreg-card">
+          <h2>Seller Registration</h2>
+          <form onSubmit={handleSubmit}>
+            <label htmlFor="email">Email</label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              placeholder="Enter your email"
+              required
+            />
 
-          <label htmlFor="uniqueId">Generated ID</label>
-          <input
-            type="text"
-            id="uniqueId"
-            name="uniqueId"
-            value={formData.uniqueId}
-            onChange={handleChange}
-            placeholder="SELL-123456"
-            required
-          />
+            <label htmlFor="uniqueId">Generated ID</label>
+            <input
+              type="text"
+              id="uniqueId"
+              name="uniqueId"
+              value={formData.uniqueId}
+              onChange={handleChange}
+              placeholder="SELL-123456"
+              required
+            />
 
-          <label htmlFor="password">Password</label>
-          <input
-            type="password"
-            id="password"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-            placeholder="Enter your password"
-            required
-          />
+            <label htmlFor="password">Password</label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              placeholder="Enter your password"
+              required
+            />
 
-          <button type="submit" className="sellerreg-btn">
-            Register
-          </button>
-        </form>
+            <button type="submit" className="sellerreg-btn">
+              Register
+            </button>
+          </form>
 
-        <p className="sellerreg-message">{message}</p>
+          <p className="sellerreg-message">{message}</p>
 
-        <Link to="/seller/login" className="sellerreg-link">
-          Already registered? Login here.
-        </Link>
+          <Link to="/seller/login" className="sellerreg-link">
+            Already registered? Login here.
+          </Link>
+        </div>
       </div>
     </div>
   );
