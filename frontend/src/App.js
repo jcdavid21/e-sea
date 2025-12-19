@@ -38,6 +38,9 @@ import BuyerNotifications from "./pages/BuyerNotifications";
 import SellerReports from "./pages/SellerReports";
 
 import StoreHours from "./pages/StoreHours";
+import About from "./pages/About";
+import Policies from "./pages/Policies";
+import Contact from "./pages/Contact";
 
 function App() {
   return (
@@ -82,6 +85,9 @@ function App() {
 
         <Route path="/shop/:shopId" element={<ShopProductPage />} />
         <Route path="/buyer/orders" element={<OrderHistory />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/policies" element={<Policies />} />
+        <Route path="/contact" element={<Contact />} />
 
       </Routes>
     </BrowserRouter>

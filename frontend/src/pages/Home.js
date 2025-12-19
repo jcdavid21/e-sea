@@ -5,6 +5,7 @@ import Swal from "sweetalert2";
 import logo from "../assets/logo.png";
 import background from "../assets/front_landscape.jpg";
 import "./Home.css";
+import Navbar from "./Navbar";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -149,6 +150,7 @@ const Home = () => {
 
   return (
     <div className="home-wrapper" >
+      <Navbar />
       <header className="home-header">
         <img src={logo} alt="Sea Merkado Logo" className="home-logo" />
       </header>
@@ -162,6 +164,8 @@ const Home = () => {
         <button className="get-started-btn" onClick={() => navigate("/role")}>
           Get Started
         </button>
+
+
 
         {/* Best Sellers Section */}
         {bestSellers.length > 0 && (
