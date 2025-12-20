@@ -149,6 +149,28 @@
   box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
 }
 
+/* Category Dropdown for Mobile */
+.sp-category-select {
+  display: none;
+  width: 100%;
+  padding: 10px 16px;
+  border: 2px solid #bae6fd;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 500;
+  color: #1e3c72;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sp-category-select:focus {
+  outline: none;
+  border-color: #1e3c72;
+  box-shadow: 0 0 0 3px rgba(30, 60, 114, 0.1);
+}
+
 /* Loading State */
 .sp-loading-container {
   text-align: center;
@@ -534,12 +556,43 @@
     font-size: 1.5rem;
   }
 
+  .sp-header-subtitle {
+    font-size: 0.85rem;
+  }
+
+  .sp-back-btn {
+    font-size: 0.85rem;
+    padding: 8px 16px;
+  }
+
   .sp-filter-bar {
     padding: 12px 16px;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .sp-filter-bar span {
+    font-size: 0.9rem;
   }
 
   .sp-search-input {
     min-width: 100%;
+    width: 100%;
+  }
+
+  .sp-clear-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Hide button filters on mobile */
+  .sp-filter-buttons {
+    display: none;
+  }
+
+  /* Show dropdown select on mobile */
+  .sp-category-select {
+    display: block;
   }
 
   .sp-table {
@@ -555,5 +608,117 @@
   .sp-no-image {
     width: 50px;
     height: 50px;
+  }
+
+  .sp-pagination {
+    padding: 16px;
+    gap: 8px;
+  }
+
+  .sp-pagination-btn {
+    width: 36px;
+    height: 36px;
+  }
+
+  .sp-pagination-info {
+    font-size: 0.85rem;
+    margin: 0 8px;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .sp-container {
+    padding: 0.75rem;
+  }
+
+  .sp-header-bar {
+    padding: 1rem;
+  }
+
+  .sp-header-bar h2 {
+    font-size: 1.25rem;
+  }
+
+  .sp-header-subtitle {
+    font-size: 0.8rem;
+  }
+
+  .sp-back-btn {
+    font-size: 0.8rem;
+    padding: 8px 14px;
+    margin-bottom: 10px;
+  }
+
+  .sp-filter-bar {
+    padding: 10px 12px;
+    gap: 10px;
+  }
+
+  .sp-search-input,
+  .sp-category-select {
+    font-size: 0.85rem;
+    padding: 8px 12px;
+  }
+
+  .sp-clear-btn {
+    font-size: 0.85rem;
+    padding: 8px 16px;
+  }
+
+  .sp-table {
+    font-size: 0.75rem;
+  }
+
+  .sp-table thead th,
+  .sp-table tbody td {
+    padding: 10px 8px;
+  }
+
+  .sp-product-img,
+  .sp-no-image {
+    width: 45px;
+    height: 45px;
+  }
+
+  .sp-no-image {
+    font-size: 1.5rem;
+  }
+
+  .sp-product-name {
+    font-size: 0.85rem;
+  }
+
+  .sp-category-badge {
+    font-size: 0.75rem;
+    padding: 4px 8px;
+  }
+
+  .sp-current-price {
+    font-size: 0.9rem;
+  }
+
+  .sp-status-badge {
+    font-size: 0.7rem;
+    padding: 4px 10px;
+  }
+
+  .sp-pagination {
+    padding: 12px;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .sp-pagination-btn {
+    width: 32px;
+    height: 32px;
+  }
+
+  .sp-pagination-info {
+    font-size: 0.8rem;
+    margin: 0 6px;
+    width: 100%;
+    text-align: center;
+    order: -1;
+    margin-bottom: 8px;
   }
 }

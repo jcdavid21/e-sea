@@ -48,6 +48,8 @@
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  overflow-y: auto;
+  flex: 1;
 }
 
 .nav-link {
@@ -118,6 +120,7 @@
 .dashboard-card:hover {
   transform: translateY(-3px);
 }
+
 /* Mobile Header */
 .mobile-header {
   display: none;
@@ -163,6 +166,22 @@
   color: #ffffff;
 }
 
+/* Sidebar Overlay for Mobile */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  top: 60px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 998;
+}
+
+.sidebar-overlay.active {
+  display: block;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .dashboard-container {
@@ -173,9 +192,10 @@
     position: fixed;
     top: 60px;
     left: 0;
-    height: calc(100% - 60px);
+    height: calc(100vh - 60px);
     transform: translateX(-100%);
     z-index: 999;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
   }
 
   .sidebar.open {
@@ -185,14 +205,31 @@
   .main-content {
     margin-top: 60px;
     padding: 1rem;
+    height: calc(100vh - 60px);
+    overflow-y: auto;
   }
 
   .mobile-header {
     display: flex;
   }
 
+  .sidebar-header {
+    margin-bottom: 1.5rem;
+  }
+
+  .sidebar-logo {
+    width: 50px;
+    height: 50px;
+  }
+
   .sidebar-header h3 {
+    font-size: 14px;
+  }
+
+  .nav-link,
+  .logout-btn {
     font-size: 0.9rem;
+    padding: 0.7rem;
   }
 
   .nav-link span,
@@ -209,4 +246,58 @@
   }
 }
 
+@media (max-width: 480px) {
+  .mobile-header {
+    height: 55px;
+    padding: 0 0.75rem;
+  }
 
+  .mobile-logo {
+    width: 30px;
+    height: 30px;
+  }
+
+  .mobile-brand-name {
+    font-size: 14px;
+  }
+
+  .sidebar {
+    top: 55px;
+    height: calc(100vh - 55px);
+    width: 200px;
+    min-width: 200px;
+    padding: 0.75rem;
+  }
+
+  .sidebar-logo {
+    width: 45px;
+    height: 45px;
+  }
+
+  .sidebar-header h3 {
+    font-size: 13px;
+  }
+
+  .nav-link,
+  .logout-btn {
+    font-size: 0.85rem;
+    padding: 0.6rem;
+    gap: 0.6rem;
+  }
+
+  .main-content {
+    margin-top: 55px;
+    padding: 0.75rem;
+    height: calc(100vh - 55px);
+  }
+
+  .page-title {
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+  }
+
+  .dashboard-card {
+    font-size: 0.9rem;
+    padding: 1rem;
+  }
+}

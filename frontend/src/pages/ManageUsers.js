@@ -431,7 +431,7 @@ const handleUpdatePassword = async (e) => {
       </div>
 
       <div className="filter-bar">
-        <div style={styles.searchContainer}>
+        <div className="search-container">
           <FiSearch size={18} />
           <input
             type="text"
@@ -841,6 +841,7 @@ const handleUpdatePassword = async (e) => {
                 <button
                   type="submit"
                   style={styles.submitButton}
+                  className="submit-btn"
                 >
                   <FiUserPlus size={18} />
                   Add Admin
@@ -858,7 +859,7 @@ const handleUpdatePassword = async (e) => {
             <div style={styles.modalHeader}>
               <div style={styles.headerContent}>
                 <FiEdit2 size={24} style={{ color: '#fff' }} />
-                <h3 style={styles.modalTitle}>Update Admin Password</h3>
+                <h3 style={styles.modalTitle} className="modal-title">Update Admin Password</h3>
               </div>
               <button style={styles.closeButton} onClick={() => setShowUpdatePasswordModal(false)}>
                 <FiX size={24} />
@@ -932,6 +933,7 @@ const handleUpdatePassword = async (e) => {
                 <button
                   type="submit"
                   style={{...styles.submitButton, background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)'}}
+                  className="submit-btn"
                 >
                   <FiEdit2 size={18} />
                   Update Password
@@ -949,7 +951,7 @@ const handleUpdatePassword = async (e) => {
             <div style={styles.modalHeader}>
               <div style={styles.headerContent}>
                 <FiShield size={24} style={{ color: '#fff' }} />
-                <h3 style={styles.modalTitle}>Admin Information</h3>
+                <h3 style={styles.modalTitle} className="modal-title">Admin Information</h3>
               </div>
               <button style={styles.closeButton} onClick={() => setSelectedAdmin(null)}>
                 <FiX size={24} />
@@ -1161,7 +1163,7 @@ const styles = {
     width: '100%',
     maxWidth: '600px',
     maxHeight: '90vh',
-    overflow: 'hidden',
+    overflow: 'auto',
     boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
     display: 'flex',
     flexDirection: 'column',
@@ -1205,7 +1207,8 @@ const styles = {
   modalBody: {
     padding: '30px',
     overflowY: 'auto',
-    flex: 1,
+    flex: '1 1 auto',
+    maxHeight: 'calc(80vh - 160px)',
   },
   formGroup: {
     marginBottom: '20px',
@@ -1300,18 +1303,6 @@ const styles = {
     cursor: 'pointer',
     transition: 'background 0.3s ease',
   },
-  searchContainer: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '12px',
-    flex: 1,
-    maxWidth: '400px',
-    padding: '10px 16px',
-    background: '#f8fafc',
-    border: '2px solid #e0f2fe',
-    borderRadius: '8px',
-    transition: 'border-color 0.2s ease',
-  }
 };
 
 export default ManageUsers;

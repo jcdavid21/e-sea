@@ -165,6 +165,8 @@ function SellerProducts() {
       <div className="sp-filter-bar">
         <FiFilter size={18} />
         <span>Category:</span>
+        
+        {/* Desktop: Button filters */}
         <div className="sp-filter-buttons">
           <button
             className={`sp-category-btn ${selectedCategory === "All" ? "active" : ""}`}
@@ -185,6 +187,20 @@ function SellerProducts() {
             </button>
           ))}
         </div>
+
+        {/* Mobile: Dropdown select */}
+        <select 
+          className="sp-category-select"
+          value={selectedCategory}
+          onChange={(e) => setSelectedCategory(e.target.value)}
+        >
+          <option value="All">All Categories ({products.length})</option>
+          {categories.map((cat) => (
+            <option key={cat.id} value={cat.category_name}>
+              {cat.category_name} ({getCategoryCount(cat.category_name)})
+            </option>
+          ))}
+        </select>
       </div>
 
       {filteredProducts.length === 0 ? (
