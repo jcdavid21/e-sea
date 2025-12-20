@@ -48,7 +48,10 @@ const SellerDashboard = () => {
         >
           {sidebarOpen ? <FaTimes /> : <FaBars />}
         </button>
-        <img src={logo} alt="Sea-Merkado Logo" className="mobile-logo" />
+        <div className="mobile-logo-section">
+          <img src={logo} alt="Sea-Merkado Logo" className="mobile-logo" />
+          <h2 className="mobile-brand-name">e-Sea-Merkado</h2>
+        </div>
       </header>
 
       {/* Sidebar */}

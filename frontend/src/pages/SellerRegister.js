@@ -4,6 +4,7 @@ import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import "./SellerRegister.css";
 import Navbar from "./Navbar";
+import TermsModal from "./TermsModal";
 
 const SellerRegister = () => {
   const [formData, setFormData] = useState({
@@ -12,14 +13,27 @@ const SellerRegister = () => {
     password: "",
   });
   const [message, setMessage] = useState("");
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const handleTermsAccept = () => {
+    setAcceptedTerms(true);
+    setShowTermsModal(false);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!acceptedTerms) {
+      setMessage("Please accept the Terms & Conditions to continue.");
+      return;
+    }
+
     setMessage("Processing registration...");
 
     try {
@@ -83,7 +97,30 @@ const SellerRegister = () => {
               required
             />
 
-            <button type="submit" className="sellerreg-btn">
+            <div className="terms-checkbox-container">
+              <input
+                type="checkbox"
+                id="terms"
+                checked={acceptedTerms}
+                onChange={(e) => setAcceptedTerms(e.target.checked)}
+              />
+              <label htmlFor="terms">
+                I accept the{" "}
+                <button
+                  type="button"
+                  className="terms-link-btn"
+                  onClick={() => setShowTermsModal(true)}
+                >
+                  Terms & Conditions
+                </button>
+              </label>
+            </div>
+
+            <button
+              type="submit"
+              className="sellerreg-btn"
+              disabled={!acceptedTerms}
+            >
               Register
             </button>
           </form>
@@ -95,6 +132,13 @@ const SellerRegister = () => {
           </Link>
         </div>
       </div>
+
+      {showTermsModal && (
+        <TermsModal
+          onClose={() => setShowTermsModal(false)}
+          onAccept={handleTermsAccept}
+        />
+      )}
     </div>
   );
 };

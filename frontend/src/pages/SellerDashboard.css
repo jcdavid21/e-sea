@@ -22,23 +22,25 @@
 
 .sidebar-header {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
   margin-bottom: 2rem;
-  flex-wrap: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .sidebar-logo {
-  width: 36px;
-  height: 36px;
+  width: 70px;
+  height: 70px;
+  background: rgb(227, 227, 227);
+  border-radius: 50%;
+  padding: 10px;
 }
 
 .sidebar-header h3 {
-  font-size: 1rem;
-  font-weight: 500;
-  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  margin-top: 10px;
+  color: #ffffff;
+  margin-bottom: 0;
   white-space: nowrap;
 }
 
@@ -116,7 +118,6 @@
 .dashboard-card:hover {
   transform: translateY(-3px);
 }
-
 /* Mobile Header */
 .mobile-header {
   display: none;
@@ -141,9 +142,25 @@
   cursor: pointer;
 }
 
+.mobile-logo-section {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .mobile-logo {
-  width: 80px;
-  height: auto;
+  width: 35px;
+  height: 35px;
+  background: rgb(227, 227, 227);
+  border-radius: 50%;
+  padding: 5px;
+}
+
+.mobile-brand-name {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+  color: #ffffff;
 }
 
 /* Responsive */

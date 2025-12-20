@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import "./BuyerRegister.css";
 import Navbar from "./Navbar";
+import TermsModal from "./TermsModal";
 
 const BuyerRegister = () => {
   const [formData, setFormData] = useState({
@@ -16,6 +17,8 @@ const BuyerRegister = () => {
   });
 
   const [message, setMessage] = useState("");
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
   const navigate = useNavigate();
 
   const validatePassword = (password) => {
@@ -28,8 +31,18 @@ const BuyerRegister = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const handleTermsAccept = () => {
+    setAcceptedTerms(true);
+    setShowTermsModal(false);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!acceptedTerms) {
+      setMessage("Please accept the Terms & Conditions to continue.");
+      return;
+    }
 
     if (!validatePassword(formData.password)) {
       setMessage(
@@ -118,7 +131,30 @@ const BuyerRegister = () => {
               placeholder="Create a strong password"
             />
 
-            <button type="submit" className="buyer-register-btn">
+            <div className="terms-checkbox-container">
+              <input
+                type="checkbox"
+                id="terms"
+                checked={acceptedTerms}
+                onChange={(e) => setAcceptedTerms(e.target.checked)}
+              />
+              <label htmlFor="terms">
+                I accept the{" "}
+                <button
+                  type="button"
+                  className="terms-link-btn"
+                  onClick={() => setShowTermsModal(true)}
+                >
+                  Terms & Conditions
+                </button>
+              </label>
+            </div>
+
+            <button
+              type="submit"
+              className="buyer-register-btn"
+              disabled={!acceptedTerms}
+            >
               Register
             </button>
           </form>
@@ -133,6 +169,13 @@ const BuyerRegister = () => {
           </p>
         </div>
       </div>
+
+      {showTermsModal && (
+        <TermsModal
+          onClose={() => setShowTermsModal(false)}
+          onAccept={handleTermsAccept}
+        />
+      )}
     </div>
   );
 };

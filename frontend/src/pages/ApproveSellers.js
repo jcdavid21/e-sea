@@ -293,6 +293,8 @@ const ApproveSellers = () => {
       <div className="filter-bar">
         <FiFilter size={18} />
         <span>Filter by Status:</span>
+        
+        {/* Desktop filter buttons */}
         <div className="filter-buttons">
           <button 
             className={statusFilter === "all" ? "active" : ""} 
@@ -318,6 +320,19 @@ const ApproveSellers = () => {
           >
             Rejected ({sellers.filter(s => s.display_status === "rejected").length})
           </button>
+        </div>
+
+        {/* Mobile dropdown */}
+        <div className="filter-dropdown">
+          <select 
+            value={statusFilter} 
+            onChange={(e) => setStatusFilter(e.target.value)}
+          >
+            <option value="all">All ({sellers.length})</option>
+            <option value="pending">Pending ({sellers.filter(s => s.display_status === "pending").length})</option>
+            <option value="accepted">Accepted ({sellers.filter(s => s.display_status === "accepted").length})</option>
+            <option value="rejected">Rejected ({sellers.filter(s => s.display_status === "rejected").length})</option>
+          </select>
         </div>
       </div>
 
