@@ -4,6 +4,7 @@ import "./AdminDashboard.css";
 import ApproveSellers from "./ApproveSellers";
 import ManageUsers from "./ManageUsers";
 import AdminAnalytics from "./AdminAnalytics";
+import ManageFeedbacks from "./ManageFeedbacks";
 import Reports from "./Reports";
 import logo from "../assets/logo.png";
 
@@ -37,6 +38,8 @@ const AdminDashboard = () => {
         return <ManageUsers />;
       case "reports":
         return <Reports />;
+      case "feedbacks":
+        return <ManageFeedbacks />;
       default:
         return <AdminAnalytics />;
     }
@@ -127,6 +130,14 @@ const AdminDashboard = () => {
             >
               <span className="material-symbols-outlined">inventory_2</span>
               Seller Products
+            </button>
+
+            <button
+              className={activeTab === "feedbacks" ? "active" : ""}
+              onClick={() => handleNavClick("feedbacks")}
+            >
+              <span className="material-symbols-outlined">feedback</span>
+              Feedbacks
             </button>
 
             <button

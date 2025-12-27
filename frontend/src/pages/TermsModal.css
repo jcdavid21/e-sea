@@ -189,3 +189,73 @@
     padding: 16px 20px;
   }
 }
+
+
+/* Warning box for important policies */
+.terms-warning-box {
+  background: linear-gradient(135deg, #fff3cd 0%, #fff9e6 100%);
+  border-left: 4px solid #ff9800;
+  padding: 16px;
+  margin: 16px 0;
+  border-radius: 8px;
+}
+
+.terms-warning-box strong {
+  color: #d84315;
+}
+
+.terms-warning-box ul {
+  margin: 12px 0 0 0;
+  padding-left: 20px;
+}
+
+.terms-warning-box ul li {
+  margin: 8px 0;
+  color: #333;
+}
+
+.terms-warning-box svg {
+  color: #ff9800;
+  margin-right: 6px;
+}
+
+/* Make the accept button more prominent */
+.terms-accept-btn {
+  background: linear-gradient(135deg, #1e3c72, #2a5298);
+  color: white;
+  border: none;
+  padding: 14px 32px;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+}
+
+.terms-accept-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+/* Highlight box styling */
+.terms-highlight-box {
+  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+  border-left: 4px solid #2196f3;
+  padding: 16px;
+  margin: 16px 0;
+  border-radius: 8px;
+}
+
+.terms-highlight-box strong {
+  color: #1565c0;
+}
+
+.terms-highlight-box ul {
+  margin: 12px 0 0 0;
+  padding-left: 20px;
+}
+
+.terms-highlight-box ul li {
+  margin: 8px 0;
+}

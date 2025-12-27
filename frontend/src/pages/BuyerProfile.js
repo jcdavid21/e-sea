@@ -13,6 +13,7 @@ import {
   FaCalendarAlt
 } from "react-icons/fa";
 import BuyerHeader from "./BuyerHeader";
+import FeedbackModal from "./FeedbackModal";
 import "./BuyerProfile.css";
 
 const BuyerProfile = () => {
@@ -21,6 +22,7 @@ const BuyerProfile = () => {
   const [error, setError] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [editForm, setEditForm] = useState({
     username: "",
     email: "",
@@ -75,22 +77,74 @@ const BuyerProfile = () => {
     }
   };
 
-  const handleLogout = () => {
+  // Check if user has already submitted feedback
+  const checkExistingFeedback = async (customer_id) => {
+    try {
+      const res = await fetch(
+        `${process.env.REACT_APP_BUYER_API_URL}/api/feedback/check/${customer_id}?user_type=buyer`
+      );
+      const data = await res.json();
+      return data.hasFeedback;
+    } catch (error) {
+      console.error('Error checking feedback:', error);
+      return false;
+    }
+  };
+
+  // Modified handleLogout to check for existing feedback
+  const handleLogout = async () => {
     const customer_id = sessionStorage.getItem("customer_id");
-    console.log("🚪 Logging out customer:", customer_id);
+    
+    // Check if user has already submitted feedback
+    const hasFeedback = await checkExistingFeedback(customer_id);
+    
+    if (hasFeedback) {
+      // User has already submitted feedback, logout directly
+      console.log("🚪 User has already submitted feedback, logging out directly...");
+      sessionStorage.removeItem("customer_id");
+      sessionStorage.removeItem("buyerEmail");
+      sessionStorage.removeItem("buyerName");
+      navigate("/");
+    } else {
+      // Show feedback modal
+      setShowFeedbackModal(true);
+    }
+  };
 
-    // Clear session data
-    sessionStorage.removeItem("customer_id");
-    sessionStorage.removeItem("buyerEmail");
-    sessionStorage.removeItem("buyerName");
+  const handleFeedbackSubmit = async (feedbackData) => {
+    const customer_id = sessionStorage.getItem("customer_id");
+    
+    try {
+      await fetch(`${process.env.REACT_APP_BUYER_API_URL}/api/feedback`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...feedbackData,
+          user_id: customer_id
+        })
+      });
+      
+      console.log("🚪 Logging out customer:", customer_id);
+      
+      // Clear session data
+      sessionStorage.removeItem("customer_id");
+      sessionStorage.removeItem("buyerEmail");
+      sessionStorage.removeItem("buyerName");
 
-    console.log("Session cleared.");
-    navigate("/");
+      console.log("Session cleared.");
+      navigate("/");
+    } catch (error) {
+      console.error('Error submitting feedback:', error);
+      // Still proceed with logout even if feedback fails
+      sessionStorage.removeItem("customer_id");
+      sessionStorage.removeItem("buyerEmail");
+      sessionStorage.removeItem("buyerName");
+      navigate("/");
+    }
   };
 
   const handleEditToggle = () => {
     if (isEditing) {
-      // Cancel editing - reset form to original values
       setEditForm({
         username: buyer.username,
         email: buyer.email,
@@ -122,7 +176,6 @@ const BuyerProfile = () => {
       return;
     }
 
-    // Validation
     if (!editForm.username || !editForm.email || !editForm.contact || 
         !editForm.first_name || !editForm.last_name) {
       alert("Please fill in all required fields.");
@@ -142,7 +195,6 @@ const BuyerProfile = () => {
         setBuyer(res.data.buyer);
         setIsEditing(false);
         
-        // Update session storage if needed
         sessionStorage.setItem("buyerEmail", res.data.buyer.email);
         sessionStorage.setItem("buyerName", res.data.buyer.first_name);
       }
@@ -406,6 +458,19 @@ const BuyerProfile = () => {
           )}
         </div>
       </div>
+
+      <FeedbackModal
+        isOpen={showFeedbackModal}
+        onClose={() => {
+          setShowFeedbackModal(false);
+          sessionStorage.removeItem("customer_id");
+          sessionStorage.removeItem("buyerEmail");
+          sessionStorage.removeItem("buyerName");
+          navigate("/");
+        }}
+        onSubmit={handleFeedbackSubmit}
+        userType="buyer"
+      />
     </div>
   );
 };

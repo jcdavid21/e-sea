@@ -12,25 +12,75 @@ import {
   FaShoppingCart,
   FaClock,
 } from "react-icons/fa";
+import FeedbackModal from './FeedbackModal';
 import "./SellerDashboard.css";
 import logo from "../assets/logo.png";
 
 const SellerDashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const location = useLocation();
 
-  const handleLogout = () => {
-    localStorage.removeItem("sellerToken");
-    localStorage.removeItem("uniqueId");
-    window.location.href = "/role";
+  // Check if seller has already submitted feedback
+  const checkExistingFeedback = async (sellerId) => {
+    try {
+      const res = await fetch(
+        `${process.env.REACT_APP_SELLER_API_URL}/api/feedback/check/${sellerId}?user_type=seller`
+      );
+      const data = await res.json();
+      return data.hasFeedback;
+    } catch (error) {
+      console.error('Error checking feedback:', error);
+      return false;
+    }
   };
 
-  // Function to check if current route is active
+  const handleLogoutClick = async () => {
+    const sellerId = localStorage.getItem('uniqueId');
+    
+    // Check if user has already submitted feedback
+    const hasFeedback = await checkExistingFeedback(sellerId);
+    
+    if (hasFeedback) {
+      // User has already submitted feedback, logout directly
+      console.log("🚪 Seller has already submitted feedback, logging out directly...");
+      localStorage.removeItem("sellerToken");
+      localStorage.removeItem("uniqueId");
+      window.location.href = "/role";
+    } else {
+      // Show feedback modal
+      setShowFeedbackModal(true);
+    }
+  };
+
+  const handleFeedbackSubmit = async (feedbackData) => {
+    const sellerId = localStorage.getItem('uniqueId');
+    
+    try {
+      await fetch(`${process.env.REACT_APP_SELLER_API_URL}/api/feedback`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...feedbackData,
+          user_id: sellerId
+        })
+      });
+      
+      localStorage.removeItem("sellerToken");
+      localStorage.removeItem("uniqueId");
+      window.location.href = "/role";
+    } catch (error) {
+      console.error('Error submitting feedback:', error);
+      localStorage.removeItem("sellerToken");
+      localStorage.removeItem("uniqueId");
+      window.location.href = "/role";
+    }
+  };
+
   const isActive = (path) => {
     return location.pathname === path;
   };
 
-  // Active link styles
   const activeLinkStyle = {
     backgroundColor: '#1f2d48',
     color: '#ffffff',
@@ -40,7 +90,6 @@ const SellerDashboard = () => {
 
   return (
     <div className="dashboard-container">
-      {/* Mobile Header */}
       <header className="mobile-header">
         <button
           className="menu-toggle"
@@ -54,7 +103,6 @@ const SellerDashboard = () => {
         </div>
       </header>
 
-      {/* Sidebar */}
       <aside className={`sidebar ${sidebarOpen ? "open" : ""}`}>
         <div className="sidebar-header">
           <img src={logo} alt="e-Sea-Merkado Logo" className="sidebar-logo" />
@@ -106,7 +154,6 @@ const SellerDashboard = () => {
             <FaChartBar />
             <span>Price Analysis</span>
           </Link>
-          {/* store hours */}
           <Link 
             to="/seller/dashboard/store-hours" 
             className="nav-link"
@@ -116,7 +163,6 @@ const SellerDashboard = () => {
             <FaClock />
             <span>Store Hours</span>
           </Link>
-          {/* reports */}
           <Link 
             to="/seller/dashboard/reports" 
             className="nav-link"
@@ -126,7 +172,6 @@ const SellerDashboard = () => {
             <FaClipboardList />
             <span>Reports</span>
           </Link>
-          {/* end reports */}
           <Link 
             to="/seller/dashboard/profile" 
             className="nav-link"
@@ -137,16 +182,27 @@ const SellerDashboard = () => {
             <span>Profile</span>
           </Link>
         </nav>
-        <button onClick={handleLogout} className="logout-btn">
+        <button onClick={handleLogoutClick} className="logout-btn">
           <FaSignOutAlt />
           <span>Logout</span>
         </button>
       </aside>
 
-      {/* Main Content */}
       <main className="main-content">
-        <Outlet /> {/* This will render the selected page */}
+        <Outlet />
       </main>
+
+      <FeedbackModal
+        isOpen={showFeedbackModal}
+        onClose={() => {
+          setShowFeedbackModal(false);
+          localStorage.removeItem("sellerToken");
+          localStorage.removeItem("uniqueId");
+          window.location.href = "/role";
+        }}
+        onSubmit={handleFeedbackSubmit}
+        userType="seller"
+      />
     </div>
   );
 };

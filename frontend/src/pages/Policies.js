@@ -45,10 +45,11 @@ const Policies = () => {
 
             <h3>2. User Responsibilities</h3>
             <ul>
-              <li>Provide accurate adderss and contact information</li>
+              <li>Provide accurate address and contact information</li>
               <li>Comply with all applicable local, state, and national laws</li>
               <li>Not engage in fraudulent activities or misuse the platform</li>
               <li>Respect intellectual property rights</li>
+              <li>Inspect products thoroughly upon pick-up</li>
             </ul>
 
             <h3>3. Pick-Up Policy</h3>
@@ -58,7 +59,8 @@ const Policies = () => {
                 <li>Orders must be collected at the designated pick-up location</li>
                 <li>Pick-up times are subject to vendor availability</li>
                 <li>Order ID may be required during pick-up</li>
-                <li>Unclaimed orders may be subject to cancellation fees</li>
+                <li>Buyers must inspect products at the time of pick-up</li>
+                <li>Products must be collected within the agreed timeframe</li>
               </ul>
             </div>
 
@@ -66,9 +68,18 @@ const Policies = () => {
             <ul>
               <li>All prices are in Philippine Peso (₱) and are subject to change without notice</li>
               <li>Payment must be completed before order confirmation</li>
-              <li>We accept Gcash as the primary payment method</li>
-              <li>All sales are final unless otherwise stated in our refund policy</li>
+              <li>We accept GCash as the primary payment method</li>
+              <li><strong>All sales are final - No cancellations or refunds</strong></li>
+              <li>Once an order is placed, it cannot be cancelled or modified</li>
             </ul>
+
+            <div className="highlight-box warning">
+              <p><strong><FaExclamationTriangle /> No Cancellation Policy:</strong></p>
+              <p>
+                Due to the perishable nature of seafood products and to ensure fair business practices for our vendors, 
+                <strong> all orders are final and cannot be cancelled once placed</strong>. Please review your order carefully before confirming your purchase.
+              </p>
+            </div>
           </section>
 
           {/* Privacy Policy */}
@@ -132,50 +143,83 @@ const Policies = () => {
               <li>We maintain strict hygiene and food safety standards</li>
             </ul>
 
+            <h3>Product Inspection</h3>
+            <div className="highlight-box">
+              <p><strong>Buyer Responsibility:</strong></p>
+              <ul>
+                <li>Buyers must thoroughly inspect products at the time of pick-up</li>
+                <li>Any concerns about product quality must be raised immediately during pick-up</li>
+                <li>Once products leave the pick-up location, they are the buyer's responsibility</li>
+                <li>Vendors are available at pick-up to address any quality concerns</li>
+              </ul>
+            </div>
+
             <h3>Product Availability</h3>
             <p>
               Product availability is subject to daily catch and stock levels. We reserve the right to:
             </p>
             <ul>
               <li>Limit quantities of products purchased</li>
-              <li>Cancel orders if products become unavailable</li>
-              <li>Suggest alternative products when your selection is out of stock</li>
+              <li>Update product availability in real-time</li>
+              <li>Communicate with buyers if products become unavailable before pick-up</li>
             </ul>
           </section>
 
-          {/* Refund & Cancellation Policy */}
+          {/* No Refund Policy */}
           <section className="policies-section">
             <h2 className="section-title">
               <FaExclamationTriangle className="section-icon" />
-              Refund & Cancellation Policy
+              No Refund & No Cancellation Policy
             </h2>
 
-            <h3>Order Cancellation</h3>
+            <div className="highlight-box warning">
+              <h3>⚠️ Important Notice</h3>
+              <p>
+                <strong>e-Sea-Merkado operates with a strict NO REFUND and NO CANCELLATION policy.</strong>
+              </p>
+            </div>
+
+            <h3>Policy Details</h3>
             <ul>
-                <li><strong>No Cancellation:</strong> Orders cannot be cancelled once placed due to the perishable nature of seafood products
-                </li>
-                <li>If you encounter issues with your order, please contact our support team immediately</li>
+              <li><strong>No Cancellations:</strong> Once an order is placed and payment is confirmed, it cannot be cancelled under any circumstances</li>
+              <li><strong>No Refunds:</strong> All sales are final. No refunds will be issued for any reason</li>
+              <li><strong>No Exchanges:</strong> Products cannot be exchanged after purchase</li>
+              <li><strong>No Modifications:</strong> Orders cannot be modified after confirmation</li>
             </ul>
 
-            <h3>Refund Eligibility</h3>
-            <p>Refunds may be issued in the following cases:</p>
+            <h3>Reasons for This Policy</h3>
             <ul>
-              <li>Product received does have quality issues</li>
-              <li>Product quality issues verified upon pick-up</li>
-              <li>Order cancelled by vendor due to stock unavailability</li>
-              <li>System errors resulting in duplicate charges</li>
+              <li>Seafood products are highly perishable and prepared specifically for each order</li>
+              <li>Vendors commit resources immediately upon order confirmation</li>
+              <li>This ensures fair business practices and prevents food waste</li>
+              <li>Protects both buyers and vendors from unfair practices</li>
             </ul>
 
             <div className="highlight-box">
-              <p><strong>Important:</strong> Products must be inspected at the time of pick-up. Claims made after leaving the pick-up location may not be eligible for refund.</p>
+              <p><strong>Before You Order:</strong></p>
+              <ul>
+                <li>Double-check your order details, quantities, and pick-up information</li>
+                <li>Ensure you can pick up your order at the scheduled time</li>
+                <li>Verify product descriptions and specifications</li>
+                <li>Review vendor ratings and reviews</li>
+                <li>Contact the vendor if you have questions before placing an order</li>
+              </ul>
             </div>
 
-            <h3>Refund Process</h3>
+            <h3>Buyer Protection</h3>
+            <p>
+              While we maintain a strict no refund policy, we encourage buyers to:
+            </p>
             <ul>
-              <li>Refund requests must be submitted within 24 hours of pick-up</li>
-              <li>Approved refunds will be processed within 5-7 business days</li>
-              <li>Refunds will be returned to the original payment method</li>
+              <li>Inspect products thoroughly at the time of pick-up</li>
+              <li>Communicate immediately with the vendor if there are concerns</li>
+              <li>Take photos or videos if quality issues are observed during pick-up</li>
+              <li>Contact platform support for assistance in resolving disputes</li>
             </ul>
+
+            <p className="policy-emphasis">
+              By placing an order on e-Sea-Merkado, you acknowledge and accept this No Refund and No Cancellation policy.
+            </p>
           </section>
 
           {/* Vendor Terms */}
@@ -195,7 +239,9 @@ const Policies = () => {
               <li>Update stock availability in real-time</li>
               <li>Fulfill confirmed orders within agreed timeframes</li>
               <li>Comply with all food safety regulations and licensing requirements</li>
-              <li>Respond promptly to customer inquiries and issues</li>
+              <li>Be present during pick-up to address buyer concerns</li>
+              <li>Respond promptly to customer inquiries</li>
+              <li>Honor all confirmed orders</li>
             </ul>
 
             <h3>Commission and Fees</h3>
@@ -211,9 +257,11 @@ const Policies = () => {
             </p>
             <ul>
               <li>Violation of platform policies</li>
-              <li>Repeated customer complaints</li>
+              <li>Repeated customer complaints about quality</li>
               <li>Fraudulent activities</li>
               <li>Failure to maintain quality standards</li>
+              <li>Not fulfilling confirmed orders</li>
+              <li>Providing misleading product information</li>
             </ul>
           </section>
 
@@ -227,14 +275,20 @@ const Policies = () => {
               e-Sea-Merkado acts as a platform connecting buyers and sellers. While we strive to ensure quality and safety:
             </p>
             <ul>
-              <li>We are not responsible for issues arising from vendor products beyond our control</li>
-              <li>Users consume products at their own risk and should inspect items upon pick-up</li>
+              <li>We are not responsible for product quality issues that arise after pick-up</li>
+              <li>Buyers are responsible for inspecting products at the time of pick-up</li>
+              <li>We facilitate transactions but do not guarantee product quality beyond vendor commitments</li>
               <li>We are not liable for indirect, incidental, or consequential damages</li>
-              <li>Our total liability shall not exceed the amount paid for the specific order</li>
+              <li>Disputes between buyers and vendors should be resolved at the point of pick-up</li>
+              <li>We provide a platform for communication but are not party to individual transactions</li>
             </ul>
 
             <div className="highlight-box">
               <p><strong>Health Advisory:</strong> If you have allergies or dietary restrictions, please verify product details with vendors before purchase. We cannot guarantee the absence of allergens or cross-contamination.</p>
+            </div>
+
+            <div className="highlight-box warning">
+              <p><strong>Food Safety:</strong> Buyers are responsible for proper handling and storage of seafood products after pick-up. Follow food safety guidelines to prevent spoilage or contamination.</p>
             </div>
           </section>
 
@@ -269,7 +323,7 @@ const Policies = () => {
           </div>
 
           <p className="last-updated">
-            Last Updated: December 18, 2024
+            Last Updated: December 27, 2024
           </p>
         </div>
       </div>

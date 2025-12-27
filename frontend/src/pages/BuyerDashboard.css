@@ -42,7 +42,7 @@
   transform: scale(1.05);
 }
 
-.search-container {
+.left-section .search-container {
   flex: 1;
   display: flex;
   align-items: center;
@@ -50,7 +50,7 @@
   position: relative;
 }
 
-.search-bar {
+.search-container .search-bar {
   width: 100%;
   max-width: 750px;
   padding: 12px 20px;
@@ -63,7 +63,7 @@
   transition: all 0.3s ease;
 }
 
-.search-bar:focus {
+.left-section .search-bar:focus {
   background: #fff;
   outline: none;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
