@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Dec 14, 2025 at 05:19 AM
+-- Generation Time: Dec 27, 2025 at 09:49 AM
 -- Server version: 10.4.28-MariaDB
 -- PHP Version: 8.0.28
 
@@ -114,6 +114,17 @@ CREATE TABLE `fish_categories` (
   `created_at` timestamp NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `fish_categories`
+--
+
+INSERT INTO `fish_categories` (`id`, `category_name`, `seller_id`, `created_at`) VALUES
+(1, 'Freshwater', 'SELLER-QS2594', '2025-12-20 03:20:02'),
+(2, 'Saltwater', 'SELLER-QS2594', '2025-12-20 03:20:02'),
+(3, 'Shellfish', 'SELLER-QS2594', '2025-12-20 03:20:02'),
+(4, 'Crustaceans', 'SELLER-QS2594', '2025-12-20 03:20:02'),
+(5, 'Premium Fish', 'SELLER-QS2594', '2025-12-20 03:20:02');
+
 -- --------------------------------------------------------
 
 --
@@ -210,6 +221,13 @@ CREATE TABLE `sellers` (
   `date_added` timestamp NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `sellers`
+--
+
+INSERT INTO `sellers` (`id`, `unique_id`, `last_name`, `first_name`, `middle_name`, `shop_name`, `street`, `barangay`, `municipality`, `province`, `requirements`, `status`, `date_added`) VALUES
+(1, 'SELLER-QS2594', 'David', 'Juancarlo', '', 'doys', 'Loraine Street', 'doys', 'doys', 'Bulacan', '\"{\\\"barangayClearance\\\":true,\\\"businessPermit\\\":true,\\\"idProof\\\":true}\"', 'accepted', '2025-12-20 03:19:43');
+
 -- --------------------------------------------------------
 
 --
@@ -223,6 +241,13 @@ CREATE TABLE `seller_credentials` (
   `password_hash` varchar(255) NOT NULL,
   `date_registered` timestamp NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `seller_credentials`
+--
+
+INSERT INTO `seller_credentials` (`id`, `unique_id`, `email`, `password_hash`, `date_registered`) VALUES
+(1, 'SELLER-QS2594', 'jcdavid@gmail.com', '$2b$10$W09eLo0uZNYKAA5G2cAB.u9TsSOAMjUtahDUqYgbSUR2xRsrM5Si6', '2025-12-20 03:20:02');
 
 -- --------------------------------------------------------
 
@@ -285,6 +310,28 @@ CREATE TABLE `store_hours` (
   `created_at` timestamp NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `system_feedback`
+--
+
+CREATE TABLE `system_feedback` (
+  `id` int(11) NOT NULL,
+  `user_id` varchar(255) NOT NULL,
+  `user_type` enum('buyer','seller') NOT NULL,
+  `rating` int(11) NOT NULL CHECK (`rating` >= 1 and `rating` <= 5),
+  `comment` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `system_feedback`
+--
+
+INSERT INTO `system_feedback` (`id`, `user_id`, `user_type`, `rating`, `comment`, `created_at`) VALUES
+(1, '2', 'buyer', 5, 'User friendly', '2025-12-27 07:22:45');
 
 --
 -- Indexes for dumped tables
@@ -379,6 +426,12 @@ ALTER TABLE `store_hours`
   ADD UNIQUE KEY `unique_seller_day` (`seller_id`,`day_of_week`);
 
 --
+-- Indexes for table `system_feedback`
+--
+ALTER TABLE `system_feedback`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- AUTO_INCREMENT for dumped tables
 --
 
@@ -404,7 +457,7 @@ ALTER TABLE `buyer_notifications`
 -- AUTO_INCREMENT for table `fish_categories`
 --
 ALTER TABLE `fish_categories`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `fish_products`
@@ -434,13 +487,13 @@ ALTER TABLE `price_history`
 -- AUTO_INCREMENT for table `sellers`
 --
 ALTER TABLE `sellers`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `seller_credentials`
 --
 ALTER TABLE `seller_credentials`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `seller_locations`
@@ -465,6 +518,12 @@ ALTER TABLE `seller_profiles`
 --
 ALTER TABLE `store_hours`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `system_feedback`
+--
+ALTER TABLE `system_feedback`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- Constraints for dumped tables
