@@ -62,7 +62,7 @@ const db = mysql.createPool({
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DATABASE_NAME,
-  port: process.env.DB_PORT,
+  // port: process.env.DB_PORT,
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0
@@ -182,6 +182,63 @@ app.post("/api/admin/login", async (req, res) => {
   } catch (err) {
     console.error("❌ Database error:", err);
     return res.status(500).json({ message: "Database error" });
+  }
+});
+
+
+// Check if user has already submitted feedback
+app.get('/api/feedback/check/:user_id', async (req, res) => {
+  const { user_id } = req.params;
+  const { user_type } = req.query;
+  
+  try {
+    const [result] = await db.query(
+      'SELECT COUNT(*) as count FROM system_feedback WHERE user_id = ? AND user_type = ?',
+      [user_id, user_type]
+    );
+    
+    res.json({ hasFeedback: result[0].count > 0 });
+  } catch (error) {
+    console.error('Error checking feedback:', error);
+    res.status(500).json({ error: 'Failed to check feedback' });
+  }
+});
+
+// Get all feedbacks for admin
+app.get('/api/all-feedbacks', async (req, res) => {
+  try {
+    const [feedbacks] = await db.query(
+      `SELECT 
+        id, 
+        user_id, 
+        user_type, 
+        rating, 
+        comment, 
+        created_at 
+      FROM system_feedback 
+      ORDER BY created_at DESC`
+    );
+    
+    res.json(feedbacks);
+  } catch (error) {
+    console.error('Error fetching all feedbacks:', error);
+    res.status(500).json({ error: 'Failed to fetch feedbacks' });
+  }
+});
+
+// Submit feedback (keep the existing route)
+app.post('/api/feedback', async (req, res) => {
+  const { user_id, rating, comment, userType } = req.body;
+  
+  try {
+    await db.query(
+      'INSERT INTO system_feedback (user_id, user_type, rating, comment) VALUES (?, ?, ?, ?)',
+      [user_id, userType, rating, comment]
+    );
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error saving feedback:', error);
+    res.status(500).json({ error: 'Failed to save feedback' });
   }
 });
 
