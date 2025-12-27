@@ -129,7 +129,7 @@
   border-color: #1e3c72;
 }
 
-.search-container {
+.filter-bar .search-container {
   display: flex;
   align-items: center;
   gap: 12px;
