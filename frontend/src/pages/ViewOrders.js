@@ -15,7 +15,8 @@ import {
   FiCheckCircle,
   FiXCircle,
   FiTruck,
-  FiAlertCircle
+  FiAlertCircle,
+  FiPrinter
 } from "react-icons/fi";
 import Swal from "sweetalert2";
 
@@ -79,6 +80,241 @@ export default function ViewOrders() {
       fetchOrders(newPage);
     }
   };
+
+  const handlePrintReceipt = (order) => {
+    const printWindow = window.open('', '_blank');
+    const receiptHTML = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Receipt - Order #${order.orderId}</title>
+        <style>
+          * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+          }
+          body {
+            font-family: 'Courier New', monospace;
+            padding: 20px;
+            max-width: 400px;
+            margin: 0 auto;
+          }
+          .receipt {
+            border: 2px solid #000;
+            padding: 20px;
+          }
+          .header {
+            text-align: center;
+            border-bottom: 2px dashed #000;
+            padding-bottom: 15px;
+            margin-bottom: 15px;
+          }
+          .header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+          }
+          .header p {
+            font-size: 12px;
+            margin: 2px 0;
+          }
+          .section {
+            margin: 15px 0;
+            border-bottom: 1px dashed #000;
+            padding-bottom: 15px;
+          }
+          .section:last-child {
+            border-bottom: none;
+          }
+          .section-title {
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+          }
+          .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+            font-size: 13px;
+          }
+          .info-label {
+            font-weight: bold;
+          }
+          .items-table {
+            width: 100%;
+            margin: 10px 0;
+          }
+          .items-table th {
+            text-align: left;
+            border-bottom: 2px solid #000;
+            padding: 8px 0;
+            font-size: 12px;
+          }
+          .items-table td {
+            padding: 8px 0;
+            font-size: 13px;
+            border-bottom: 1px dashed #ccc;
+          }
+          .items-table .item-name {
+            width: 50%;
+          }
+          .items-table .item-qty {
+            width: 20%;
+            text-align: center;
+          }
+          .items-table .item-price {
+            width: 30%;
+            text-align: right;
+          }
+          .total-section {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 2px solid #000;
+          }
+          .total-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 8px 0;
+            font-size: 16px;
+            font-weight: bold;
+          }
+          .footer {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 2px dashed #000;
+            font-size: 12px;
+          }
+          .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            background: #f0f0f0;
+            border: 1px solid #000;
+          }
+          @media print {
+            body {
+              padding: 0;
+            }
+            .receipt {
+              border: none;
+            }
+            .no-print {
+              display: none;
+            }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="receipt">
+          <div class="header">
+            <h1>ORDER RECEIPT</h1>
+            <p>Thank you for your order!</p>
+          </div>
+
+          <div class="section">
+            <div class="section-title">Order Details</div>
+            <div class="info-row">
+              <span class="info-label">Order ID:</span>
+              <span>#${order.orderId}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Date:</span>
+              <span>${new Date(order.orderDate).toLocaleString()}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Status:</span>
+              <span class="status-badge">${order.status || "Pending"}</span>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">Customer Information</div>
+            <div class="info-row">
+              <span class="info-label">Name:</span>
+              <span>${order.customerName}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Contact:</span>
+              <span>${order.contact}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Address:</span>
+              <span>${order.address || 'N/A'}</span>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">Order Items</div>
+            <table class="items-table">
+              <thead>
+                <tr>
+                  <th class="item-name">Item</th>
+                  <th class="item-qty">Qty</th>
+                  <th class="item-price">Price</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${order.items.map(item => `
+                  <tr>
+                    <td class="item-name">${item.productName}</td>
+                    <td class="item-qty">×${item.quantity}</td>
+                    <td class="item-price">₱${item.price}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+
+          <div class="total-section">
+            <div class="total-row">
+              <span>TOTAL AMOUNT:</span>
+              <span>₱${Number(order.total).toFixed(2)}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Payment Mode:</span>
+              <span>${order.paymentMode || 'Gcash QR'}</span>
+            </div>
+          </div>
+
+          ${order.notes ? `
+          <div class="section">
+            <div class="section-title">Notes</div>
+            <p style="font-size: 12px;">${order.notes}</p>
+          </div>
+          ` : ''}
+
+          <div class="footer">
+            <p>This is an official receipt</p>
+            <p>Generated on ${new Date().toLocaleString()}</p>
+            <p style="margin-top: 10px;">Thank you for your business!</p>
+          </div>
+        </div>
+
+        <div class="no-print" style="text-align: center; margin-top: 20px;">
+          <button onclick="window.print()" style="padding: 10px 20px; font-size: 14px; cursor: pointer; background: #1e3c72; color: white; border: none; border-radius: 5px;">
+            Print Receipt
+          </button>
+          <button onclick="window.close()" style="padding: 10px 20px; font-size: 14px; cursor: pointer; background: #6c757d; color: white; border: none; border-radius: 5px; margin-left: 10px;">
+            Close
+          </button>
+        </div>
+      </body>
+      </html>
+    `;
+    
+    printWindow.document.write(receiptHTML);
+    printWindow.document.close();
+    
+    // Auto-trigger print dialog when page loads
+    printWindow.onload = function() {
+      printWindow.print();
+    };
+  };
+  
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
@@ -347,6 +583,17 @@ export default function ViewOrders() {
                   </div>
 
                   <div className="order-actions">
+                    {order.status === "Completed" && (
+                      <button
+                        className="btn btn-print"
+                        onClick={() => handlePrintReceipt(order)}
+                        title="Print Receipt"
+                      >
+                        <FiPrinter />
+                        Print
+                      </button>
+                    )}
+
                     {order.proofOfPayment ? (
                       <button
                         className="btn btn-view-proof"
@@ -1543,6 +1790,19 @@ export default function ViewOrders() {
   border-color: #1e3c72;
   box-shadow: 0 0 0 3px rgba(30, 60, 114, 0.1);
 }
+
+.btn-print {
+  background: #28a745;
+  color: white;
+  flex: 1;
+}
+
+.btn-print:hover {
+  background: #218838;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+}
+
       `}</style>
     </div>
   );
