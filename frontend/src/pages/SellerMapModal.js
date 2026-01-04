@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap } from 'react-leaflet';
+import { FaSpinner } from 'react-icons/fa';
 import L from 'leaflet';
 import Swal from 'sweetalert2';
 import 'leaflet/dist/leaflet.css';
@@ -29,7 +30,7 @@ const sellerIcon = new L.Icon({
 // Component to handle map re-centering
 function MapController({ position, zoom = 15 }) {
   const map = useMap();
-  
+
   useEffect(() => {
     if (position) {
       map.setView([position.lat, position.lng], zoom);
@@ -42,7 +43,7 @@ function MapController({ position, zoom = 15 }) {
 // Component to handle map clicks
 function LocationMarker({ position, setPosition, initialLocationSet }) {
   const map = useMap();
-  
+
   useMapEvents({
     click(e) {
       setPosition(e.latlng);
@@ -50,10 +51,10 @@ function LocationMarker({ position, setPosition, initialLocationSet }) {
   });
 
   return position ? (
-    <Marker 
-      position={[position.lat, position.lng]} 
-      icon={sellerIcon} 
-      draggable={true} 
+    <Marker
+      position={[position.lat, position.lng]}
+      icon={sellerIcon}
+      draggable={true}
       eventHandlers={{
         dragend: (e) => {
           const marker = e.target;
@@ -69,7 +70,7 @@ function LocationMarker({ position, setPosition, initialLocationSet }) {
       }}
     >
       <Popup>
-        <strong>📍 Store Location</strong><br />
+        <strong>Store Location</strong><br />
         Click and drag to adjust<br />
         <small style={{ color: '#666' }}>
           Lat: {position.lat.toFixed(6)}<br />
@@ -91,6 +92,7 @@ const SellerMapModal = ({ isOpen, onClose, sellerId, currentLocation, onSave }) 
   const [isSearching, setIsSearching] = useState(false);
   const hasRequestedLocation = useRef(false);
   const searchTimeoutRef = useRef(null);
+  const [selectedAddress, setSelectedAddress] = useState('');
 
   useEffect(() => {
     if (currentLocation) {
@@ -99,8 +101,8 @@ const SellerMapModal = ({ isOpen, onClose, sellerId, currentLocation, onSave }) 
     }
   }, [currentLocation]);
 
-    // Only automatically request location if there's NO saved location
-    useEffect(() => {
+  // Only automatically request location if there's NO saved location
+  useEffect(() => {
     if (isOpen && !hasRequestedLocation.current && !currentLocation) {
       hasRequestedLocation.current = true;
       // Reduce delay - map should be ready after 300-500ms
@@ -108,7 +110,7 @@ const SellerMapModal = ({ isOpen, onClose, sellerId, currentLocation, onSave }) 
         requestLocationPermission();
       }, 500);
     }
-    
+
     if (!isOpen) {
       hasRequestedLocation.current = false;
       setInitialLocationSet(false);
@@ -117,12 +119,19 @@ const SellerMapModal = ({ isOpen, onClose, sellerId, currentLocation, onSave }) 
     }
   }, [isOpen, currentLocation]);
 
+  // Reverse geocode when position changes
+  useEffect(() => {
+    if (position && position.lat && position.lng) {
+      reverseGeocode(position.lat, position.lng);
+    }
+  }, [position]);
+
   const requestLocationPermission = async () => {
     if ('permissions' in navigator) {
       try {
         const result = await navigator.permissions.query({ name: 'geolocation' });
         console.log('📍 Geolocation permission:', result.state);
-        
+
         if (result.state === 'denied') {
           Swal.fire({
             icon: 'warning',
@@ -137,7 +146,7 @@ const SellerMapModal = ({ isOpen, onClose, sellerId, currentLocation, onSave }) 
         console.log('Permission API not supported');
       }
     }
-    
+
     setIsLoadingLocation(true);
 
     if (!navigator.geolocation) {
@@ -170,21 +179,21 @@ const SellerMapModal = ({ isOpen, onClose, sellerId, currentLocation, onSave }) 
             lat: pos.coords.latitude,
             lng: pos.coords.longitude
           };
-          
+
           console.log(`📍 Location detected (attempt ${attempt}):`, userLocation);
           console.log('Accuracy:', pos.coords.accuracy, 'meters');
-          
+
           setPosition(userLocation);
           setIsLoadingLocation(false);
           setInitialLocationSet(true);
-          
+
           // Zoom in more if we have good accuracy
           if (pos.coords.accuracy < 50) {
             setMapZoom(18); // Very close zoom for high accuracy
           } else if (pos.coords.accuracy < 100) {
             setMapZoom(17); // Close zoom for medium accuracy
           }
-          
+
           Swal.fire({
             icon: 'success',
             title: 'Location Detected!',
@@ -203,20 +212,20 @@ const SellerMapModal = ({ isOpen, onClose, sellerId, currentLocation, onSave }) 
         },
         (error) => {
           console.warn(`Geolocation error (attempt ${attempt}):`, error);
-          
+
           // If first attempt failed, try with low accuracy
           if (attempt === 1) {
             console.log('Retrying with low accuracy settings...');
             setTimeout(() => tryGetLocation(2), 500);
             return;
           }
-          
+
           // Both attempts failed - show the map without setting location
           setIsLoadingLocation(false);
-          
+
           let errorMessage = '';
-          
-          switch(error.code) {
+
+          switch (error.code) {
             case error.PERMISSION_DENIED:
               errorMessage = 'Location access was denied. You can click on the map or use search to set your location.';
               break;
@@ -229,7 +238,7 @@ const SellerMapModal = ({ isOpen, onClose, sellerId, currentLocation, onSave }) 
             default:
               errorMessage = 'Unable to retrieve your location. You can click on the map or use search to set your location.';
           }
-          
+
           Swal.fire({
             icon: 'info',
             title: 'Manual Location Setup',
@@ -243,7 +252,7 @@ const SellerMapModal = ({ isOpen, onClose, sellerId, currentLocation, onSave }) 
         options
       );
     };
-    
+
     // Add delay to ensure map is ready, then start location detection
     setTimeout(() => tryGetLocation(1), 300);
   };
@@ -255,13 +264,13 @@ const SellerMapModal = ({ isOpen, onClose, sellerId, currentLocation, onSave }) 
     }
 
     setIsSearching(true);
-    
+
     try {
       // Using Nominatim API for geocoding (OpenStreetMap)
       const response = await fetch(
         `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&countrycodes=ph`
       );
-      
+
       if (response.ok) {
         const data = await response.json();
         setSearchResults(data);
@@ -283,12 +292,12 @@ const SellerMapModal = ({ isOpen, onClose, sellerId, currentLocation, onSave }) 
   const handleSearchInputChange = (e) => {
     const query = e.target.value;
     setSearchQuery(query);
-    
+
     // Debounce search
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current);
     }
-    
+
     searchTimeoutRef.current = setTimeout(() => {
       handleSearchLocation(query);
     }, 500);
@@ -299,12 +308,12 @@ const SellerMapModal = ({ isOpen, onClose, sellerId, currentLocation, onSave }) 
       lat: parseFloat(result.lat),
       lng: parseFloat(result.lon)
     };
-    
+
     setPosition(newPosition);
     setMapZoom(17);
     setSearchQuery(result.display_name);
     setSearchResults([]);
-    
+
     Swal.fire({
       icon: 'success',
       title: 'Location Selected',
@@ -414,6 +423,26 @@ const SellerMapModal = ({ isOpen, onClose, sellerId, currentLocation, onSave }) 
     requestLocationPermission();
   };
 
+  // Reverse geocode to get address from coordinates
+  const reverseGeocode = async (lat, lng) => {
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.display_name) {
+          setSelectedAddress(data.display_name);
+          return data.display_name;
+        }
+      }
+    } catch (error) {
+      console.error('Reverse geocoding error:', error);
+    }
+    return '';
+  };
+
   const center = useMemo(() => {
     if (position) return [position.lat, position.lng];
     return [14.5995, 120.9842]; // Default to Manila, Philippines
@@ -425,7 +454,7 @@ const SellerMapModal = ({ isOpen, onClose, sellerId, currentLocation, onSave }) 
     <div className="seller-map-modal" onClick={onClose}>
       <div className="seller-map-content" onClick={(e) => e.stopPropagation()}>
         <div className="seller-map-header">
-          <h2>📍 Store Location</h2>
+          <h2>Store Location</h2>
           <button className="modal-close" onClick={onClose}>×</button>
         </div>
 
@@ -458,9 +487,9 @@ const SellerMapModal = ({ isOpen, onClose, sellerId, currentLocation, onSave }) 
           ) : (
             <>
               <div className="map-instructions">
-                <p>🎯 Click on the map, drag the marker, or search for your location</p>
+                <p>Click on the map, drag the marker, or search for your location</p>
                 <p style={{ fontSize: '12px', color: '#475569', marginTop: '4px' }}>
-                  💡 Tip: Zoom in for more precise positioning
+                  Tip: Zoom in for more precise positioning
                 </p>
                 <button
                   onClick={handleRefreshLocation}
@@ -494,10 +523,10 @@ const SellerMapModal = ({ isOpen, onClose, sellerId, currentLocation, onSave }) 
                     onChange={handleSearchInputChange}
                   />
                   {isSearching && (
-                    <span className="search-loading">⏳</span>
+                    <span className="search-loading"><FaSpinner style={{ animation: 'spin 1s linear infinite' }} /></span>
                   )}
                 </div>
-                
+
                 {searchResults.length > 0 && (
                   <div className="search-results">
                     {searchResults.map((result, index) => (
@@ -520,6 +549,19 @@ const SellerMapModal = ({ isOpen, onClose, sellerId, currentLocation, onSave }) 
               {currentLocation && (
                 <div className="current-location-display">
                   <h4>Current Saved Location</h4>
+                  {selectedAddress && (
+                    <div style={{
+                      padding: '10px',
+                      background: '#f8f9fa',
+                      borderRadius: '6px',
+                      marginBottom: '12px',
+                      fontSize: '13px',
+                      lineHeight: '1.5',
+                      color: '#495057'
+                    }}>
+                      {selectedAddress}
+                    </div>
+                  )}
                   <p><strong>Latitude:</strong> {currentLocation.lat.toFixed(6)}</p>
                   <p><strong>Longitude:</strong> {currentLocation.lng.toFixed(6)}</p>
                 </div>
@@ -539,9 +581,9 @@ const SellerMapModal = ({ isOpen, onClose, sellerId, currentLocation, onSave }) 
                     maxZoom={19}
                   />
                   <MapController position={position} zoom={mapZoom} />
-                  <LocationMarker 
-                    position={position} 
-                    setPosition={setPosition} 
+                  <LocationMarker
+                    position={position}
+                    setPosition={setPosition}
                     initialLocationSet={initialLocationSet}
                   />
                 </MapContainer>
@@ -550,6 +592,36 @@ const SellerMapModal = ({ isOpen, onClose, sellerId, currentLocation, onSave }) 
               {position && (
                 <div className="location-info">
                   <h4>Selected Location</h4>
+                  {selectedAddress ? (
+                    <div style={{
+                      padding: '12px',
+                      background: '#f0f9ff',
+                      borderRadius: '8px',
+                      marginBottom: '12px',
+                      fontSize: '13px',
+                      lineHeight: '1.6',
+                      color: '#0c4a6e',
+                      border: '1px solid #bae6fd'
+                    }}>
+                      📍 <strong>Address:</strong><br />
+                      {selectedAddress}
+                    </div>
+                  ) : (
+                    <div style={{
+                      padding: '12px',
+                      background: '#f8f9fa',
+                      borderRadius: '8px',
+                      marginBottom: '12px',
+                      fontSize: '13px',
+                      color: '#667eea',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px'
+                    }}>
+                      <FaSpinner style={{ animation: 'spin 1s linear infinite' }} />
+                      Getting address...
+                    </div>
+                  )}
                   <div className="location-detail">
                     <span className="label">Latitude:</span>
                     <span className="value">{position.lat.toFixed(6)}</span>
@@ -577,8 +649,8 @@ const SellerMapModal = ({ isOpen, onClose, sellerId, currentLocation, onSave }) 
               Delete Location
             </button>
           )}
-          <button 
-            className="btn-confirm" 
+          <button
+            className="btn-confirm"
             onClick={handleSave}
             disabled={!position}
           >

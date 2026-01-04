@@ -5,7 +5,7 @@ import BuyerHeader from "./BuyerHeader";
 import Swal from 'sweetalert2';
 import MapPicker from './MapPicker';
 import {
-  FaClock, FaCheckCircle, FaTimesCircle, FaShoppingCart, FaCar, FaMapMarkerAlt
+  FaClock, FaCheckCircle, FaTimesCircle, FaShoppingCart, FaCar, FaMapMarkerAlt, FaTrashAlt
 } from 'react-icons/fa';
 
 // Import cart utilities
@@ -631,12 +631,12 @@ const CartPage = () => {
       if (item.id === id) {
         // Parse the input and handle invalid values
         let parsedQty = parseInt(newQty);
-        
+
         // If invalid input, default to 1
         if (isNaN(parsedQty) || parsedQty < 1) {
           parsedQty = 1;
         }
-        
+
         // If exceeds stock, set to max stock and show warning
         if (parsedQty > (item.stock || 999)) {
           Swal.fire({
@@ -647,7 +647,7 @@ const CartPage = () => {
           });
           parsedQty = item.stock || 999;
         }
-        
+
         return { ...item, quantity: parsedQty };
       }
       return item;
@@ -1002,7 +1002,7 @@ const CartPage = () => {
                   )}
                   {!storeStatus.isOpen && (
                     <div className="store-closed-overlay">
-                      
+
                     </div>
                   )}
                 </div>
@@ -1155,10 +1155,13 @@ const CartPage = () => {
                                 distance: location.distance ? parseFloat(location.distance) : null
                               };
                               setDeliveryLocation(processedLocation);
-                              setOrderData({
-                                ...orderData,
-                                address: `Lat: ${location.lat.toFixed(6)}, Lng: ${location.lng.toFixed(6)}`
-                              });
+                              // Address will be set by MapPicker's reverse geocoding
+                              if (location.address) {
+                                setOrderData({
+                                  ...orderData,
+                                  address: location.address
+                                });
+                              }
                             }}
                             initialPosition={deliveryLocation}
                           />
@@ -1174,13 +1177,18 @@ const CartPage = () => {
                           }}>
                             <div className="location-info">
                               <p style={{ margin: '0 0 8px 0', fontWeight: '600', color: '#333' }}>
-                                ✅ Location Selected
+                                Location Selected
                               </p>
-                              <p style={{ margin: '4px 0', fontSize: '13px', color: '#666' }}>
-                                <strong>Latitude:</strong> {deliveryLocation.lat.toFixed(6)}
-                              </p>
-                              <p style={{ margin: '4px 0', fontSize: '13px', color: '#666' }}>
-                                <strong>Longitude:</strong> {deliveryLocation.lng.toFixed(6)}
+                              <p style={{
+                                margin: '4px 0',
+                                fontSize: '13px',
+                                color: '#666',
+                                padding: '8px',
+                                background: 'white',
+                                borderRadius: '6px',
+                                lineHeight: '1.5'
+                              }}>
+                                {orderData.address || 'Address not set'}
                               </p>
                               {deliveryLocation.distance && (
                                 <div className="distance-badge" style={{
@@ -1226,20 +1234,8 @@ const CartPage = () => {
                                 <p className="contact">{addr.contact}</p>
 
                                 {addr.latitude && addr.longitude ? (
-                                  <p style={{
-                                    fontSize: '11px',
-                                    color: '#10b981',
-                                    marginTop: '8px',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '4px',
-                                    fontWeight: '600',
-                                    background: '#f0fdf4',
-                                    padding: '4px 8px',
-                                    borderRadius: '4px',
-                                    border: '1px solid #86efac'
-                                  }}>
-                                    <FaMapMarkerAlt /> Location: {parseFloat(addr.latitude).toFixed(4)}, {parseFloat(addr.longitude).toFixed(4)}
+                                  <p style={{ fontSize: '11px', color: '#10b981', marginTop: '8px', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: '600', background: '#f0fdf4', padding: '4px 8px', borderRadius: '4px', border: '1px solid #86efac' }}>
+                                    <FaMapMarkerAlt /> Location saved
                                   </p>
                                 ) : (
                                   <p style={{
@@ -1267,7 +1263,7 @@ const CartPage = () => {
                                 }}
                                 title="Delete address"
                               >
-                                🗑️
+                                <FaTrashAlt />
                               </button>
                             </div>
                           ))}
@@ -1352,11 +1348,18 @@ const CartPage = () => {
                               <FaCheckCircle style={{ color: '#10b981' }} /> Location Selected
                             </div>
                             <div style={{ fontSize: '13px', color: '#047857' }}>
-                              <div>📍 Latitude: {deliveryLocation.lat.toFixed(6)}</div>
-                              <div>📍 Longitude: {deliveryLocation.lng.toFixed(6)}</div>
+                              <div style={{
+                                padding: '8px',
+                                background: 'white',
+                                borderRadius: '6px',
+                                marginBottom: '8px',
+                                lineHeight: '1.5'
+                              }}>
+                                {orderData.address || 'Address not set'}
+                              </div>
                               {deliveryLocation.distance && (
                                 <div style={{ marginTop: '4px', fontWeight: '600' }}>
-                                  🚗 Distance to store: {deliveryLocation.distance.toFixed(2)} km
+                                  Distance to store: {deliveryLocation.distance.toFixed(2)} km
                                 </div>
                               )}
                             </div>
@@ -1494,10 +1497,13 @@ const CartPage = () => {
                           distance: location.distance ? parseFloat(location.distance) : null
                         };
                         setDeliveryLocation(processedLocation);
-                        setOrderData({
-                          ...orderData,
-                          address: `Lat: ${location.lat.toFixed(6)}, Lng: ${location.lng.toFixed(6)}`
-                        });
+                        // Address will be set by MapPicker's reverse geocoding
+                        if (location.address) {
+                          setOrderData({
+                            ...orderData,
+                            address: location.address
+                          });
+                        }
                       }}
                       initialPosition={deliveryLocation}
                     />

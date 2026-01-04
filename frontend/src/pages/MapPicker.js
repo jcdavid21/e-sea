@@ -102,6 +102,8 @@ const MapPicker = ({ sellerLocation, onLocationSelect, initialPosition = null })
     const searchTimeoutRef = useRef(null);
     const hasAutoDetected = useRef(false);
 
+    const [selectedAddress, setSelectedAddress] = useState('');
+
     // ✅ FIXED: Better auto-detection logic
     useEffect(() => {
         // Only auto-detect if:
@@ -132,6 +134,13 @@ const MapPicker = ({ sellerLocation, onLocationSelect, initialPosition = null })
             fetchRoute(position, sellerLocation);
         }
     }, [position, sellerLocation, mapReady]);
+
+    // Reverse geocode when position changes
+    useEffect(() => {
+        if (position && position.lat && position.lng) {
+            reverseGeocode(position.lat, position.lng);
+        }
+    }, [position]);
 
     // ✅ FIXED: Improved location request with IP fallback
     const requestLocation = async () => {
@@ -266,6 +275,26 @@ const MapPicker = ({ sellerLocation, onLocationSelect, initialPosition = null })
         setLocationError('Could not detect location automatically. Please click on the map or search for your location.');
     };
 
+    // Reverse geocode to get address from coordinates
+    const reverseGeocode = async (lat, lng) => {
+        try {
+            const response = await fetch(
+                `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`
+            );
+            
+            if (response.ok) {
+                const data = await response.json();
+                if (data.display_name) {
+                    setSelectedAddress(data.display_name);
+                    return data.display_name;
+                }
+            }
+        } catch (error) {
+            console.error('Reverse geocoding error:', error);
+        }
+        return `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+    };
+
     const fetchRoute = async (start, end) => {
         setIsLoadingRoute(true);
         try {
@@ -346,6 +375,7 @@ const MapPicker = ({ sellerLocation, onLocationSelect, initialPosition = null })
         setRouteInfo(null);
         setRouteCoordinates([]);
         setLocationError(null);
+        setSelectedAddress(''); 
         console.log('📍 Location selected manually:', e.latlng);
     };
 
@@ -353,6 +383,7 @@ const MapPicker = ({ sellerLocation, onLocationSelect, initialPosition = null })
         if (position && onLocationSelect) {
             const locationData = {
                 ...position,
+                address: selectedAddress || `${position.lat.toFixed(6)}, ${position.lng.toFixed(6)}`,
                 distance: routeInfo?.distance || (sellerLocation ?
                     calculateDistance(position.lat, position.lng, sellerLocation.lat, sellerLocation.lng) :
                     null),
@@ -699,16 +730,38 @@ const MapPicker = ({ sellerLocation, onLocationSelect, initialPosition = null })
                     <div style={{ fontWeight: '600', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <FaMapMarkerAlt style={{ color: '#667eea' }} /> Selected Location
                     </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                        <div>
-                            <span style={{ color: '#666' }}>Latitude:</span>
-                            <div style={{ fontWeight: '600' }}>{position.lat.toFixed(6)}</div>
+                    {selectedAddress ? (
+                        <div style={{ 
+                            padding: '10px', 
+                            background: 'white', 
+                            borderRadius: '6px',
+                            border: '1px solid #e5e7eb',
+                            lineHeight: '1.5'
+                        }}>
+                            {selectedAddress}
                         </div>
-                        <div>
-                            <span style={{ color: '#666' }}>Longitude:</span>
-                            <div style={{ fontWeight: '600' }}>{position.lng.toFixed(6)}</div>
+                    ) : (
+                        <div style={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            gap: '8px',
+                            padding: '10px',
+                            background: 'white',
+                            borderRadius: '6px',
+                            color: '#667eea'
+                        }}>
+                            <FaSpinner className="fa-spin" />
+                            <span>Getting address...</span>
                         </div>
-                    </div>
+                    )}
+                    <details style={{ marginTop: '8px', fontSize: '11px', color: '#666' }}>
+                        <summary style={{ cursor: 'pointer', fontStyle: 'italic' }}>
+                            Show coordinates
+                        </summary>
+                        <div style={{ marginTop: '4px', padding: '6px', background: 'white', borderRadius: '4px' }}>
+                            Lat: {position.lat.toFixed(6)}, Lng: {position.lng.toFixed(6)}
+                        </div>
+                    </details>
                 </div>
             )}
 
