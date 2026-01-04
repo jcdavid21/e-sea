@@ -13,12 +13,13 @@ const SellerHome = () => {
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [priceAnalysisData, setPriceAnalysisData] = useState([]);
-  
+
 
   // Filter states
   const [salesPeriod, setSalesPeriod] = useState('7days'); // 7days, 30days, 90days, all
   const [categoryFilter, setCategoryFilter] = useState('all'); // all, or specific category
   const [orderStatusFilter, setOrderStatusFilter] = useState('Pending');
+  const [supplyDemandData, setSupplyDemandData] = useState([]);
 
   // Map Modal State
   const [showMapModal, setShowMapModal] = useState(false);
@@ -26,6 +27,49 @@ const SellerHome = () => {
 
   const SELLER_ID = localStorage.getItem("seller_unique_id");
   const navigate = useNavigate();
+
+  const prepareSupplyDemandData = (productsData, ordersData) => {
+    const varietyStats = {};
+
+    // Calculate supply from products
+    productsData.forEach(product => {
+      const variety = product.name.toLowerCase();
+      if (!varietyStats[variety]) {
+        varietyStats[variety] = {
+          name: product.name,
+          supply: 0,
+          demand: 0,
+          category: product.category || 'Uncategorized'
+        };
+      }
+      varietyStats[variety].supply += Number(product.stock);
+    });
+
+    // Calculate demand from completed orders
+    ordersData
+      .filter(order => order.status === 'Completed')
+      .forEach(order => {
+        if (order.items && Array.isArray(order.items)) {
+          order.items.forEach(item => {
+            const variety = item.productName.toLowerCase();
+            if (varietyStats[variety]) {
+              varietyStats[variety].demand += Number(item.quantity);
+            }
+          });
+        }
+      });
+
+    // Calculate trends and sort by demand
+    return Object.values(varietyStats).map(stat => ({
+      name: stat.name,
+      supply: stat.supply,
+      demand: stat.demand,
+      category: stat.category,
+      ratio: stat.supply / (stat.demand || 1),
+      trend: stat.supply > stat.demand * 1.5 ? 'Oversupply' :
+        stat.demand > stat.supply ? 'High Demand' : 'Balanced'
+    })).sort((a, b) => b.demand - a.demand);
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -50,6 +94,8 @@ const SellerHome = () => {
 
         setProfile(profileData || {});
         setSellerInfo(infoData || {});
+        const supplyDemand = prepareSupplyDemandData(Array.isArray(prodData) ? prodData : [], Array.isArray(ordersArray) ? ordersArray : []);
+        setSupplyDemandData(supplyDemand);
         await fetchStoreLocation();
         await fetchPriceAnalysisData(prodData);
       } catch (err) {
@@ -104,13 +150,13 @@ const SellerHome = () => {
   const fetchPriceAnalysisData = async (productsData) => {
     try {
       const priceData = [];
-      
+
       for (const product of productsData.slice(0, 5)) {
         try {
           const res = await fetch(
             `${process.env.REACT_APP_SELLER_API_URL}/api/seller/price-analysis/${product.id}?seller_id=${SELLER_ID}`
           );
-          
+
           if (res.ok) {
             const data = await res.json();
             if (data.suggestions && data.suggestions.length > 0) {
@@ -127,7 +173,7 @@ const SellerHome = () => {
           console.log(`Could not fetch price analysis for product ${product.id}`);
         }
       }
-      
+
       setPriceAnalysisData(priceData);
     } catch (err) {
       console.error("Error fetching price analysis:", err);
@@ -151,19 +197,19 @@ const SellerHome = () => {
   };
 
   // Get products for pie chart
-  const getProductsForPieChart = () => {
-    const filteredProducts = getFilteredProducts();
-    const categoryCount = {};
-    filteredProducts.forEach(product => {
-      const category = product.category || "Uncategorized";
-      categoryCount[category] = (categoryCount[category] || 0) + 1;
-    });
+  // const getProductsForPieChart = () => {
+  //   const filteredProducts = getFilteredProducts();
+  //   const categoryCount = {};
+  //   filteredProducts.forEach(product => {
+  //     const category = product.category || "Uncategorized";
+  //     categoryCount[category] = (categoryCount[category] || 0) + 1;
+  //   });
 
-    return Object.entries(categoryCount).map(([name, value]) => ({
-      name,
-      value
-    }));
-  };
+  //   return Object.entries(categoryCount).map(([name, value]) => ({
+  //     name,
+  //     value
+  //   }));
+  // };
 
   const COLORS = ['#0891b2', '#06b6d4', '#22d3ee', '#67e8f9', '#a5f3fc', '#cffafe'];
 
@@ -350,7 +396,7 @@ const SellerHome = () => {
               alignItems: 'center',
               gap: '8px',
               padding: '10px 20px',
-              background: storeLocation 
+              background: storeLocation
                 ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
                 : 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
               color: 'white',
@@ -379,7 +425,7 @@ const SellerHome = () => {
 
       {/* Stats Cards */}
       <div className="stats-grid">
-        <div 
+        <div
           className="stat-card stat-products"
           onClick={() => navigate('/seller/dashboard/products')}
           style={{ cursor: 'pointer' }}
@@ -394,7 +440,7 @@ const SellerHome = () => {
           </div>
         </div>
 
-        <div 
+        <div
           className="stat-card stat-orders"
           onClick={() => navigate('/seller/dashboard/orders')}
           style={{ cursor: 'pointer' }}
@@ -412,7 +458,7 @@ const SellerHome = () => {
           </div>
         </div>
 
-        <div 
+        <div
           className="stat-card stat-revenue"
           onClick={() => navigate('/seller/dashboard/reports')}
           style={{ cursor: 'pointer' }}
@@ -427,8 +473,8 @@ const SellerHome = () => {
           </div>
         </div>
 
-        <div 
-          className="stat-card stat-pending" 
+        <div
+          className="stat-card stat-pending"
           onClick={() => navigate('/seller/dashboard/orders')}
           style={{
             background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)',
@@ -451,7 +497,7 @@ const SellerHome = () => {
       {/* Main Content Grid */}
       <div className="content-grid">
         <div className="chart-card chart-large">
-          <div 
+          <div
             className="card-header clickable-header"
             onClick={() => navigate('/seller/dashboard/reports')}
             style={{ cursor: 'pointer' }}
@@ -560,7 +606,7 @@ const SellerHome = () => {
 
         {/* Order Status Distribution */}
         <div className="chart-card">
-          <div 
+          <div
             className="card-header clickable-header"
             onClick={() => navigate('/seller/dashboard/orders')}
             style={{ cursor: 'pointer' }}
@@ -623,7 +669,7 @@ const SellerHome = () => {
           </div>
         </div>
       </div>
-      
+
       {/* Price Analysis Chart */}
       <div className="price-analysis-card" onClick={handleNavigateToPriceAnalysis}>
         <div className="card-header clickable-header">
@@ -676,9 +722,200 @@ const SellerHome = () => {
         </div>
       </div>
 
+      <div className="chart-card" style={{ marginTop: '28px' }}>
+        <div
+          className="card-header clickable-header"
+          onClick={() => navigate('/seller/dashboard/stock')}
+          style={{ cursor: 'pointer' }}
+        >
+          <h3><BarChart3 size={18} style={{ display: 'inline', marginRight: '8px' }} /> Supply vs Demand Analysis</h3>
+          <span className="chart-period">Fish Varieties Overview</span>
+        </div>
+        <div className="chart-content">
+          {supplyDemandData.length > 0 ? (
+            <>
+              <ResponsiveContainer width="100%" height={400}>
+                <BarChart data={supplyDemandData.slice(0, 10)} margin={{ top: 10, right: 30, left: 0, bottom: 80 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis
+                    dataKey="name"
+                    angle={-45}
+                    textAnchor="end"
+                    height={100}
+                    fontSize={11}
+                    stroke="#6b7280"
+                    tickLine={false}
+                    axisLine={{ stroke: '#e5e7eb' }}
+                  />
+                  <YAxis
+                    fontSize={11}
+                    stroke="#6b7280"
+                    tickLine={false}
+                    axisLine={{ stroke: '#e5e7eb' }}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'white',
+                      border: 'none',
+                      borderRadius: '12px',
+                      padding: '12px',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+                    }}
+                    formatter={(value, name, props) => {
+                      const item = props.payload;
+                      return [
+                        <div key="tooltip">
+                          <div style={{ fontWeight: '700', marginBottom: '8px' }}>{item.name}</div>
+                          <div style={{ fontSize: '12px', marginBottom: '4px' }}>
+                            Supply: <strong>{item.supply}</strong> units
+                          </div>
+                          <div style={{ fontSize: '12px', marginBottom: '4px' }}>
+                            Demand: <strong>{item.demand}</strong> units
+                          </div>
+                          <div style={{ fontSize: '12px', marginBottom: '4px' }}>
+                            Category: <strong>{item.category}</strong>
+                          </div>
+                          <div style={{
+                            fontSize: '11px',
+                            padding: '4px 8px',
+                            borderRadius: '6px',
+                            marginTop: '4px',
+                            background: item.trend === 'High Demand' ? '#fee2e2' :
+                              item.trend === 'Oversupply' ? '#dbeafe' : '#f0fdf4',
+                            color: item.trend === 'High Demand' ? '#dc2626' :
+                              item.trend === 'Oversupply' ? '#2563eb' : '#16a34a',
+                            fontWeight: '700'
+                          }}>
+                            {item.trend}
+                          </div>
+                        </div>
+                      ];
+                    }}
+                  />
+                  <Legend />
+                  <Bar dataKey="supply" fill="#3b82f6" name="Supply (Stock)" radius={[8, 8, 0, 0]} />
+                  <Bar dataKey="demand" fill="#10b981" name="Demand (Sold)" radius={[8, 8, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+
+              {/* Insights Cards */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                gap: '16px',
+                marginTop: '24px'
+              }}>
+                {/* High Demand Items */}
+                {supplyDemandData.filter(item => item.trend === 'High Demand').length > 0 && (
+                  <div style={{
+                    background: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)',
+                    padding: '16px',
+                    borderRadius: '12px',
+                    border: '2px solid #fca5a5'
+                  }}>
+                    <h4 style={{
+                      margin: '0 0 12px 0',
+                      fontSize: '14px',
+                      fontWeight: '800',
+                      color: '#991b1b',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px'
+                    }}>
+                      <TrendingUp size={16} />
+                      High Demand Items
+                    </h4>
+                    {supplyDemandData.filter(item => item.trend === 'High Demand').slice(0, 3).map((item, idx) => (
+                      <div key={idx} style={{
+                        fontSize: '12px',
+                        color: '#7f1d1d',
+                        marginBottom: '6px',
+                        fontWeight: '600'
+                      }}>
+                        • {item.name}: {item.demand} sold vs {item.supply} in stock
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Oversupply Items */}
+                {supplyDemandData.filter(item => item.trend === 'Oversupply').length > 0 && (
+                  <div style={{
+                    background: 'linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)',
+                    padding: '16px',
+                    borderRadius: '12px',
+                    border: '2px solid #93c5fd'
+                  }}>
+                    <h4 style={{
+                      margin: '0 0 12px 0',
+                      fontSize: '14px',
+                      fontWeight: '800',
+                      color: '#1e40af',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px'
+                    }}>
+                      <Package size={16} />
+                      Oversupply Items
+                    </h4>
+                    {supplyDemandData.filter(item => item.trend === 'Oversupply').slice(0, 3).map((item, idx) => (
+                      <div key={idx} style={{
+                        fontSize: '12px',
+                        color: '#1e3a8a',
+                        marginBottom: '6px',
+                        fontWeight: '600'
+                      }}>
+                        • {item.name}: {item.supply} in stock vs {item.demand} sold
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Balanced Items */}
+                {supplyDemandData.filter(item => item.trend === 'Balanced').length > 0 && (
+                  <div style={{
+                    background: 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)',
+                    padding: '16px',
+                    borderRadius: '12px',
+                    border: '2px solid #6ee7b7'
+                  }}>
+                    <h4 style={{
+                      margin: '0 0 12px 0',
+                      fontSize: '14px',
+                      fontWeight: '800',
+                      color: '#065f46',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px'
+                    }}>
+                      <CheckCircle size={16} />
+                      Well-Balanced Items
+                    </h4>
+                    {supplyDemandData.filter(item => item.trend === 'Balanced').slice(0, 3).map((item, idx) => (
+                      <div key={idx} style={{
+                        fontSize: '12px',
+                        color: '#064e3b',
+                        marginBottom: '6px',
+                        fontWeight: '600'
+                      }}>
+                        • {item.name}: {item.supply} stock, {item.demand} sold
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </>
+          ) : (
+            <div className="empty-state">
+              <p><BarChart3 size={18} style={{ display: 'inline', marginRight: '8px' }} /> No supply/demand data available</p>
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* Product Distribution with Filter */}
       <div className="chart-card">
-        <div 
+        <div
           className="card-header clickable-header"
           onClick={() => navigate('/seller/dashboard/products')}
           style={{ cursor: 'pointer' }}
@@ -754,7 +991,7 @@ const SellerHome = () => {
 
         {/* Top Selling Products */}
         <div className="chart-card">
-          <div 
+          <div
             className="card-header clickable-header"
             onClick={() => navigate('/seller/dashboard/products')}
             style={{ cursor: 'pointer' }}
@@ -796,7 +1033,7 @@ const SellerHome = () => {
 
         {/* Low Stock Alert */}
         <div className="chart-card" style={{ borderTop: '3px solid #ef4444' }}>
-          <div 
+          <div
             className="card-header clickable-header"
             onClick={() => navigate('/seller/dashboard/stock')}
             style={{ cursor: 'pointer' }}
@@ -840,13 +1077,13 @@ const SellerHome = () => {
       {/* Calendar Section */}
       <div className="calendar-section">
         <div className="calendar-card">
-          <div 
+          <div
             className="card-header clickable-header"
             onClick={() => navigate('/seller/dashboard/orders')}
             style={{ cursor: 'pointer' }}
           >
             <h3><Calendar size={18} style={{ display: 'inline', marginRight: '8px' }} /> Orders by Date</h3>
-            <div 
+            <div
               className="date-picker-wrapper"
               onClick={(e) => e.stopPropagation()} // Prevent navigation when clicking date picker
             >
@@ -895,14 +1132,14 @@ const SellerHome = () => {
       {/* Orders Section with Filter */}
       <div className="pending-orders-section">
         <div className="section-header">
-          <h3 
+          <h3
             className="clickable-header"
             onClick={() => navigate('/seller/dashboard/orders')}
             style={{ cursor: 'pointer' }}
           >
             <List size={18} style={{ display: 'inline', marginRight: '8px' }} /> Orders
           </h3>
-          <div 
+          <div
             style={{ display: 'flex', alignItems: 'center', gap: '12px' }}
             onClick={(e) => e.stopPropagation()} // Prevent navigation when clicking filter
           >
