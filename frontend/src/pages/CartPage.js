@@ -629,8 +629,26 @@ const CartPage = () => {
   const updateQuantity = (id, newQty) => {
     const updated = cart.map((item) => {
       if (item.id === id) {
-        const validQty = Math.max(1, Math.min(newQty, item.stock || 999));
-        return { ...item, quantity: validQty };
+        // Parse the input and handle invalid values
+        let parsedQty = parseInt(newQty);
+        
+        // If invalid input, default to 1
+        if (isNaN(parsedQty) || parsedQty < 1) {
+          parsedQty = 1;
+        }
+        
+        // If exceeds stock, set to max stock and show warning
+        if (parsedQty > (item.stock || 999)) {
+          Swal.fire({
+            icon: 'warning',
+            title: 'Stock Limit Reached',
+            text: `Maximum available stock is ${item.stock} ${item.unit || "units"}. Quantity adjusted to maximum.`,
+            confirmButtonColor: '#3085d6'
+          });
+          parsedQty = item.stock || 999;
+        }
+        
+        return { ...item, quantity: parsedQty };
       }
       return item;
     });
@@ -1023,9 +1041,36 @@ const CartPage = () => {
                     >
                       −
                     </button>
-                    <span className="quantity-display">
-                      {item.quantity}
-                    </span>
+                    <input
+                      type="number"
+                      value={item.quantity}
+                      onChange={(e) => {
+                        // Allow empty string during editing
+                        const value = e.target.value;
+                        if (value === '') {
+                          // Temporarily set to empty for editing
+                          const updated = cart.map((cartItem) => {
+                            if (cartItem.id === item.id) {
+                              return { ...cartItem, quantity: '' };
+                            }
+                            return cartItem;
+                          });
+                          setCart(updated);
+                        } else {
+                          updateQuantity(item.id, value);
+                        }
+                      }}
+                      onBlur={(e) => {
+                        // Ensure valid value on blur
+                        if (!e.target.value || parseInt(e.target.value) < 1) {
+                          updateQuantity(item.id, 1);
+                        }
+                      }}
+                      disabled={!storeStatus.isOpen}
+                      className="quantity-input"
+                      min="1"
+                      max={item.stock || 999}
+                    />
                     <button
                       onClick={() => incrementQuantity(item.id)}
                       disabled={item.quantity >= (item.stock || 999) || !storeStatus.isOpen}

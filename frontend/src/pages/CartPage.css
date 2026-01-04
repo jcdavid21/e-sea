@@ -1668,3 +1668,37 @@
   font-size: 32px;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
 }
+
+.quantity-input {
+  width: 60px;
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 600;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  padding: 4px 8px;
+  margin: 0 4px;
+}
+
+.quantity-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.quantity-input:disabled {
+  background-color: #f7fafc;
+  cursor: not-allowed;
+}
+
+/* Remove spinner arrows in Chrome, Safari, Edge */
+.quantity-input::-webkit-inner-spin-button,
+.quantity-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Remove spinner arrows in Firefox */
+.quantity-input[type=number] {
+  -moz-appearance: textfield;
+}

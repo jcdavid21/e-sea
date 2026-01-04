@@ -3,6 +3,7 @@ import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { FaFish } from "react-icons/fa";
 import './ShopProductPage.css';
 import BuyerHeader from "./BuyerHeader";
+import Logo from "../assets/logo.png";
 
 // ✅ Import cart utilities
 import { addToCart as addToCartUtil, getCartCount } from "../utils/cartUtils";
@@ -17,6 +18,7 @@ const ShopProductPage = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [logo, setLogo] = useState("");
 
   // ✅ Add to cart using utility (user-specific)
   const addToCart = (product) => {
@@ -57,9 +59,12 @@ const ShopProductPage = () => {
           const allShops = await allShopsRes.json();
           const shopData = allShops.find(shop => String(shop.seller_id) === shopId);
           setProducts(shopData?.products || []);
+          setLogo(shopData?.logo || "");
+          
         } else {
           const data = await res.json();
           setProducts(data.products || data || []);
+          setLogo(data.logo || "");
         }
 
       } catch (err) {
@@ -102,8 +107,34 @@ const ShopProductPage = () => {
         </button>
         
         <div className="page-header">
-          <h1 className="page-title">{shopName}</h1>
-          <p className="product-count">{filteredProducts.length} Products</p>
+          <div className="header-content">
+            <div className="header-flex">
+              <div className="shop-logo-con">
+                {logo ? (
+                  <img
+                    src={`${process.env.REACT_APP_SELLER_API_URL}${logo}`}
+                    alt={`${shopName} Logo`}
+                    className="shop-logo"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = "https://via.placeholder.com/80?text=No+Logo";
+                    }}
+                  />
+                ) : (
+                  <div className="shop-logo-con">
+                    <img
+                      src={Logo}
+                      alt="Default Logo"
+                      className="shop-logo"
+                    />
+                  </div>
+                )}
+              </div>
+              <h1 className="page-title">{shopName}</h1>
+            </div>
+            <div className="title-underline"></div>
+          </div>
+          <p className="product-count">{filteredProducts.length} Products Available</p>
         </div>
         
         {filteredProducts.length === 0 ? (

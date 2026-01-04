@@ -484,6 +484,7 @@ const styles = {
     marginTop: '20px',
     background: '#ffffff',
     borderTop: '2px solid #e0f2fe',
+    flexWrap: 'wrap',
   },
   paginationBtn: {
     display: 'flex',
@@ -497,6 +498,7 @@ const styles = {
     cursor: 'pointer',
     transition: 'all 0.2s ease',
     color: '#1e3c72',
+    flexShrink: 0,
   },
   paginationBtnDisabled: {
     opacity: 0.3,
@@ -508,12 +510,14 @@ const styles = {
     fontSize: '1rem',
     color: '#1e3c72',
     fontWeight: '600',
+    textAlign: 'center',
   },
   paginationCount: {
     fontSize: '0.8rem',
     fontWeight: '500',
     color: '#666',
     marginLeft: '8px',
+    display: 'inline-block',
   },
   modalOverlay: {
     position: 'fixed',
@@ -554,7 +558,7 @@ const styles = {
     gap: '12px',
   },
   modalTitle: {
-    fontSize: '1.5rem',
+    fontSize: '1.3rem',
     fontWeight: '700',
     color: '#fff',
     margin: 0,

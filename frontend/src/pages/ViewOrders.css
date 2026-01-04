@@ -370,57 +370,142 @@
 /* Responsive */
 @media (max-width: 768px) {
   .view-orders-container {
-    padding: 20px;
-    margin: 15px;
+    padding: 16px;
+    margin: 10px;
+  }
+
+  .view-orders-container h2 {
+    font-size: 16px;
   }
 
   .view-orders-table th,
   .view-orders-table td {
     padding: 8px 6px;
-    font-size: 0.65rem;
+    font-size: 12px;
   }
 
   .items-table {
-    font-size: 0.65rem;
+    font-size: 12px;
   }
 
   .items-table thead th,
   .items-table tbody td {
-    padding: 3px 4px;
-    font-size: 0.65rem;
+    padding: 6px 4px;
+    font-size: 12px;
   }
 
   .product-col {
-    padding-left: 4px !important;
+    padding-left: 6px !important;
   }
 
   .status-dropdown {
     width: 100%;
-    font-size: 0.65rem;
-    padding: 4px 6px;
+    font-size: 12px;
+    padding: 6px 8px;
   }
 
   .status-cell {
-    font-size: 0.65rem;
-    padding: 4px 8px;
+    font-size: 12px;
+    padding: 5px 10px;
+  }
+
+  .btn-view-proof {
+    font-size: 12px;
+    padding: 8px 12px;
+  }
+
+  .no-proof {
+    font-size: 12px;
+  }
+
+  .pagination-info {
+    font-size: 13px;
+  }
+
+  .pagination-btn {
+    font-size: 13px;
+  }
+
+  .loading,
+  .error,
+  .no-orders {
+    font-size: 14px;
+  }
+
+  .proof-modal-header h3 {
+    font-size: 16px;
+  }
+
+  .btn-download-proof,
+  .btn-close-proof {
+    font-size: 13px;
   }
 }
 
 /* Extra small screens */
 @media (max-width: 480px) {
   .view-orders-container {
-    padding: 15px;
-    margin: 10px;
+    padding: 12px;
+    margin: 8px;
+  }
+
+  .view-orders-container h2 {
+    font-size: 15px;
   }
 
   .view-orders-table {
-    font-size: 0.6rem;
+    font-size: 11px;
+  }
+
+  .view-orders-table th,
+  .view-orders-table td {
+    padding: 6px 4px;
+    font-size: 11px;
   }
 
   .items-table thead th,
   .items-table tbody td {
-    padding: 2px 3px;
-    font-size: 0.6rem;
+    padding: 4px 3px;
+    font-size: 11px;
+  }
+
+  .status-dropdown {
+    font-size: 11px;
+    padding: 5px 6px;
+  }
+
+  .status-cell {
+    font-size: 11px;
+    padding: 4px 8px;
+  }
+
+  .btn-view-proof {
+    font-size: 11px;
+    padding: 6px 10px;
+  }
+
+  .no-proof {
+    font-size: 11px;
+  }
+
+  .pagination-info {
+    font-size: 12px;
+  }
+
+  .loading,
+  .error,
+  .no-orders {
+    font-size: 13px;
+  }
+
+  .proof-modal-header h3 {
+    font-size: 15px;
+  }
+
+  .btn-download-proof,
+  .btn-close-proof {
+    font-size: 12px;
+    padding: 6px 12px;
   }
 }
 

@@ -1,0 +1,253 @@
+/* Mobile Responsive Styles */
+@media (max-width: 768px) {
+  /* Container */
+  .container {
+    margin: 20px auto !important;
+    padding: 16px !important;
+  }
+
+  /* Header */
+  h2 {
+    font-size: 1.5rem !important;
+  }
+
+  .subtitle {
+    font-size: 0.8rem !important;
+  }
+
+  /* Download Button */
+  button[style*="background: #28a745"] {
+    padding: 10px 16px !important;
+    font-size: 0.85rem !important;
+  }
+
+  /* Report Type Buttons */
+  .reportTypeBtn {
+    padding: 8px 14px !important;
+    font-size: 0.8rem !important;
+  }
+
+  /* Date Input */
+  input[type="date"],
+  input[type="week"],
+  input[type="month"] {
+    padding: 8px 12px !important;
+    font-size: 0.85rem !important;
+  }
+
+  /* Summary Cards */
+  .summaryCard {
+    padding: 16px !important;
+    gap: 12px !important;
+  }
+
+  .summaryIcon {
+    width: 48px !important;
+    height: 48px !important;
+  }
+
+  .summaryIcon svg {
+    width: 20px !important;
+    height: 20px !important;
+  }
+
+  .summaryLabel {
+    font-size: 0.75rem !important;
+  }
+
+  .summaryValue {
+    font-size: 1.3rem !important;
+  }
+
+  /* Report Title */
+  .reportTitle,
+  h3 {
+    font-size: 1rem !important;
+  }
+
+  .reportTitle svg {
+    width: 16px !important;
+    height: 16px !important;
+  }
+
+  /* Table */
+  table {
+    font-size: 0.8rem !important;
+  }
+
+  th {
+    padding: 12px 10px !important;
+    font-size: 0.75rem !important;
+  }
+
+  td {
+    padding: 12px 10px !important;
+    font-size: 0.8rem !important;
+  }
+
+  /* Order Number */
+  .orderNumber {
+    font-size: 0.8rem !important;
+  }
+
+  /* Product Name */
+  .productName {
+    font-size: 0.8rem !important;
+  }
+
+  /* Summary Footer */
+  .summaryFooter {
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px !important;
+  }
+
+  .footerLabel {
+    font-size: 0.75rem !important;
+  }
+
+  .footerValue {
+    font-size: 0.95rem !important;
+  }
+
+  /* Pagination */
+  .paginationWrapper {
+    padding: 12px 16px !important;
+    gap: 6px !important;
+  }
+
+  .paginationBtn {
+    min-width: 32px !important;
+    width: 32px !important;
+    height: 32px !important;
+  }
+
+  .paginationBtn svg {
+    width: 16px !important;
+    height: 16px !important;
+  }
+
+  .paginationInfo {
+    margin: 0 6px !important;
+    font-size: 12px !important;
+  }
+
+  .pageText {
+    font-size: 12px !important;
+  }
+
+  .pageNumber {
+    font-size: 14px !important;
+  }
+
+  /* No Data Message */
+  .noData {
+    padding: 40px 16px !important;
+    font-size: 0.85rem !important;
+  }
+
+  .noData svg {
+    width: 36px !important;
+    height: 36px !important;
+  }
+
+  /* Loading State */
+  .loading {
+    padding: 40px 16px !important;
+    font-size: 0.85rem !important;
+  }
+
+  .spinner {
+    width: 40px !important;
+    height: 40px !important;
+    border-width: 3px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Extra Small Screens */
+  h2 {
+    font-size: 1.3rem !important;
+  }
+
+  .subtitle {
+    font-size: 0.75rem !important;
+  }
+
+  .summaryValue {
+    font-size: 1.1rem !important;
+  }
+
+  .summaryLabel {
+    font-size: 0.7rem !important;
+  }
+
+  .reportTitle,
+  h3 {
+    font-size: 0.9rem !important;
+  }
+
+  table {
+    font-size: 0.75rem !important;
+  }
+
+  th {
+    padding: 10px 8px !important;
+    font-size: 11px !important;
+  }
+
+  td {
+    padding: 10px 8px !important;
+    font-size: 0.75rem !important;
+  }
+
+  .reportTypeBtn {
+    padding: 8px 12px !important;
+    font-size: 0.75rem !important;
+  }
+
+  .footerValue {
+    font-size: 0.85rem !important;
+  }
+
+  .paginationInfo {
+    font-size: 11px !important;
+  }
+
+  .pageText {
+    font-size: 11px !important;
+  }
+
+  .pageNumber {
+    font-size: 13px !important;
+  }
+}
+
+/* Ensure table is scrollable on mobile */
+@media (max-width: 768px) {
+  .tableWrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  table {
+    min-width: 600px;
+  }
+}
+
+
+/* Hide mobile dropdown on desktop */
+.mobile-filter-dropdown {
+  display: none !important;
+}
+
+/* Show dropdown on mobile, hide buttons */
+@media (max-width: 768px) {
+  .desktop-filters {
+    display: none !important;
+  }
+  
+  .mobile-filter-dropdown {
+    display: block !important;
+  }
+}

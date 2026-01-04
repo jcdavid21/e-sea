@@ -339,16 +339,37 @@
     padding: 20px;
   }
 
+  .header-content svg {
+    width: 24px;
+    height: 24px;
+  }
+
   .page-title {
-    font-size: 24px;
+    font-size: 16px;
+    letter-spacing: -0.3px;
+  }
+
+  .page-subtitle {
+    font-size: 13px;
+  }
+
+  .message-banner {
+    padding: 12px 16px;
+    font-size: 12px;
+  }
+
+  .message-banner svg {
+    width: 16px;
+    height: 16px;
   }
 
   .hours-editor {
-    padding: 20px;
+    padding: 16px;
   }
 
   .day-row {
     padding: 16px;
+    margin-bottom: 12px;
   }
 
   .day-info {
@@ -358,13 +379,57 @@
     min-width: auto;
   }
 
+  .day-name {
+    font-size: 15px;
+  }
+
+  .today-badge {
+    font-size: 10px;
+    padding: 2px 10px;
+  }
+
+  .toggle-switch {
+    gap: 10px;
+  }
+
+  .toggle-slider {
+    width: 48px;
+    height: 24px;
+  }
+
+  .toggle-slider::before {
+    width: 18px;
+    height: 18px;
+  }
+
+  .toggle-switch input:checked + .toggle-slider::before {
+    transform: translateX(24px);
+  }
+
+  .toggle-label {
+    font-size: 13px;
+    min-width: 45px;
+  }
+
   .time-inputs {
     flex-direction: column;
     gap: 12px;
+    width: 100%;
+  }
+
+  .time-group {
+    width: 100%;
+  }
+
+  .time-group label {
+    font-size: 11px;
   }
 
   .time-input {
     width: 100%;
+    padding: 10px 14px;
+    font-size: 14px;
+    min-width: auto;
   }
 
   .time-separator {
@@ -374,5 +439,67 @@
   .save-button {
     width: 100%;
     justify-content: center;
+    padding: 14px 32px;
+    font-size: 14px;
+  }
+
+  .save-button svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .button-spinner {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .store-hours-page {
+    padding: 12px;
+  }
+
+  .page-header {
+    padding: 16px;
+  }
+
+  .header-content svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .page-title {
+    font-size: 15px;
+  }
+
+  .page-subtitle {
+    font-size: 12px;
+  }
+
+  .hours-editor {
+    padding: 12px;
+  }
+
+  .day-row {
+    padding: 14px;
+  }
+
+  .day-name {
+    font-size: 14px;
+  }
+
+  .toggle-label {
+    font-size: 12px;
+  }
+
+  .time-input {
+    font-size: 13px;
+    padding: 9px 12px;
+  }
+
+  .save-button {
+    padding: 12px 24px;
+    font-size: 13px;
+    gap: 8px;
   }
 }

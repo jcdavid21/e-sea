@@ -8,6 +8,7 @@ import {
   FaFish,
   FaHistory,
   FaHeart,
+  FaShoppingCart,
   FaTruck,
   FaArrowRight,
 } from "react-icons/fa";
@@ -176,7 +177,7 @@ const BuyerDashboard = () => {
             <div style={{display: "flex", justifyContent: "space-between", alignItems: "center",
               width: "100%"
             }}>
-              <h1>Welcome to E-Sea Merkado Market! 🐟</h1>
+              <h1>Welcome to E-Sea Merkado Market!</h1>
             </div>
             <p>Discover the finest fresh seafood. Quality guaranteed, ocean to table.</p>
             <button className="hero-cta" onClick={()=> navigate('/buyer/shop')}>
@@ -298,7 +299,7 @@ const BuyerDashboard = () => {
           <div className="section-header">
             <span className="section-icon">
               {
-                bestSellers.length > 0 && bestSellers[0].total_sold > 0 ? <FaFire style={{ color: '#ff5722' }} /> : <FaSearch />
+                bestSellers.length > 0 && bestSellers[0].total_sold > 0 ? <FaShoppingCart /> : <FaSearch />
               }
             </span>
             <h2>

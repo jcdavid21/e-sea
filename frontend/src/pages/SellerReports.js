@@ -14,6 +14,7 @@ import {
   FiChevronsRight
 } from 'react-icons/fi';
 import Swal from 'sweetalert2';
+import './SellerReports.css';
 
 function Reports() {
   const [reportType, setReportType] = useState('all');
@@ -296,7 +297,7 @@ function Reports() {
 
       {/* Report Type Selector */}
       <div style={styles.filterSection}>
-        <div style={styles.reportTypeButtons}>
+        <div style={styles.reportTypeButtons} className="desktop-filters">
           <button
             style={{
               ...styles.reportTypeBtn,
@@ -394,6 +395,19 @@ function Reports() {
             Monthly
           </button>
         </div>
+
+        {/* Mobile Dropdown */}
+        <select
+          className="mobile-filter-dropdown"
+          value={reportType}
+          onChange={(e) => setReportType(e.target.value)}
+          style={styles.mobileDropdown}
+        >
+          <option value="all">All Sales</option>
+          <option value="daily">Daily</option>
+          <option value="weekly">Weekly</option>
+          <option value="monthly">Monthly</option>
+        </select>
 
         <div style={styles.dateSelector}>
           {reportType === 'daily' && (
@@ -875,6 +889,19 @@ const styles = {
     fontSize: '16px',
     fontWeight: '700',
     color: '#1e3c72',
+  },
+  mobileDropdown: {
+    display: 'none',
+    width: '100%',
+    padding: '10px 16px',
+    border: '2px solid #dee2e6',
+    borderRadius: '8px',
+    fontSize: '0.95rem',
+    fontWeight: '600',
+    color: '#1e3c72',
+    background: 'white',
+    cursor: 'pointer',
+    outline: 'none',
   },
 };
 

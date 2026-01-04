@@ -743,7 +743,7 @@ const styles = {
     borderRadius: '16px 16px 0 0',
   },
   modalTitle: {
-    fontSize: '1.5rem',
+    fontSize: '1.3rem',
     fontWeight: '700',
     color: '#fff',
     margin: 0,

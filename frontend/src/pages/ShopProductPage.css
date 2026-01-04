@@ -43,21 +43,51 @@ html{
 
 /* Page Header */
 .page-header {
-  margin-bottom: 32px;
+  margin-bottom: 40px;
+  padding: 32px 0;
+  border-bottom: 1px solid #e8ecf0;
+}
+
+.header-content {
+  display: inline-block;
+  position: relative;
+  margin-bottom: 12px;
 }
 
 .page-title {
-  color: #16135d;
-  font-size: 2rem;
-  font-weight: 600;
-  margin: 0 0 8px 0;
+  color: #1e3c72;
+  font-size: 24px !important;
+  font-weight: 700 !important;
+  margin: 0;
+  letter-spacing: -0.5px;
+  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.title-underline {
+  height: 4px;
+  width: 60%;
+  background: linear-gradient(90deg, #1e3c72 0%, #2a5298 100%);
+  margin-top: 8px;
+  border-radius: 2px;
+}
+
+.header-flex {
+  display: flex;
+  align-items: center;
+  gap: 16px;
 }
 
 .product-count {
-  color: #667eea;
-  font-size: 0.95rem;
+  color: #2a5298;
+  font-size: 12px !important;
   font-weight: 500;
   margin: 0;
+  max-width: fit-content;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 /* Loading & Empty States */

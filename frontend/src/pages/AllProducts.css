@@ -257,7 +257,12 @@
   }
 
   .ap-header h2 {
-    font-size: 1.125rem;
+    font-size: 16px;
+  }
+
+  .ap-product-count {
+    font-size: 13px;
+    padding: 0.4rem 0.8rem;
   }
 
   .ap-table-wrapper {
@@ -266,12 +271,13 @@
 
   .ap-table {
     min-width: 800px;
+    font-size: 13px;
   }
 
   .ap-table th,
   .ap-table td {
     padding: 0.75rem 0.5rem;
-    font-size: 0.6875rem;
+    font-size: 12px;
   }
 
   .ap-product-img,
@@ -282,7 +288,48 @@
 
   .ap-edit-btn {
     padding: 0.4rem 0.75rem;
-    font-size: 0.6875rem;
+    font-size: 12px;
+  }
+
+  .ap-no-products p {
+    font-size: 14px;
+  }
+
+  .ap-view-all-btn {
+    font-size: 13px;
+    padding: 0.45rem 1rem;
+  }
+
+  .ap-loading {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .ap-header h2 {
+    font-size: 15px;
+  }
+
+  .ap-product-count {
+    font-size: 12px;
+  }
+
+  .ap-table {
+    font-size: 12px;
+  }
+
+  .ap-table th,
+  .ap-table td {
+    font-size: 11px;
+    padding: 0.6rem 0.4rem;
+  }
+
+  .ap-no-products p {
+    font-size: 13px;
+  }
+
+  .ap-view-all-btn {
+    font-size: 12px;
   }
 }
 
@@ -298,5 +345,52 @@
 @media (max-width: 768px) {
   [style*="grid-template-columns: 1fr auto"] {
     grid-template-columns: 1fr !important;
+  }
+}
+
+.ap-container select:hover {
+  border-color: #1e3c72;
+}
+
+.ap-container select:focus {
+  border-color: #1e3c72;
+  box-shadow: 0 0 0 3px rgba(30, 60, 114, 0.1);
+}
+
+@media (max-width: 768px) {
+  [style*="grid-template-columns: 1fr auto"] {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Mobile Modal Adjustments */
+@media (max-width: 768px) {
+  /* Ensure modal title and buttons are properly sized */
+  .ap-container button {
+    font-size: 13px !important;
+  }
+  
+  .ap-container input,
+  .ap-container select {
+    font-size: 14px !important;
+  }
+  
+  .ap-container label {
+    font-size: 13px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .ap-container button {
+    font-size: 12px !important;
+  }
+  
+  .ap-container input,
+  .ap-container select {
+    font-size: 13px !important;
+  }
+  
+  .ap-container label {
+    font-size: 12px !important;
   }
 }

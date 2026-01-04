@@ -11,6 +11,7 @@ const SellerRegister = () => {
     email: "",
     uniqueId: "",
     password: "",
+    confirmPassword: "",
   });
   const [message, setMessage] = useState("");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
@@ -31,6 +32,11 @@ const SellerRegister = () => {
 
     if (!acceptedTerms) {
       setMessage("Please accept the Terms & Conditions to continue.");
+      return;
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      setMessage("Passwords do not match.");
       return;
     }
 
@@ -94,6 +100,17 @@ const SellerRegister = () => {
               value={formData.password}
               onChange={handleChange}
               placeholder="Enter your password"
+              required
+            />
+
+            <label htmlFor="confirmPassword">Confirm Password</label>
+            <input
+              type="password"
+              id="confirmPassword"
+              name="confirmPassword"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              placeholder="Confirm your password"
               required
             />
 

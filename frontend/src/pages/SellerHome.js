@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Fish, Package, DollarSign, Clock, TrendingUp, TrendingDown, Minus, Calendar, User, Phone, MapPin, MessageCircle, Trophy, AlertTriangle, CheckCircle, List, BarChart3, Waves, ShoppingCart } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
 import './SellerHome.css';
+import { useNavigate } from "react-router-dom";
 import SellerMapModal from './SellerMapModal';
 
 const SellerHome = () => {
@@ -11,6 +12,8 @@ const SellerHome = () => {
   const [profile, setProfile] = useState({ logo: "" });
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [priceAnalysisData, setPriceAnalysisData] = useState([]);
+  
 
   // Filter states
   const [salesPeriod, setSalesPeriod] = useState('7days'); // 7days, 30days, 90days, all
@@ -22,6 +25,7 @@ const SellerHome = () => {
   const [storeLocation, setStoreLocation] = useState(null);
 
   const SELLER_ID = localStorage.getItem("seller_unique_id");
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -47,6 +51,7 @@ const SellerHome = () => {
         setProfile(profileData || {});
         setSellerInfo(infoData || {});
         await fetchStoreLocation();
+        await fetchPriceAnalysisData(prodData);
       } catch (err) {
         console.error("Error fetching seller data:", err);
         setProducts([]);
@@ -93,6 +98,40 @@ const SellerHome = () => {
     } catch (error) {
       console.error('Error fetching store location:', error);
       setStoreLocation(null);
+    }
+  };
+
+  const fetchPriceAnalysisData = async (productsData) => {
+    try {
+      const priceData = [];
+      
+      for (const product of productsData.slice(0, 5)) {
+        try {
+          const res = await fetch(
+            `${process.env.REACT_APP_SELLER_API_URL}/api/seller/price-analysis/${product.id}?seller_id=${SELLER_ID}`
+          );
+          
+          if (res.ok) {
+            const data = await res.json();
+            if (data.suggestions && data.suggestions.length > 0) {
+              priceData.push({
+                name: product.name.length > 15 ? product.name.substring(0, 15) + '...' : product.name,
+                current: parseFloat(data.currentPrice),
+                suggested: data.suggestions[0]?.price || parseFloat(data.currentPrice),
+                min: Math.min(...data.suggestions.map(s => s.price)),
+                max: Math.max(...data.suggestions.map(s => s.price))
+              });
+            }
+          }
+        } catch (err) {
+          console.log(`Could not fetch price analysis for product ${product.id}`);
+        }
+      }
+      
+      setPriceAnalysisData(priceData);
+    } catch (err) {
+      console.error("Error fetching price analysis:", err);
+      setPriceAnalysisData([]);
     }
   };
 
@@ -271,6 +310,10 @@ const SellerHome = () => {
     return `${process.env.REACT_APP_SELLER_API_URL}/uploads/${normalized}`;
   };
 
+  const handleNavigateToPriceAnalysis = () => {
+    navigate('/seller/dashboard/price');
+  };
+
   if (loading) {
     return (
       <div className="loading-container">
@@ -336,7 +379,11 @@ const SellerHome = () => {
 
       {/* Stats Cards */}
       <div className="stats-grid">
-        <div className="stat-card stat-products">
+        <div 
+          className="stat-card stat-products"
+          onClick={() => navigate('/seller/dashboard/products')}
+          style={{ cursor: 'pointer' }}
+        >
           <div className="stat-icon-wrapper">
             <Fish className="stat-icon" size={24} />
           </div>
@@ -347,7 +394,11 @@ const SellerHome = () => {
           </div>
         </div>
 
-        <div className="stat-card stat-orders">
+        <div 
+          className="stat-card stat-orders"
+          onClick={() => navigate('/seller/dashboard/orders')}
+          style={{ cursor: 'pointer' }}
+        >
           <div className="stat-icon-wrapper">
             <Package className="stat-icon" size={24} />
           </div>
@@ -355,12 +406,17 @@ const SellerHome = () => {
             <p className="stat-label">Total Orders</p>
             <h2 className="stat-value">{orders.length}</h2>
             <p className="stat-subtext">
-              {orderGrowth > 0 ? <TrendingUp size={14} /> : orderGrowth < 0 ? <TrendingDown size={14} /> : <Minus size={14} />}% vs last week
+              {orderGrowth > 0 ? <TrendingUp size={14} /> : orderGrowth < 0 ? <TrendingDown size={14} /> : <Minus size={14} />}
+              {orderGrowth}% vs last week
             </p>
           </div>
         </div>
 
-        <div className="stat-card stat-revenue">
+        <div 
+          className="stat-card stat-revenue"
+          onClick={() => navigate('/seller/dashboard/reports')}
+          style={{ cursor: 'pointer' }}
+        >
           <div className="stat-icon-wrapper">
             <DollarSign className="stat-icon" size={24} />
           </div>
@@ -371,10 +427,15 @@ const SellerHome = () => {
           </div>
         </div>
 
-        <div className="stat-card stat-pending" style={{
-          background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)',
-          borderLeft: '4px solid #f59e0b'
-        }}>
+        <div 
+          className="stat-card stat-pending" 
+          onClick={() => navigate('/seller/dashboard/orders')}
+          style={{
+            background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)',
+            borderLeft: '4px solid #f59e0b',
+            cursor: 'pointer'
+          }}
+        >
           <div className="stat-icon-wrapper">
             <Clock className="stat-icon" size={24} />
           </div>
@@ -389,14 +450,20 @@ const SellerHome = () => {
 
       {/* Main Content Grid */}
       <div className="content-grid">
-        {/* Sales Chart with Filter */}
         <div className="chart-card chart-large">
-          <div className="card-header">
+          <div 
+            className="card-header clickable-header"
+            onClick={() => navigate('/seller/dashboard/reports')}
+            style={{ cursor: 'pointer' }}
+          >
             <h3><Waves size={18} style={{ display: 'inline', marginRight: '8px' }} /> Sales & Revenue Overview</h3>
             <div style={{ display: 'flex', gap: '8px' }}>
               <select
                 value={salesPeriod}
-                onChange={(e) => setSalesPeriod(e.target.value)}
+                onChange={(e) => {
+                  e.stopPropagation(); // Prevent navigation when clicking select
+                  setSalesPeriod(e.target.value);
+                }}
                 className="chart-filter"
                 style={{
                   padding: '6px 12px',
@@ -493,7 +560,11 @@ const SellerHome = () => {
 
         {/* Order Status Distribution */}
         <div className="chart-card">
-          <div className="card-header">
+          <div 
+            className="card-header clickable-header"
+            onClick={() => navigate('/seller/dashboard/orders')}
+            style={{ cursor: 'pointer' }}
+          >
             <h3><BarChart3 size={18} style={{ display: 'inline', marginRight: '8px' }} /> Order Status</h3>
           </div>
           <div className="chart-content pie-chart-container">
@@ -552,13 +623,73 @@ const SellerHome = () => {
           </div>
         </div>
       </div>
+      
+      {/* Price Analysis Chart */}
+      <div className="price-analysis-card" onClick={handleNavigateToPriceAnalysis}>
+        <div className="card-header clickable-header">
+          <h3><TrendingUp size={18} style={{ display: 'inline', marginRight: '8px' }} /> Price Analysis Overview</h3>
+          <span className="chart-period" style={{ fontSize: '11px', color: '#64748b' }}>
+            Click to view detailed analysis →
+          </span>
+        </div>
+        <div className="chart-content">
+          {priceAnalysisData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={280}>
+              <BarChart data={priceAnalysisData} margin={{ top: 10, right: 10, left: -20, bottom: 60 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
+                <XAxis
+                  dataKey="name"
+                  stroke="#6b7280"
+                  fontSize={10}
+                  angle={-45}
+                  textAnchor="end"
+                  height={80}
+                  tickLine={false}
+                  axisLine={{ stroke: '#e5e7eb' }}
+                />
+                <YAxis
+                  stroke="#6b7280"
+                  fontSize={11}
+                  tickLine={false}
+                  axisLine={{ stroke: '#e5e7eb' }}
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: 'white',
+                    border: 'none',
+                    borderRadius: '12px',
+                    padding: '12px',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+                  }}
+                  formatter={(value) => [`₱${value.toFixed(2)}`, '']}
+                />
+                <Legend />
+                <Bar dataKey="current" fill="#0891b2" name="Current Price" radius={[8, 8, 0, 0]} />
+                <Bar dataKey="suggested" fill="#10b981" name="Suggested Price" radius={[8, 8, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="empty-state">
+              <p><TrendingUp size={18} style={{ display: 'inline', marginRight: '8px' }} /> Update prices 3+ times to see analysis</p>
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* Product Distribution with Filter */}
       <div className="chart-card">
-        <div className="card-header">
+        <div 
+          className="card-header clickable-header"
+          onClick={() => navigate('/seller/dashboard/products')}
+          style={{ cursor: 'pointer' }}
+        >
           <h3><Fish size={18} style={{ display: 'inline', marginRight: '8px' }} /> Products by Category</h3>
           <select
             value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
+            onChange={(e) => {
+              e.stopPropagation(); // Prevent navigation when clicking select
+              setCategoryFilter(e.target.value);
+            }}
             className="chart-filter"
             style={{
               padding: '6px 12px',
@@ -623,7 +754,11 @@ const SellerHome = () => {
 
         {/* Top Selling Products */}
         <div className="chart-card">
-          <div className="card-header">
+          <div 
+            className="card-header clickable-header"
+            onClick={() => navigate('/seller/dashboard/products')}
+            style={{ cursor: 'pointer' }}
+          >
             <h3><Trophy size={18} style={{ display: 'inline', marginRight: '8px' }} /> Top Selling Products</h3>
           </div>
           <div className="chart-content">
@@ -661,7 +796,11 @@ const SellerHome = () => {
 
         {/* Low Stock Alert */}
         <div className="chart-card" style={{ borderTop: '3px solid #ef4444' }}>
-          <div className="card-header">
+          <div 
+            className="card-header clickable-header"
+            onClick={() => navigate('/seller/dashboard/stock')}
+            style={{ cursor: 'pointer' }}
+          >
             <h3><AlertTriangle size={18} style={{ display: 'inline', marginRight: '8px' }} /> Low Stock Alert</h3>
           </div>
           <div className="chart-content">
@@ -701,9 +840,16 @@ const SellerHome = () => {
       {/* Calendar Section */}
       <div className="calendar-section">
         <div className="calendar-card">
-          <div className="card-header">
+          <div 
+            className="card-header clickable-header"
+            onClick={() => navigate('/seller/dashboard/orders')}
+            style={{ cursor: 'pointer' }}
+          >
             <h3><Calendar size={18} style={{ display: 'inline', marginRight: '8px' }} /> Orders by Date</h3>
-            <div className="date-picker-wrapper">
+            <div 
+              className="date-picker-wrapper"
+              onClick={(e) => e.stopPropagation()} // Prevent navigation when clicking date picker
+            >
               <input
                 type="date"
                 value={selectedDate}
@@ -749,8 +895,17 @@ const SellerHome = () => {
       {/* Orders Section with Filter */}
       <div className="pending-orders-section">
         <div className="section-header">
-          <h3><List size={18} style={{ display: 'inline', marginRight: '8px' }} /> Orders</h3>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <h3 
+            className="clickable-header"
+            onClick={() => navigate('/seller/dashboard/orders')}
+            style={{ cursor: 'pointer' }}
+          >
+            <List size={18} style={{ display: 'inline', marginRight: '8px' }} /> Orders
+          </h3>
+          <div 
+            style={{ display: 'flex', alignItems: 'center', gap: '12px' }}
+            onClick={(e) => e.stopPropagation()} // Prevent navigation when clicking filter
+          >
             <select
               value={orderStatusFilter}
               onChange={(e) => setOrderStatusFilter(e.target.value)}

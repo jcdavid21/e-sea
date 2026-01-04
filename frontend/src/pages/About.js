@@ -128,7 +128,7 @@ const About = () => {
                     <p>
                         Join hundreds of satisfied customers who trust e-Sea-Merkado for their daily seafood needs
                     </p>
-                    <button className="cta-button" onClick={() => navigate('/role')}>
+                    <button className="cta-button" onClick={() => navigate('/buyer/login')}>
                         Start Shopping Now
                         <FaArrowRight />
                     </button>

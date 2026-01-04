@@ -161,7 +161,7 @@ const Home = () => {
           <p className="home-subtitle">Bringing Fresh Fish to Your Fingertips!</p>
         </div>
 
-        <button className="get-started-btn" onClick={() => navigate("/role")}>
+        <button className="get-started-btn" onClick={() => navigate("/buyer/login")}>
           Get Started
         </button>
 
@@ -172,15 +172,11 @@ const Home = () => {
           <section className="products-showcase best-sellers-section">
             <div className="section-header">
               <span className="section-icon">
-                {bestSellers[0]?.total_sold > 0 ? (
-                  <FaFire style={{ color: '#ff5722' }} />
-                ) : (
-                  <FaShoppingCart style={{ color: '#667eea' }} />
-                )}
+                <FaShoppingCart style={{ color: '#667eea' }} />
               </span>
               <h2>
                 {bestSellers[0]?.total_sold > 0 
-                  ? "🔥 Best Sellers" 
+                  ? "Best Sellers" 
                   : "Recommended for You"}
               </h2>
             </div>

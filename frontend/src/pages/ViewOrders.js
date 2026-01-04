@@ -324,18 +324,53 @@ export default function ViewOrders() {
 
 
   const handleStatusChange = async (orderId, newStatus) => {
-    const result = await Swal.fire({
-      title: 'Update Order Status?',
-      html: `Change order <strong>#${orderId}</strong> status to <strong>"${newStatus}"</strong>?`,
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonColor: '#1e3c72',
-      cancelButtonColor: '#6c757d',
-      confirmButtonText: 'Yes, update it!',
-      cancelButtonText: 'Cancel'
-    });
+    const order = orders.find(o => o.orderId === orderId);
+    const currentStatus = order?.status || "Pending";
+    
+    // Define status progression order
+    const statusOrder = ["Pending", "Preparing", "Ready for Pickup", "Completed", "Cancelled"];
+    const currentIndex = statusOrder.indexOf(currentStatus);
+    const newIndex = statusOrder.indexOf(newStatus);
+    
+    // Block going back to previous statuses (except Cancelled)
+    if (newStatus !== "Cancelled" && newIndex < currentIndex) {
+      await Swal.fire({
+        icon: 'error',
+        title: 'Invalid Status Change',
+        text: 'Cannot go back to a previous status. Order progression is one-way only.',
+        confirmButtonColor: '#1e3c72'
+      });
+      return;
+    }
+    
+    // Warn if skipping statuses
+    if (newStatus !== "Cancelled" && newIndex > currentIndex + 1) {
+      const result = await Swal.fire({
+        title: 'Warning: Skipping Status',
+        html: `You are skipping from <strong>"${currentStatus}"</strong> to <strong>"${newStatus}"</strong>.<br>Are you sure you want to continue?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#1e3c72',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Yes, update it!',
+        cancelButtonText: 'Cancel'
+      });
+      
+      if (!result.isConfirmed) return;
+    } else {
+      const result = await Swal.fire({
+        title: 'Update Order Status?',
+        html: `Change order <strong>#${orderId}</strong> status to <strong>"${newStatus}"</strong>?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#1e3c72',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Yes, update it!',
+        cancelButtonText: 'Cancel'
+      });
 
-    if (!result.isConfirmed) return;
+      if (!result.isConfirmed) return;
+    }
 
     try {
       const res = await fetch(`${process.env.REACT_APP_SELLER_API_URL}/api/orders/${orderId}/status`, {
@@ -612,11 +647,20 @@ export default function ViewOrders() {
                       onChange={(e) => handleStatusChange(order.orderId, e.target.value)}
                       disabled={order.status === "Completed" || order.status === "Cancelled"}
                     >
-                      {STATUS_OPTIONS.map((status) => (
-                        <option key={status} value={status}>
-                          {status}
-                        </option>
-                      ))}
+                      {STATUS_OPTIONS.map((status) => {
+                        const statusOrder = ["Pending", "Preparing", "Ready for Pickup", "Completed", "Cancelled"];
+                        const currentIndex = statusOrder.indexOf(order.status || "Pending");
+                        const statusIndex = statusOrder.indexOf(status);
+                        
+                        // Disable previous statuses (except Cancelled which is always available)
+                        const isDisabled = status !== "Cancelled" && statusIndex < currentIndex;
+                        
+                        return (
+                          <option key={status} value={status} disabled={isDisabled}>
+                            {status}
+                          </option>
+                        );
+                      })}
                     </select>
                   </div>
                 </div>
@@ -1801,6 +1845,225 @@ export default function ViewOrders() {
   background: #218838;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+}
+
+@media (max-width: 768px) {
+  .orders-header h1 {
+    font-size: 16px !important;
+  }
+
+  .header-subtitle {
+    font-size: 13px !important;
+  }
+
+  .count-number {
+    font-size: 20px !important;
+  }
+
+  .count-label {
+    font-size: 12px !important;
+  }
+
+  .order-id {
+    font-size: 16px !important;
+  }
+
+  .order-id-label {
+    font-size: 11px !important;
+  }
+
+  .status-badge {
+    font-size: 12px !important;
+    padding: 6px 12px !important;
+  }
+
+  .status-icon {
+    font-size: 14px !important;
+  }
+
+  .info-label {
+    font-size: 11px !important;
+  }
+
+  .info-value {
+    font-size: 13px !important;
+  }
+
+  .total-section .info-value {
+    font-size: 16px !important;
+  }
+
+  .items-header {
+    font-size: 12px !important;
+  }
+
+  .item-row {
+    font-size: 12px !important;
+  }
+
+  .item-name,
+  .item-qty,
+  .item-price {
+    font-size: 12px !important;
+  }
+
+  .no-items {
+    font-size: 12px !important;
+  }
+
+  .btn {
+    font-size: 13px !important;
+    padding: 8px 12px !important;
+  }
+
+  .status-select {
+    font-size: 13px !important;
+    padding: 8px 12px !important;
+  }
+
+  .no-proof-text {
+    font-size: 12px !important;
+  }
+
+  .pagination-info {
+    font-size: 13px !important;
+  }
+
+  .loading-state p,
+  .error-state p,
+  .empty-state h3 {
+    font-size: 14px !important;
+  }
+
+  .empty-state p {
+    font-size: 13px !important;
+  }
+
+  .search-input {
+    font-size: 14px !important;
+    padding: 12px 44px 12px 44px !important;
+  }
+
+  .filter-btn {
+    font-size: 13px !important;
+    padding: 8px 14px !important;
+  }
+
+  .status-select-mobile {
+    font-size: 13px !important;
+  }
+
+  .modal-header h3 {
+    font-size: 16px !important;
+  }
+
+  .detail-header h4 {
+    font-size: 13px !important;
+  }
+
+  .detail-label {
+    font-size: 11px !important;
+  }
+
+  .detail-value {
+    font-size: 13px !important;
+  }
+
+  .status-badge-small {
+    font-size: 11px !important;
+    padding: 5px 10px !important;
+  }
+
+  .modal-item-row {
+    font-size: 12px !important;
+  }
+
+  .modal-item-name,
+  .modal-item-qty,
+  .modal-item-price {
+    font-size: 12px !important;
+  }
+
+  .modal-total-label {
+    font-size: 12px !important;
+  }
+
+  .modal-total-value {
+    font-size: 16px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .orders-header h1 {
+    font-size: 15px !important;
+  }
+
+  .header-subtitle {
+    font-size: 12px !important;
+  }
+
+  .count-number {
+    font-size: 18px !important;
+  }
+
+  .count-label {
+    font-size: 11px !important;
+  }
+
+  .order-id {
+    font-size: 15px !important;
+  }
+
+  .status-badge {
+    font-size: 11px !important;
+    padding: 5px 10px !important;
+  }
+
+  .info-value {
+    font-size: 12px !important;
+  }
+
+  .total-section .info-value {
+    font-size: 15px !important;
+  }
+
+  .item-row {
+    font-size: 11px !important;
+  }
+
+  .btn {
+    font-size: 12px !important;
+    padding: 7px 10px !important;
+  }
+
+  .status-select {
+    font-size: 12px !important;
+    padding: 7px 10px !important;
+  }
+
+  .search-input {
+    font-size: 13px !important;
+  }
+
+  .filter-btn {
+    font-size: 12px !important;
+  }
+
+  .status-select-mobile {
+    font-size: 12px !important;
+  }
+
+  .modal-header h3 {
+    font-size: 15px !important;
+  }
+
+  .detail-value {
+    font-size: 12px !important;
+  }
+
+  .modal-total-value {
+    font-size: 15px !important;
+  }
 }
 
       `}</style>

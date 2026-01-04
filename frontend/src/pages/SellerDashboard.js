@@ -46,7 +46,7 @@ const SellerDashboard = () => {
       console.log("🚪 Seller has already submitted feedback, logging out directly...");
       localStorage.removeItem("sellerToken");
       localStorage.removeItem("uniqueId");
-      window.location.href = "/role";
+      window.location.href = "/";
     } else {
       // Show feedback modal
       setShowFeedbackModal(true);
@@ -68,12 +68,12 @@ const SellerDashboard = () => {
       
       localStorage.removeItem("sellerToken");
       localStorage.removeItem("uniqueId");
-      window.location.href = "/role";
+      window.location.href = "/";
     } catch (error) {
       console.error('Error submitting feedback:', error);
       localStorage.removeItem("sellerToken");
       localStorage.removeItem("uniqueId");
-      window.location.href = "/role";
+      window.location.href = "/";
     }
   };
 
@@ -198,7 +198,7 @@ const SellerDashboard = () => {
           setShowFeedbackModal(false);
           localStorage.removeItem("sellerToken");
           localStorage.removeItem("uniqueId");
-          window.location.href = "/role";
+          window.location.href = "/";
         }}
         onSubmit={handleFeedbackSubmit}
         userType="seller"

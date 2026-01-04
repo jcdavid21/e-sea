@@ -28,6 +28,36 @@ const Reports = () => {
   }, []);
 
   useEffect(() => {
+    const handleKeyPress = (e) => {
+      // Ctrl+P for print
+      if (e.ctrlKey && e.key === 'p') {
+        e.preventDefault();
+        Swal.fire({
+          title: 'Select Report to Print',
+          text: 'Which report would you like to print?',
+          icon: 'question',
+          showDenyButton: true,
+          showCancelButton: true,
+          confirmButtonText: 'Sales Report',
+          denyButtonText: 'Notifications Report',
+          confirmButtonColor: '#1e3c72',
+          denyButtonColor: '#4a6fa5',
+          cancelButtonColor: '#6c757d',
+        }).then((result) => {
+          if (result.isConfirmed) {
+            printReport('sales');
+          } else if (result.isDenied) {
+            printReport('notifications');
+          }
+        });
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [filteredNotifications, salesData, analytics]);
+
+  useEffect(() => {
     applyFilters();
   }, [typeFilter, dateRange, notifications]);
 
@@ -193,6 +223,163 @@ const Reports = () => {
     });
   };
 
+  const printReport = async (type) => {
+    const result = await Swal.fire({
+      title: 'Print Report?',
+      text: `Do you want to print the ${type === 'notifications' ? 'Notifications' : 'Sales'} report?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#1e3c72',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Yes, Print',
+      cancelButtonText: 'Cancel'
+    });
+
+    if (!result.isConfirmed) {
+      return;
+    }
+
+    const printWindow = window.open('', '_blank');
+    
+    if (type === 'notifications') {
+      const notificationsHTML = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Notifications Report - ${new Date().toLocaleDateString()}</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 40px; }
+            h1 { color: #1e3c72; margin-bottom: 10px; }
+            .date { color: #666; margin-bottom: 30px; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th { background: #1e3c72; color: white; padding: 12px; text-align: left; }
+            td { padding: 10px; border-bottom: 1px solid #ddd; }
+            tr:hover { background: #f5f5f5; }
+            .source-badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+            .source-badge.user { background: #dbeafe; color: #1e40af; }
+            .source-badge.seller { background: #fef3c7; color: #92400e; }
+            @media print {
+              body { padding: 20px; }
+              .no-print { display: none; }
+            }
+          </style>
+        </head>
+        <body>
+          <h1>Notifications Report</h1>
+          <div class="date">Generated on: ${new Date().toLocaleString()}</div>
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Source</th>
+                <th>Type</th>
+                <th>Message</th>
+                <th>Date Created</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${filteredNotifications.map(n => `
+                <tr>
+                  <td>${n.id}</td>
+                  <td><span class="source-badge ${n.source}">${n.source}</span></td>
+                  <td>${n.type || 'General'}</td>
+                  <td>${n.message}</td>
+                  <td>${new Date(n.date_created).toLocaleString()}</td>
+                  <td>${n.status === 1 || n.status === 'read' ? 'Read' : 'Unread'}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </body>
+        </html>
+      `;
+      printWindow.document.write(notificationsHTML);
+    } else if (type === 'sales') {
+      const salesHTML = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Sales Report - ${new Date().toLocaleDateString()}</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 40px; }
+            h1 { color: #1e3c72; margin-bottom: 10px; }
+            .date { color: #666; margin-bottom: 20px; }
+            .summary { background: #f0f9ff; padding: 20px; border-radius: 8px; margin-bottom: 30px; }
+            .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+            .summary-item { text-align: center; }
+            .summary-label { color: #666; font-size: 14px; margin-bottom: 5px; }
+            .summary-value { color: #1e3c72; font-size: 24px; font-weight: bold; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th { background: #1e3c72; color: white; padding: 12px; text-align: left; }
+            td { padding: 10px; border-bottom: 1px solid #ddd; }
+            tr:hover { background: #f5f5f5; }
+            @media print {
+              body { padding: 20px; }
+              .no-print { display: none; }
+            }
+          </style>
+        </head>
+        <body>
+          <h1>Sales Report</h1>
+          <div class="date">Generated on: ${new Date().toLocaleString()}</div>
+          
+          <div class="summary">
+            <div class="summary-grid">
+              <div class="summary-item">
+                <div class="summary-label">Total Orders</div>
+                <div class="summary-value">${analytics.completedOrders}</div>
+              </div>
+              <div class="summary-item">
+                <div class="summary-label">Total Revenue</div>
+                <div class="summary-value">₱${analytics.totalRevenue.toFixed(2)}</div>
+              </div>
+              <div class="summary-item">
+                <div class="summary-label">Average Order Value</div>
+                <div class="summary-value">₱${analytics.averageOrderValue.toFixed(2)}</div>
+              </div>
+            </div>
+          </div>
+          
+          <table>
+            <thead>
+              <tr>
+                <th>Order ID</th>
+                <th>Customer Name</th>
+                <th>Total Amount</th>
+                <th>Payment Method</th>
+                <th>Date Completed</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${salesData.map(s => `
+                <tr>
+                  <td>${s.order_id}</td>
+                  <td>${s.customer_name}</td>
+                  <td>PHP ${parseFloat(s.total_amount || 0).toFixed(2)}</td>
+                  <td>${s.payment_method}</td>
+                  <td>${new Date(s.date_completed).toLocaleString()}</td>
+                  <td>${s.status}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </body>
+        </html>
+      `;
+      printWindow.document.write(salesHTML);
+    }
+    
+    printWindow.document.close();
+    
+    // Wait for content to load then print automatically
+    printWindow.onload = function() {
+      printWindow.focus();
+      printWindow.print();
+    };
+  };
+
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentNotifications = filteredNotifications.slice(indexOfFirstItem, indexOfLastItem);
@@ -271,16 +458,37 @@ const Reports = () => {
         </div>
       </div>
 
-      {/* Download Buttons */}
+      {/* Download and Print Section */}
       <div className="download-section">
-        <button className="download-btn sales" onClick={() => downloadCSV("sales")}>
-          <FiDownload size={18} />
-          Download Sales Report
-        </button>
-        <button className="download-btn notifications" onClick={() => downloadCSV("notifications")}>
-          <FiDownload size={18} />
-          Download Notifications Report
-        </button>
+        <div className="action-dropdown-group">
+          <label htmlFor="report-action">Generate Report:</label>
+          <select 
+            id="report-action"
+            className="action-select"
+            onChange={(e) => {
+              const [action, type] = e.target.value.split('-');
+              if (action && type) {
+                if (action === 'download') {
+                  downloadCSV(type);
+                } else if (action === 'print') {
+                  printReport(type);
+                }
+              }
+              e.target.value = ''; // Reset selection
+            }}
+            defaultValue=""
+          >
+            <option value="" disabled>Select an action...</option>
+            <optgroup label="Download CSV">
+              <option value="download-sales">Sales Report</option>
+              <option value="download-notifications">Notifications Report</option>
+            </optgroup>
+            <optgroup label="Print Report">
+              <option value="print-sales">Sales Report</option>
+              <option value="print-notifications">Notifications Report</option>
+            </optgroup>
+          </select>
+        </div>
       </div>
 
       {/* Filters */}
