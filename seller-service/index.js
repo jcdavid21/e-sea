@@ -856,6 +856,7 @@ app.get("/api/seller/price-analysis/:productId", async (req, res) => {
       return res.status(400).json({ message: "Product ID and Seller ID required" });
     }
 
+    // Get current product details
     const [product] = await db.query(
       "SELECT name, price FROM fish_products WHERE id = ? AND seller_id = ?",
       [productId, seller_id]
@@ -868,6 +869,7 @@ app.get("/api/seller/price-analysis/:productId", async (req, res) => {
     const currentPrice = Number(product[0].price);
     const productName = product[0].name;
 
+    // Get price history
     const [history] = await db.query(
       `SELECT id, old_price, new_price, change_date 
         FROM price_history 
@@ -881,34 +883,125 @@ app.get("/api/seller/price-analysis/:productId", async (req, res) => {
     const canGenerateSuggestions = totalUpdates >= 3;
     
     if (canGenerateSuggestions) {
+      // Collect all historical prices (including current)
       const allPrices = [currentPrice];
-      history.forEach(h => allPrices.push(Number(h.new_price)));
-      
-      const floorPrice = history.length > 0 ? Number(history[0].old_price) : currentPrice;
-      const sum = allPrices.reduce((acc, p) => acc + p, 0);
-      const averagePrice = sum / allPrices.length;
-      const basePrice = Math.max(averagePrice, floorPrice);
-      
-      suggestions.push({
-        label: "Average Based Price (Balanced)",
-        price: parseFloat(basePrice.toFixed(2)),
-        margin: 0
+      history.forEach(h => {
+        allPrices.push(Number(h.new_price));
+        allPrices.push(Number(h.old_price));
       });
       
-      const margins = [
-        { rate: 0.03, label: "Conservative Margin (+3%)" },
-        { rate: 0.05, label: "Standard Margin (+5%)" },
-        { rate: 0.07, label: "Premium Margin (+7%)" }
+      // Remove duplicates and sort
+      const uniquePrices = [...new Set(allPrices)].sort((a, b) => a - b);
+      
+      // ========================================
+      // SIMPLE MOVING AVERAGE (SMA) CALCULATION
+      // ========================================
+      
+      // SMA-3: Average of last 3 prices
+      const recentPrices = [currentPrice];
+      if (history.length > 0) recentPrices.push(Number(history[0].new_price));
+      if (history.length > 1) recentPrices.push(Number(history[1].new_price));
+      const sma3 = recentPrices.reduce((sum, p) => sum + p, 0) / recentPrices.length;
+      
+      // SMA-5: Average of last 5 prices (if available)
+      const last5Prices = [currentPrice];
+      for (let i = 0; i < Math.min(4, history.length); i++) {
+        last5Prices.push(Number(history[i].new_price));
+      }
+      const sma5 = last5Prices.reduce((sum, p) => sum + p, 0) / last5Prices.length;
+      
+      // SMA-All: Average of all historical prices
+      const smaAll = uniquePrices.reduce((sum, p) => sum + p, 0) / uniquePrices.length;
+      
+      // Get price range
+      const minPrice = Math.min(...uniquePrices);
+      const maxPrice = Math.max(...uniquePrices);
+      
+      // ========================================
+      // GENERATE SUGGESTIONS BASED ON SMA
+      // ========================================
+      
+      suggestions = [
+        {
+          label: "Current Market Price",
+          price: parseFloat(currentPrice.toFixed(2)),
+          margin: 0,
+          description: "Your active selling price"
+        },
+        {
+          label: "SMA-3 (Short-term Trend)",
+          price: parseFloat(sma3.toFixed(2)),
+          margin: 0,
+          description: "Average of last 3 prices - follows recent trends"
+        },
+        {
+          label: "SMA-5 (Medium-term Trend)",
+          price: parseFloat(sma5.toFixed(2)),
+          margin: 0,
+          description: "Average of last 5 prices - balanced approach"
+        },
+        {
+          label: "SMA-All (Long-term Average)",
+          price: parseFloat(smaAll.toFixed(2)),
+          margin: 0,
+          description: "Average of all historical prices - stable pricing"
+        },
+        {
+          label: "Conservative (SMA-3 + 3%)",
+          price: parseFloat((sma3 * 1.03).toFixed(2)),
+          margin: 3,
+          description: "Short-term average with small markup"
+        },
+        {
+          label: "Balanced (SMA-5 + 5%)",
+          price: parseFloat((sma5 * 1.05).toFixed(2)),
+          margin: 5,
+          description: "Medium-term average with standard markup"
+        },
+        {
+          label: "Premium (SMA-All + 7%)",
+          price: parseFloat((smaAll * 1.07).toFixed(2)),
+          margin: 7,
+          description: "Long-term average with premium markup"
+        },
+        {
+          label: "Minimum Recommended",
+          price: parseFloat(minPrice.toFixed(2)),
+          margin: 0,
+          description: "Lowest historical price"
+        },
+        {
+          label: "Maximum Recommended",
+          price: parseFloat(maxPrice.toFixed(2)),
+          margin: 0,
+          description: "Highest historical price"
+        }
       ];
       
-      margins.forEach(m => {
-        const suggestedPrice = basePrice * (1 + m.rate);
-        suggestions.push({
-          label: m.label,
-          price: parseFloat(suggestedPrice.toFixed(2)),
-          margin: m.rate * 100
-        });
+      // Remove duplicates based on price
+      const seenPrices = new Set();
+      suggestions = suggestions.filter(s => {
+        if (seenPrices.has(s.price)) {
+          return false;
+        }
+        seenPrices.add(s.price);
+        return true;
       });
+      
+      // Sort suggestions by price
+      suggestions.sort((a, b) => a.price - b.price);
+      
+      // Limit to 6 most relevant suggestions
+      if (suggestions.length > 6) {
+        // Keep current price, min, max, and 3 SMA-based suggestions
+        const mustKeep = suggestions.filter(s => 
+          s.price === currentPrice || 
+          s.price === minPrice || 
+          s.price === maxPrice ||
+          s.label.includes('SMA')
+        );
+        suggestions = mustKeep.slice(0, 6);
+      }
     }
 
     res.json({
@@ -922,7 +1015,13 @@ app.get("/api/seller/price-analysis/:productId", async (req, res) => {
         new_price: Number(h.new_price),
         change_date: h.change_date
       })),
-      suggestions
+      suggestions,
+      algorithm: "Simple Moving Average (SMA)",
+      metadata: canGenerateSuggestions ? {
+        sma3: parseFloat(suggestions.find(s => s.label.includes('SMA-3'))?.price || 0),
+        sma5: parseFloat(suggestions.find(s => s.label.includes('SMA-5'))?.price || 0),
+        smaAll: parseFloat(suggestions.find(s => s.label.includes('SMA-All'))?.price || 0)
+      } : null
     });
 
   } catch (err) {
@@ -2280,9 +2379,10 @@ app.get("/api/shop/:shopId/products", async (req, res) => {
 
   try {
     const checkSql = `
-      SELECT shop_name 
-      FROM sellers 
-      WHERE unique_id = ? AND status = 'accepted'
+      SELECT s.shop_name, sp.logo 
+      FROM sellers s
+      LEFT JOIN seller_profiles sp ON s.unique_id = sp.seller_id 
+      WHERE s.unique_id = ? AND s.status = 'accepted'
     `;
     
     const [sellers] = await db.query(checkSql, [shopId]);
@@ -2296,6 +2396,7 @@ app.get("/api/shop/:shopId/products", async (req, res) => {
 
     return res.status(200).json({ 
       shop_name: sellers[0].shop_name,
+      logo: sellers[0].logo,
       products: products 
     });
   } catch (err) {
