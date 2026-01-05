@@ -1,0 +1,388 @@
+/* Feedback Section */
+.feedback-section {
+  margin-top: 40px;
+  padding: 32px;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.feedback-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 32px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid #e0f2fe;
+}
+
+.feedback-title-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.feedback-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #0c4a6e;
+  margin: 0;
+}
+
+.feedback-icon {
+  font-size: 1.8rem;
+  color: #0284c7;
+}
+
+.rating-summary {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 24px;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border-radius: 16px;
+  margin-bottom: 32px;
+}
+
+.average-rating-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.average-rating-number {
+  font-size: 32px;
+  font-weight: 800;
+  color: #0284c7;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.rating-stars-large {
+  display: flex;
+  gap: 4px;
+  color: #fbbf24;
+  font-size: 16px;
+  margin-bottom: 8px;
+}
+
+.total-reviews-text {
+  font-size: 0.9rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.rating-distribution {
+  flex: 1;
+}
+
+.rating-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.rating-bar-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 80px;
+  font-size: 0.9rem;
+  color: #475569;
+  font-weight: 500;
+}
+
+.rating-bar-label svg {
+  color: #fbbf24;
+}
+
+.rating-bar-container {
+  flex: 1;
+  height: 12px;
+  background: #e2e8f0;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.rating-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #0284c7 0%, #0ea5e9 100%);
+  border-radius: 6px;
+  transition: width 0.3s ease;
+}
+
+.rating-bar-count {
+  min-width: 40px;
+  text-align: right;
+  font-size: 0.9rem;
+  color: #64748b;
+  font-weight: 600;
+}
+
+/* Feedback List */
+.feedback-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.feedback-item {
+  padding: 24px;
+  background: #f8fafc;
+  border-radius: 16px;
+  border: 2px solid #e0f2fe;
+  transition: all 0.3s ease;
+}
+
+.feedback-item:hover {
+  border-color: #0284c7;
+  box-shadow: 0 4px 16px rgba(2, 132, 199, 0.1);
+}
+
+.feedback-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.feedback-user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.feedback-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0284c7 0%, #0ea5e9 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 700;
+  font-size: 1.2rem;
+}
+
+.feedback-user-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.feedback-user-name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #0c4a6e;
+  margin: 0;
+}
+
+.feedback-date {
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.feedback-rating-stars {
+  display: flex;
+  gap: 4px;
+  color: #fbbf24;
+  font-size: 1.1rem;
+}
+
+.feedback-comment {
+  font-size: 0.95rem;
+  color: #475569;
+  line-height: 1.6;
+  margin: 0;
+  padding: 16px;
+  background: white;
+  border-radius: 12px;
+  border-left: 4px solid #0284c7;
+}
+
+/* Empty State */
+.no-feedback-container {
+  text-align: center;
+  padding: 60px 20px;
+  background: #f8fafc;
+  border-radius: 16px;
+  border: 2px dashed #cbd5e1;
+}
+
+.no-feedback-icon {
+  font-size: 4rem;
+  margin-bottom: 16px;
+  opacity: 0.3;
+}
+
+.no-feedback-text {
+  font-size: 1.1rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+/* Loading State */
+.feedback-loading {
+  text-align: center;
+  padding: 40px;
+  color: #64748b;
+  font-size: 1rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .feedback-section {
+    padding: 20px 12px;
+  }
+
+  .feedback-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+  }
+
+  .feedback-title {
+    font-size: 1.2rem;
+  }
+
+  .feedback-icon {
+    font-size: 1.2rem;
+  }
+
+  .rating-summary {
+    flex-direction: column;
+    gap: 0;
+    padding: 16px;
+    margin-bottom: 20px;
+    max-width: 100%;
+  }
+
+  .average-rating-box {
+    display: none;
+  }
+
+  .rating-distribution {
+    width: 100%;
+    background: white;
+    padding: 16px;
+    border-radius: 12px;
+  }
+
+  .rating-distribution-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #e0f2fe;
+  }
+
+  .rating-distribution-average {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .rating-distribution .average-rating-number {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #0284c7;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .rating-distribution .rating-stars-large {
+    display: flex;
+    gap: 3px;
+    color: #fbbf24;
+    font-size: 0.9rem;
+    margin-bottom: 4px;
+  }
+
+  .rating-distribution .total-reviews-text {
+    font-size: 0.7rem;
+    color: #64748b;
+    font-weight: 500;
+  }
+
+  .rating-bar-row {
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .rating-bar-label {
+    min-width: 60px;
+    font-size: 0.75rem;
+  }
+
+  .rating-bar-container {
+    height: 10px;
+  }
+
+  .rating-bar-count {
+    min-width: 30px;
+    font-size: 0.75rem;
+  }
+
+  .feedback-item {
+    padding: 12px;
+  }
+
+  .feedback-item-header {
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .feedback-user-info {
+    gap: 8px;
+  }
+
+  .feedback-avatar {
+    width: 36px;
+    height: 36px;
+    font-size: 0.9rem;
+  }
+
+  .feedback-user-name {
+    font-size: 0.85rem;
+  }
+
+  .feedback-date {
+    font-size: 0.7rem;
+  }
+
+  .feedback-rating-stars {
+    font-size: 0.9rem;
+  }
+
+  .feedback-comment {
+    font-size: 0.8rem;
+    padding: 10px;
+    line-height: 1.5;
+  }
+
+  .no-feedback-container {
+    padding: 40px 16px;
+  }
+
+  .no-feedback-icon {
+    font-size: 3rem;
+  }
+
+  .no-feedback-text {
+    font-size: 0.9rem;
+  }
+
+  .feedback-loading {
+    padding: 30px;
+    font-size: 0.85rem;
+  }
+}

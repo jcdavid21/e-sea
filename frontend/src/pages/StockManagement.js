@@ -19,11 +19,18 @@ function StockManagement() {
   const [imagePreview, setImagePreview] = useState(null);
   const [filterCategory, setFilterCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
   // Pagination calculations
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = stockItems.slice(indexOfFirstItem, indexOfLastItem);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const filteredStockItems = stockItems.filter((item) => {
     const matchesCategory = filterCategory === "All" || item.category === filterCategory;
@@ -509,63 +516,81 @@ const totalPages = Math.ceil(filteredStockItems.length / itemsPerPage);
             )}
           </div>
 
-          <div style={styles.statusFilters}>
-            <button
-              style={{
-                ...styles.filterBtn,
-                ...(filterCategory === "All" ? styles.filterBtnActive : {})
-              }}
-              onClick={() => {
-                setFilterCategory("All");
+          {isMobile ? (
+            <select
+              style={styles.statusSelectMobile}
+              value={filterCategory}
+              onChange={(e) => {
+                setFilterCategory(e.target.value);
                 setCurrentPage(1);
               }}
-              onMouseEnter={(e) => {
-                if (filterCategory !== "All") {
-                  e.target.style.borderColor = '#1e3c72';
-                  e.target.style.color = '#1e3c72';
-                  e.target.style.transform = 'translateY(-2px)';
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (filterCategory !== "All") {
-                  e.target.style.borderColor = '#dee2e6';
-                  e.target.style.color = '#495057';
-                  e.target.style.transform = 'translateY(0)';
-                }
-              }}
             >
-              All Categories
-            </button>
-            {categories.map((cat) => (
+              <option value="All">All Categories</option>
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.category_name}>
+                  {cat.category_name}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <div style={styles.statusFilters}>
               <button
-                key={cat.id}
                 style={{
                   ...styles.filterBtn,
-                  ...(filterCategory === cat.category_name ? styles.filterBtnActive : {})
+                  ...(filterCategory === "All" ? styles.filterBtnActive : {})
                 }}
                 onClick={() => {
-                  setFilterCategory(cat.category_name);
+                  setFilterCategory("All");
                   setCurrentPage(1);
                 }}
                 onMouseEnter={(e) => {
-                  if (filterCategory !== cat.category_name) {
+                  if (filterCategory !== "All") {
                     e.target.style.borderColor = '#1e3c72';
                     e.target.style.color = '#1e3c72';
                     e.target.style.transform = 'translateY(-2px)';
                   }
                 }}
                 onMouseLeave={(e) => {
-                  if (filterCategory !== cat.category_name) {
+                  if (filterCategory !== "All") {
                     e.target.style.borderColor = '#dee2e6';
                     e.target.style.color = '#495057';
                     e.target.style.transform = 'translateY(0)';
                   }
                 }}
               >
-                {cat.category_name}
+                All Categories
               </button>
-            ))}
-          </div>
+              {categories.map((cat) => (
+                <button
+                  key={cat.id}
+                  style={{
+                    ...styles.filterBtn,
+                    ...(filterCategory === cat.category_name ? styles.filterBtnActive : {})
+                  }}
+                  onClick={() => {
+                    setFilterCategory(cat.category_name);
+                    setCurrentPage(1);
+                  }}
+                  onMouseEnter={(e) => {
+                    if (filterCategory !== cat.category_name) {
+                      e.target.style.borderColor = '#1e3c72';
+                      e.target.style.color = '#1e3c72';
+                      e.target.style.transform = 'translateY(-2px)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (filterCategory !== cat.category_name) {
+                      e.target.style.borderColor = '#dee2e6';
+                      e.target.style.color = '#495057';
+                      e.target.style.transform = 'translateY(0)';
+                    }
+                  }}
+                >
+                  {cat.category_name}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -1663,6 +1688,25 @@ pageNumber: {
   fontSize: '16px',
   fontWeight: '700',
   color: '#1e3c72',
+},
+statusSelectMobile: {
+  width: '100%',
+  padding: '12px 16px',
+  border: '2px solid #dee2e6',
+  borderRadius: '10px',
+  fontSize: '14px',
+  fontWeight: '600',
+  color: '#495057',
+  background: 'white',
+  cursor: 'pointer',
+  appearance: 'none',
+  backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23495057' d='M6 9L1 4h10z'/%3E%3C/svg%3E\")",
+  backgroundRepeat: 'no-repeat',
+  backgroundPosition: 'right 12px center',
+  backgroundSize: '12px',
+  '@media (max-width: 768px)': {
+    fontSize: '13px',
+  }
 },
 };
 

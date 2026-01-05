@@ -7,8 +7,10 @@ import AdminAnalytics from "./AdminAnalytics";
 import ManageFeedbacks from "./ManageFeedbacks";
 import Reports from "./Reports";
 import logo from "../assets/logo.png";
+import { useIdleTimeout } from '../utils/SessionManager';
 
 const AdminDashboard = () => {
+  useIdleTimeout('admin');
   const [activeTab, setActiveTab] = useState("analytics");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const navigate = useNavigate();
@@ -45,11 +47,10 @@ const AdminDashboard = () => {
     }
   };
 
-  // Logout handler
   const handleLogout = () => {
-    localStorage.removeItem("authToken");
-    sessionStorage.clear();
-    navigate("/");
+    localStorage.removeItem("admin_session");
+    localStorage.removeItem("loginTime");
+    window.location.href = "/admin/login";
   };
 
   const handleNavClick = (tabName, path) => {

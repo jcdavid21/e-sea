@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import "./SellerLogin.css";
 import Navbar from "./Navbar";
+import { checkSession } from "../utils/SessionManager";
 
 const SellerLogin = () => {
   const [formData, setFormData] = useState({
@@ -11,6 +12,13 @@ const SellerLogin = () => {
   });
   const [message, setMessage] = useState("");
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const session = checkSession();
+    if (session?.type === 'seller') {
+      navigate('/seller/dashboard/home');
+    }
+  }, [navigate]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -29,12 +37,11 @@ const SellerLogin = () => {
       setMessage(res.data.message);
 
       if (res.status === 200) {
-        // ✅ Store with the correct key that AddFishProducts expects
         localStorage.setItem("seller_unique_id", formData.uniqueId);
+        localStorage.setItem("loginTime", Date.now().toString());
         setTimeout(() => navigate("/seller/dashboard/home"), 2000);
       }
     } catch (err) {
-      console.error("Login error:", err);
       setMessage(
         err.response?.data?.message || "Login failed. Check your ID and password."
       );
@@ -49,38 +56,38 @@ const SellerLogin = () => {
           <h2>Seller Login</h2>
           <form onSubmit={handleSubmit}>
             <label htmlFor="uniqueId">Generated ID</label>
-          <input
-            type="text"
-            id="uniqueId"
-            name="uniqueId"
-            value={formData.uniqueId}
-            onChange={handleChange}
-            placeholder="Enter your ID"
-            required
-          />
+            <input
+              type="text"
+              id="uniqueId"
+              name="uniqueId"
+              value={formData.uniqueId}
+              onChange={handleChange}
+              placeholder="Enter your ID"
+              required
+            />
 
-          <label htmlFor="password">Password</label>
-          <input
-            type="password"
-            id="password"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-            placeholder="Enter your password"
-            required
-          />
+            <label htmlFor="password">Password</label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              placeholder="Enter your password"
+              required
+            />
 
-          <button type="submit" className="seller-btn">
-            Login
-          </button>
-        </form>
+            <button type="submit" className="seller-btn">
+              Login
+            </button>
+          </form>
 
-        <p className="seller-message">{message}</p>
+          <p className="seller-message">{message}</p>
 
-        <Link to="/seller/register" className="seller-link">
-          New seller? Register here.
-        </Link>
-      </div>
+          <Link to="/seller/register" className="seller-link">
+            New seller? Register here.
+          </Link>
+        </div>
       </div>
     </div>
   );

@@ -10,8 +10,19 @@ import {
 } from "react-icons/fa";
 import Navbar from "./Navbar";
 import "./Policies.css";
+import { useNavigate } from "react-router-dom";
+import { checkSession } from "../utils/SessionManager";
 
 const Policies = () => {
+  const navigate = useNavigate();
+
+  React.useEffect(() => {
+    const session = checkSession();
+    if (session) {
+      navigate(session.redirectTo);
+    }
+  }, [navigate]);
+
   return (
     <div className="policies-wrapper">
       <Navbar />

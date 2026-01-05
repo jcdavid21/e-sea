@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
 import {
   FaHome,
@@ -19,7 +19,40 @@ import logo from "../assets/logo.png";
 const SellerDashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [pendingOrdersCount, setPendingOrdersCount] = useState(0); // ✅ NEW STATE
   const location = useLocation();
+
+  const sellerId = localStorage.getItem("seller_unique_id");
+
+  // ✅ NEW: Fetch pending orders count
+  const fetchPendingOrdersCount = async () => {
+    if (!sellerId) return;
+
+    try {
+      const res = await fetch(
+        `${process.env.REACT_APP_SELLER_API_URL}/api/orders?seller_id=${sellerId}&page=1&limit=999`
+      );
+      if (!res.ok) return;
+      
+      const data = await res.json();
+      const pendingCount = data.orders.filter(
+        order => order.status === "Pending"
+      ).length;
+      
+      setPendingOrdersCount(pendingCount);
+    } catch (error) {
+      console.error("Error fetching pending orders count:", error);
+    }
+  };
+
+  // ✅ NEW: Fetch count on mount and every 30 seconds
+  useEffect(() => {
+    fetchPendingOrdersCount();
+    
+    const interval = setInterval(fetchPendingOrdersCount, 30000);
+    
+    return () => clearInterval(interval);
+  }, [sellerId]);
 
   // Check if seller has already submitted feedback
   const checkExistingFeedback = async (sellerId) => {
@@ -36,25 +69,24 @@ const SellerDashboard = () => {
   };
 
   const handleLogoutClick = async () => {
-    const sellerId = localStorage.getItem('uniqueId');
+    const sellerId = localStorage.getItem('seller_unique_id');
     
-    // Check if user has already submitted feedback
     const hasFeedback = await checkExistingFeedback(sellerId);
     
     if (hasFeedback) {
-      // User has already submitted feedback, logout directly
       console.log("🚪 Seller has already submitted feedback, logging out directly...");
+      localStorage.removeItem("seller_unique_id");
       localStorage.removeItem("sellerToken");
       localStorage.removeItem("uniqueId");
-      window.location.href = "/";
+      localStorage.removeItem("loginTime");
+      window.location.href = "/seller/login";
     } else {
-      // Show feedback modal
       setShowFeedbackModal(true);
     }
   };
 
   const handleFeedbackSubmit = async (feedbackData) => {
-    const sellerId = localStorage.getItem('uniqueId');
+    const sellerId = localStorage.getItem('seller_unique_id');
     
     try {
       await fetch(`${process.env.REACT_APP_SELLER_API_URL}/api/feedback`, {
@@ -66,14 +98,18 @@ const SellerDashboard = () => {
         })
       });
       
+      localStorage.removeItem("seller_unique_id");
       localStorage.removeItem("sellerToken");
       localStorage.removeItem("uniqueId");
-      window.location.href = "/";
+      localStorage.removeItem("loginTime");
+      window.location.href = "/seller/login";
     } catch (error) {
       console.error('Error submitting feedback:', error);
+      localStorage.removeItem("seller_unique_id");
       localStorage.removeItem("sellerToken");
       localStorage.removeItem("uniqueId");
-      window.location.href = "/";
+      localStorage.removeItem("loginTime");
+      window.location.href = "/seller/login";
     }
   };
 
@@ -127,15 +163,23 @@ const SellerDashboard = () => {
             <FaClipboardList />
             <span>Stock Management</span>
           </Link>
+          
+          {/* ✅ UPDATED: Orders link with notification badge */}
           <Link 
             to="/seller/dashboard/orders" 
             className="nav-link"
             style={isActive('/seller/dashboard/orders') ? activeLinkStyle : {}}
             onClick={() => setSidebarOpen(false)}
           >
-            <FaShoppingCart />
+            <div style={{ position: 'relative' }}>
+              <FaShoppingCart />
+              {pendingOrdersCount > 0 && (
+                <span className="sidebar-notif-badge">{pendingOrdersCount}</span>
+              )}
+            </div>
             <span>View Orders</span>
           </Link>
+
           <Link 
             to="/seller/dashboard/products" 
             className="nav-link"
@@ -196,9 +240,11 @@ const SellerDashboard = () => {
         isOpen={showFeedbackModal}
         onClose={() => {
           setShowFeedbackModal(false);
+          localStorage.removeItem("seller_unique_id");
           localStorage.removeItem("sellerToken");
           localStorage.removeItem("uniqueId");
-          window.location.href = "/";
+          localStorage.removeItem("loginTime");
+          window.location.href = "/seller/login";
         }}
         onSubmit={handleFeedbackSubmit}
         userType="seller"

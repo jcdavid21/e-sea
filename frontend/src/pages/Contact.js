@@ -2,8 +2,19 @@ import React, { useState } from 'react';
 import { FaEnvelope, FaPhone, FaMapMarkerAlt, FaClock, FaChevronDown } from 'react-icons/fa';
 import Navbar from './Navbar';
 import './Contact.css';
+import { useNavigate } from "react-router-dom";
+import { checkSession } from "../utils/SessionManager";
 
 const Contact = () => {
+  const navigate = useNavigate();
+
+  React.useEffect(() => {
+    const session = checkSession();
+    if (session) {
+      navigate(session.redirectTo);
+    }
+  }, [navigate]);
+  
   const [openFaq, setOpenFaq] = useState(null);
 
   const toggleFaq = (index) => {

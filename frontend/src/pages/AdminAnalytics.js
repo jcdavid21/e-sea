@@ -50,6 +50,7 @@ const AdminAnalytics = () => {
   const [salesTrendFilter, setSalesTrendFilter] = useState('all');
   const [topProductsFilter, setTopProductsFilter] = useState('all');
   const [rankingsFilter, setRankingsFilter] = useState('all');
+  const [supplyDemandFilter, setSupplyDemandFilter] = useState('all');
 
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(4); // Show 6 sellers per page
@@ -375,6 +376,15 @@ const AdminAnalytics = () => {
     return topProducts.filter(p => p.sellerId === rankingsFilter);
   };
 
+  const getFilteredSupplyDemand = () => {
+    if (supplyDemandFilter === 'all') return supplyDemandData.slice(0, 10);
+    const sellerProducts = topProducts.filter(p => p.sellerId === supplyDemandFilter);
+    const sellerProductNames = new Set(sellerProducts.map(p => p.name.toLowerCase()));
+    return supplyDemandData
+      .filter(item => sellerProductNames.has(item.name.toLowerCase()))
+      .slice(0, 10);
+  };
+
   const getSellersForDisplay = () => {
     if (salesTrendFilter !== 'all') {
       const seller = allSellers.find(s => s.sellerId === salesTrendFilter);
@@ -430,7 +440,7 @@ const AdminAnalytics = () => {
   // Download summary report as CSV
   const downloadSummaryReport = () => {
     const reportData = getFilteredSellersForReport();
-    
+
     if (reportData.length === 0) {
       alert('No data to download');
       return;
@@ -481,10 +491,9 @@ const AdminAnalytics = () => {
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
-    
-    const fileName = `sales_summary_report_${
-      rankingsFilter === 'all' ? 'all_sellers' : reportData[0]?.sellerName.replace(/\s+/g, '_')
-    }_${new Date().toISOString().split('T')[0]}.csv`;
+
+    const fileName = `sales_summary_report_${rankingsFilter === 'all' ? 'all_sellers' : reportData[0]?.sellerName.replace(/\s+/g, '_')
+      }_${new Date().toISOString().split('T')[0]}.csv`;
 
     link.setAttribute('href', url);
     link.setAttribute('download', fileName);
@@ -679,7 +688,8 @@ const AdminAnalytics = () => {
                   <PieChart>
                     <Pie
                       data={preparePieChartData()}
-                      cx="50%"
+                      // center the pie chart in mobile view
+                      cx={ window.innerWidth <= 768 ? '30%' : '50%' }
                       cy="45%"
                       labelLine={false}
                       label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
@@ -810,12 +820,27 @@ const AdminAnalytics = () => {
       <div className="chart-card" style={{ marginTop: '28px' }}>
         <div className="card-header">
           <h3><FaChartLine size={18} style={{ display: 'inline', marginRight: '8px' }} /> Supply vs Demand Analysis</h3>
-          <span className="chart-period">Fish Varieties Overview</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <FaFilter size={14} />
+            <select
+              value={supplyDemandFilter}
+              onChange={(e) => setSupplyDemandFilter(e.target.value)}
+              className="modern-select"
+            >
+              <option value="all">All Sellers</option>
+              {allSellers.map(seller => (
+                <option key={seller.sellerId} value={seller.sellerId}>
+                  {seller.sellerName}
+                </option>
+              ))}
+            </select>
+            <span className="chart-period">Fish Varieties Overview</span>
+          </div>
         </div>
         <div className="chart-content">
-          {supplyDemandData.length > 0 ? (
+          {getFilteredSupplyDemand().length > 0 ? (
             <ResponsiveContainer width="100%" height={400}>
-              <BarChart data={supplyDemandData.slice(0, 10)} margin={{ top: 10, right: 30, left: 0, bottom: 80 }}>
+              <BarChart data={getFilteredSupplyDemand()} margin={{ top: 10, right: 30, left: 0, bottom: 80 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                 <XAxis
                   dataKey="name"
@@ -1630,8 +1655,8 @@ const AdminAnalytics = () => {
                   onClick={() => setCurrentPage(index + 1)}
                   style={{
                     padding: '8px 12px',
-                    background: currentPage === index + 1 
-                      ? 'linear-gradient(135deg, #0891b2 0%, #0e7490 100%)' 
+                    background: currentPage === index + 1
+                      ? 'linear-gradient(135deg, #0891b2 0%, #0e7490 100%)'
                       : 'white',
                     color: currentPage === index + 1 ? 'white' : '#0891b2',
                     border: '2px solid #0891b2',

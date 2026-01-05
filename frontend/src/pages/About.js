@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
     FaFish,
@@ -12,9 +12,17 @@ import {
 } from "react-icons/fa";
 import Navbar from "./Navbar";
 import "./About.css";
+import { checkSession } from "../utils/SessionManager";
 
 const About = () => {
     const navigate = useNavigate();
+
+    useEffect(() => {
+        const session = checkSession();
+        if (session) {
+            navigate(session.redirectTo);
+        }
+    }, [navigate]);
 
     return (
         <div className="about-wrapper">

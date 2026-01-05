@@ -74,6 +74,7 @@ export default function ViewOrders() {
   useEffect(() => {
     fetchOrders(1);
   }, []);
+  
 
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= totalPages) {

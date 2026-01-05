@@ -1087,6 +1087,7 @@
 
 .chart-pie .chart-content {
   overflow: visible !important;
+  position: relative;
 }
 
 .chart-pie .recharts-responsive-container {
@@ -1102,7 +1103,8 @@
 
   .chart-pie .chart-content {
     overflow: visible !important;
-    min-height: 350px;
+    min-height: 380px;
+    padding: 10px 0;
   }
 
   .chart-pie .recharts-responsive-container {
@@ -1110,9 +1112,13 @@
     width: 100% !important;
   }
 
-  /* Adjust pie chart size */
   .chart-pie .recharts-wrapper {
     margin: 0 auto;
+    overflow: visible !important;
+  }
+
+  .chart-pie .recharts-surface {
+    overflow: visible !important;
   }
 }
 
@@ -1122,27 +1128,24 @@
   }
 
   .chart-pie .chart-content {
-    min-height: 320px;
+    min-height: 400px;
+    padding: 15px 0;
   }
 
-  /* Make pie chart smaller on mobile */
-  .chart-pie .recharts-pie {
-    transform: scale(0.9);
+  .chart-pie .recharts-pie-sector {
+    cursor: pointer;
   }
 
-  /* Adjust legend on mobile */
   .chart-pie .recharts-legend-wrapper {
-    font-size: 9px !important;
+    font-size: 10px !important;
+    position: relative !important;
+    overflow: visible !important;
   }
 }
 
-@media (max-width: 360px) {
+@media (max-width: 380px) {
   .chart-pie .chart-content {
-    min-height: 300px;
-  }
-
-  .chart-pie .recharts-pie {
-    transform: scale(0.85);
+    min-height: 420px;
   }
 }
 
@@ -1404,4 +1407,208 @@
 
 .revenue-section{
   border-top-color: #0e7490 !important;
+}
+
+/* ==================
+   ADDITIONAL MOBILE FIXES FOR 368px
+   ================== */
+
+@media (max-width: 380px) {
+  .seller-home {
+    padding: 8px;
+  }
+
+  .top-bar {
+    padding: 10px 12px;
+    border-radius: 10px;
+    margin-bottom: 16px;
+  }
+
+  .shop-name {
+    font-size: 16px;
+    letter-spacing: -0.5px;
+  }
+
+  .shop-owner {
+    font-size: 11px;
+  }
+
+  .seller-id {
+    font-size: 9px;
+    padding: 5px 10px;
+  }
+
+  .stats-grid {
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .stat-card {
+    padding: 12px;
+    gap: 10px;
+    border-radius: 12px;
+  }
+
+  .stat-icon-wrapper {
+    padding: 8px;
+    border-radius: 12px;
+  }
+
+  .stat-icon {
+    font-size: 28px;
+  }
+
+  .stat-value {
+    font-size: 18px;
+  }
+
+  .stat-label {
+    font-size: 9px;
+    margin-bottom: 6px;
+  }
+
+  .stat-subtext {
+    font-size: 9px;
+    margin-top: 4px;
+  }
+
+  .charts-container {
+    margin-bottom: 16px;
+  }
+
+  .chart-card {
+    padding: 10px;
+    border-radius: 10px;
+    margin-bottom: 16px;
+  }
+
+  .card-header {
+    padding-bottom: 10px;
+    margin-bottom: 12px;
+  }
+
+  .card-header h3 {
+    font-size: 12px;
+  }
+
+  .chart-period {
+    font-size: 8px;
+    padding: 3px 6px;
+  }
+
+  .modern-select {
+    font-size: 10px;
+    padding: 5px 8px;
+  }
+
+  .date-filter-container {
+    padding: 6px;
+    gap: 6px;
+  }
+
+  .date-input {
+    font-size: 9px;
+    padding: 4px 5px;
+  }
+
+  .chart-content {
+    min-height: 200px;
+  }
+
+  .chart-area .chart-content .recharts-responsive-container {
+    height: 240px !important;
+    min-width: 550px !important;
+  }
+
+  .pending-orders-section {
+    padding: 10px;
+    border-radius: 10px;
+    margin-top: 16px;
+  }
+
+  .section-header {
+    padding-bottom: 10px;
+    margin-bottom: 12px;
+  }
+
+  .section-header h3 {
+    font-size: 12px;
+  }
+
+  .pending-count {
+    font-size: 9px;
+    padding: 4px 10px;
+  }
+
+  .pending-orders-grid {
+    gap: 12px;
+  }
+
+  .pending-order-card {
+    border-radius: 10px;
+  }
+
+  .pending-order-header {
+    padding: 10px 12px;
+  }
+
+  .pending-order-number {
+    font-size: 11px;
+  }
+
+  .pending-badge {
+    font-size: 9px;
+    padding: 3px 8px;
+  }
+
+  .pending-order-body {
+    padding: 12px 14px;
+  }
+
+  .customer-name-compact {
+    font-size: 11px;
+    margin-bottom: 5px;
+  }
+
+  .customer-detail {
+    font-size: 9px;
+    margin-bottom: 2px;
+  }
+
+  .order-footer-info {
+    padding-top: 10px;
+  }
+
+  .order-time {
+    font-size: 9px;
+  }
+
+  .order-total-compact {
+    font-size: 14px;
+  }
+
+  .show-more-btn {
+    padding: 10px;
+    font-size: 0.8rem;
+  }
+
+  /* Revenue Summary Cards */
+  .revenue-section > div > div {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Price Comparison */
+  .chart-card div[style*="gridTemplateColumns"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Pagination */
+  .revenue-section button {
+    padding: 6px 12px !important;
+    font-size: 12px !important;
+  }
+
+  .revenue-section span {
+    font-size: 12px !important;
+  }
 }

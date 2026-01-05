@@ -6,9 +6,18 @@ import logo from "../assets/logo.png";
 import background from "../assets/front_landscape.jpg";
 import "./Home.css";
 import Navbar from "./Navbar";
+import { checkSession } from "../utils/SessionManager";
 
 const Home = () => {
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const session = checkSession();
+    if (session) {
+      navigate(session.redirectTo);
+    }
+  }, [navigate]);
+
   const [bestSellers, setBestSellers] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [products, setProducts] = useState([]);

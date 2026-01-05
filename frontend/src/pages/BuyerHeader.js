@@ -12,8 +12,10 @@ import {
 } from "react-icons/fa";
 import { getCartCount } from "../utils/cartUtils";
 import "./BuyerDashboard.css";
+import { useIdleTimeout } from '../utils/SessionManager';
 
 const BuyerHeader = ({ searchTerm, onSearchChange, onNavClick, currentPage }) => {
+  useIdleTimeout('buyer');
   const [cartCount, setCartCount] = useState(0);
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -21,12 +23,44 @@ const BuyerHeader = ({ searchTerm, onSearchChange, onNavClick, currentPage }) =>
   const searchRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
+  const [notifCount, setNotifCount] = useState(0);
 
   // Update cart count
   const updateCartCount = () => {
     const count = getCartCount();
     setCartCount(count);
   };
+
+  const fetchNotificationCount = async () => {
+    const buyerId = sessionStorage.getItem('customer_id');
+    
+    if (!buyerId) {
+      console.warn('No customer_id found in sessionStorage');
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `${process.env.REACT_APP_BUYER_API_URL}/api/buyer/${buyerId}/notifications`
+      );
+      
+      if (response.ok) {
+        const data = await response.json();
+        setNotifCount(data.count || 0);
+      }
+    } catch (error) {
+      console.error("Error fetching notification count:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchNotificationCount();
+    
+    // Poll every 10 seconds (same as BuyerNotifications.js)
+    const interval = setInterval(fetchNotificationCount, 10000);
+    
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     updateCartCount();
@@ -242,7 +276,10 @@ const BuyerHeader = ({ searchTerm, onSearchChange, onNavClick, currentPage }) =>
           className={`nav-item ${location.pathname === "/buyer/notifications" ? "active" : ""}`}
           onClick={() => navigate("/buyer/notifications")}
         >
-          <FaBell />
+          <div style={{ position: 'relative' }}>
+            <FaBell />
+            {notifCount > 0 && <span className="notif-count">{notifCount}</span>}
+          </div>
           <span>Notifications</span>
         </div>
 

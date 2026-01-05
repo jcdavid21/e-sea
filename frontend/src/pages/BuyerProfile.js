@@ -104,7 +104,8 @@ const BuyerProfile = () => {
       sessionStorage.removeItem("customer_id");
       sessionStorage.removeItem("buyerEmail");
       sessionStorage.removeItem("buyerName");
-      navigate("/");
+      sessionStorage.removeItem("loginTime");
+      window.location.href = "/buyer/login";
     } else {
       // Show feedback modal
       setShowFeedbackModal(true);
@@ -130,16 +131,18 @@ const BuyerProfile = () => {
       sessionStorage.removeItem("customer_id");
       sessionStorage.removeItem("buyerEmail");
       sessionStorage.removeItem("buyerName");
+      sessionStorage.removeItem("loginTime");
 
       console.log("Session cleared.");
-      navigate("/");
+      window.location.href = "/buyer/login";
     } catch (error) {
       console.error('Error submitting feedback:', error);
       // Still proceed with logout even if feedback fails
       sessionStorage.removeItem("customer_id");
       sessionStorage.removeItem("buyerEmail");
       sessionStorage.removeItem("buyerName");
-      navigate("/");
+      sessionStorage.removeItem("loginTime");
+      window.location.href = "/buyer/login";
     }
   };
 
@@ -466,7 +469,8 @@ const BuyerProfile = () => {
           sessionStorage.removeItem("customer_id");
           sessionStorage.removeItem("buyerEmail");
           sessionStorage.removeItem("buyerName");
-          navigate("/");
+          sessionStorage.removeItem("loginTime");
+          window.location.href = "/buyer/login";
         }}
         onSubmit={handleFeedbackSubmit}
         userType="buyer"

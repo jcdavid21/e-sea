@@ -1,9 +1,9 @@
-// src/pages/AdminLogin.js
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "./AdminLogin.css";
 import Navbar from "./Navbar";
+import { checkSession } from "../utils/SessionManager";
 
 const AdminLogin = () => {
   const [username, setUsername] = useState("");
@@ -11,6 +11,13 @@ const AdminLogin = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const session = checkSession();
+    if (session?.type === 'admin') {
+      navigate('/admin/dashboard');
+    }
+  }, [navigate]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -20,6 +27,10 @@ const AdminLogin = () => {
         admin_id: adminID,
         password,
       });
+      
+      localStorage.setItem("admin_session", "true");
+      localStorage.setItem("loginTime", Date.now().toString());
+      
       alert(res.data.message);
       navigate("/admin/dashboard");
     } catch (err) {

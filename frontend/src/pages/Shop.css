@@ -400,3 +400,37 @@
         padding: 8px 14px;
     }
 }
+
+/* Shop Rating Section */
+.shop-rating {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.rating-stars-display {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #fbbf24;
+  font-size: 1rem;
+}
+
+.rating-text {
+  font-size: 0.9rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.rating-count {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  font-weight: 400;
+}
+
+.no-ratings {
+  font-size: 0.85rem;
+  color: #cbd5e1;
+  font-style: italic;
+}

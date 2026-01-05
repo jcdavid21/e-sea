@@ -4,8 +4,10 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import './SellerHome.css';
 import { useNavigate } from "react-router-dom";
 import SellerMapModal from './SellerMapModal';
+import { useIdleTimeout } from '../utils/SessionManager';
 
 const SellerHome = () => {
+  useIdleTimeout('seller');
   const [products, setProducts] = useState([]);
   const [orders, setOrders] = useState([]);
   const [sellerInfo, setSellerInfo] = useState({ shop_name: "", first_name: "", last_name: "" });
@@ -106,7 +108,17 @@ const SellerHome = () => {
         setLoading(false);
       }
     };
+    
+    // Initial fetch
     fetchData();
+    
+    // Set up automatic refresh every 30 seconds
+    const refreshInterval = setInterval(() => {
+      fetchData();
+    }, 30000);
+    
+    // Cleanup interval on component unmount
+    return () => clearInterval(refreshInterval);
   }, [SELLER_ID]);
 
 
@@ -506,10 +518,8 @@ const SellerHome = () => {
             <div style={{ display: 'flex', gap: '8px' }}>
               <select
                 value={salesPeriod}
-                onChange={(e) => {
-                  e.stopPropagation(); // Prevent navigation when clicking select
-                  setSalesPeriod(e.target.value);
-                }}
+                onChange={(e) => setSalesPeriod(e.target.value)}
+                onClick={(e) => e.stopPropagation()}
                 className="chart-filter"
                 style={{
                   padding: '6px 12px',
@@ -923,10 +933,8 @@ const SellerHome = () => {
           <h3><Fish size={18} style={{ display: 'inline', marginRight: '8px' }} /> Products by Category</h3>
           <select
             value={categoryFilter}
-            onChange={(e) => {
-              e.stopPropagation(); // Prevent navigation when clicking select
-              setCategoryFilter(e.target.value);
-            }}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+            onClick={(e) => e.stopPropagation()}
             className="chart-filter"
             style={{
               padding: '6px 12px',
@@ -1139,13 +1147,11 @@ const SellerHome = () => {
           >
             <List size={18} style={{ display: 'inline', marginRight: '8px' }} /> Orders
           </h3>
-          <div
-            style={{ display: 'flex', alignItems: 'center', gap: '12px' }}
-            onClick={(e) => e.stopPropagation()} // Prevent navigation when clicking filter
-          >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <select
               value={orderStatusFilter}
               onChange={(e) => setOrderStatusFilter(e.target.value)}
+              onClick={(e) => e.stopPropagation()}
               style={{
                 padding: '8px 16px',
                 borderRadius: '8px',

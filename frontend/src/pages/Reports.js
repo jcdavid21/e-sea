@@ -64,17 +64,15 @@ const Reports = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      // Fetch notifications from users and sellers
-      const [userRes, sellerRes, ordersRes] = await Promise.all([
+      // Fetch notifications only from users (removed sellers)
+      const [userRes, ordersRes] = await Promise.all([
         axios.get(`${process.env.REACT_APP_ADMIN_API_URL}/api/users/notifications`),
-        axios.get(`${process.env.REACT_APP_ADMIN_API_URL}/api/sellers/notifications`),
         axios.get(`${process.env.REACT_APP_ADMIN_API_URL}/api/orders/completed`)
       ]);
 
       const userNotifications = userRes.data.map(n => ({ ...n, source: "user" }));
-      const sellerNotifications = sellerRes.data.map(n => ({ ...n, source: "seller" }));
 
-      const allNotifications = [...userNotifications, ...sellerNotifications].sort(
+      const allNotifications = userNotifications.sort(
         (a, b) => new Date(b.date_created) - new Date(a.date_created)
       );
 
@@ -257,7 +255,6 @@ const Reports = () => {
             tr:hover { background: #f5f5f5; }
             .source-badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
             .source-badge.user { background: #dbeafe; color: #1e40af; }
-            .source-badge.seller { background: #fef3c7; color: #92400e; }
             @media print {
               body { padding: 20px; }
               .no-print { display: none; }
@@ -378,6 +375,11 @@ const Reports = () => {
       printWindow.focus();
       printWindow.print();
     };
+
+    // close the tab after printing or if the user cancels
+    printWindow.onafterprint = function() {
+      printWindow.close();
+    };
   };
 
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -390,6 +392,14 @@ const Reports = () => {
       setCurrentPage(newPage);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
+  };
+
+  // Helper function to get status display text
+  const getStatusDisplay = (status) => {
+    if (status === 1 || status === 'read') {
+      return 'read';
+    }
+    return 'unread';
   };
 
   if (loading) {
@@ -491,7 +501,7 @@ const Reports = () => {
         </div>
       </div>
 
-      {/* Filters */}
+      {/* Filters - Removed seller filter option */}
       <div className="filter-bar">
         <FiFilter size={18} />
         <span>Filter by Source:</span>
@@ -507,12 +517,6 @@ const Reports = () => {
             onClick={() => setTypeFilter("user")}
           >
             Users ({notifications.filter(n => n.source === "user").length})
-          </button>
-          <button
-            className={typeFilter === "seller" ? "active" : ""}
-            onClick={() => setTypeFilter("seller")}
-          >
-            Sellers ({notifications.filter(n => n.source === "seller").length})
           </button>
         </div>
 
@@ -570,8 +574,8 @@ const Reports = () => {
                   <td className="message-cell">{notification.message}</td>
                   <td>{new Date(notification.date_created).toLocaleString()}</td>
                   <td>
-                    <span className={`status-badge ${notification.status || 'unread'}`}>
-                      {notification.status || 'Unread'}
+                    <span className={`status-badge ${getStatusDisplay(notification.status)}`}>
+                      {notification.status === 1 || notification.status === 'read' ? 'Read' : 'Unread'}
                     </span>
                   </td>
                   <td>

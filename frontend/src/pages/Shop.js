@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { FaStar } from "react-icons/fa";
 import BuyerHeader from "./BuyerHeader";
 import ImgPlaceholder from "../assets/logo.png";
 import BannerImg from "../assets/bg-1.jpg";
@@ -10,6 +11,7 @@ const Shop = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [storeHours, setStoreHours] = useState({});
+  const [ratings, setRatings] = useState({});
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -24,8 +26,9 @@ const Shop = () => {
         }));
         setShops(processedData);
 
-        // Fetch store hours for all shops
+        // Fetch store hours and ratings for all shops
         fetchAllStoreHours(processedData);
+        fetchAllRatings(processedData);
       } catch (err) {
         console.error("Error fetching shops:", err);
         setShops([]);
@@ -56,6 +59,28 @@ const Shop = () => {
       setStoreHours(hoursData);
     } catch (err) {
       console.error("Error fetching store hours:", err);
+    }
+  };
+
+  const fetchAllRatings = async (shopsData) => {
+    try {
+      const ratingsData = {};
+
+      for (const shop of shopsData) {
+        if (shop.seller_id) {
+          const response = await fetch(
+            `${process.env.REACT_APP_BUYER_API_URL}/api/seller/${shop.seller_id}/rating`
+          );
+          if (response.ok) {
+            const data = await response.json();
+            ratingsData[shop.seller_id] = data;
+          }
+        }
+      }
+
+      setRatings(ratingsData);
+    } catch (err) {
+      console.error("Error fetching ratings:", err);
     }
   };
 
@@ -140,6 +165,23 @@ const Shop = () => {
     return `${hour12}:${minutes} ${ampm}`;
   };
 
+  const renderStars = (rating) => {
+    const stars = [];
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating % 1 >= 0.5;
+
+    for (let i = 0; i < 5; i++) {
+      if (i < fullStars) {
+        stars.push(<FaStar key={i} />);
+      } else if (i === fullStars && hasHalfStar) {
+        stars.push(<FaStar key={i} style={{ opacity: 0.5 }} />);
+      } else {
+        stars.push(<FaStar key={i} style={{ opacity: 0.2 }} />);
+      }
+    }
+    return stars;
+  };
+
   const handleShopClick = (shopId, shopName) => {
     navigate(`/shop/${shopId}`, { state: { shopName: shopName } });
   };
@@ -179,7 +221,7 @@ const Shop = () => {
           </div>
         ) : filteredShops.length === 0 ? (
           <div className="no-shops-container">
-            <div className="empty-icon">🏪</div>
+            <div className="empty-icon">🪧</div>
             <p className="no-shops-message">
               {searchTerm ? "No shops found matching your search." : "No shops available at the moment."}
             </p>
@@ -188,6 +230,7 @@ const Shop = () => {
           <div className="shops-grid">
             {filteredShops.map((shop) => {
               const storeStatus = isStoreOpen(shop.seller_id);
+              const shopRating = ratings[shop.seller_id];
 
               return (
                 <div
@@ -217,6 +260,24 @@ const Shop = () => {
                         <div className={`store-status-badge ${storeStatus.isOpen ? 'open' : 'closed'}`}>
                           {storeStatus.message}
                         </div>
+                        {shopRating && (
+                          <div className="shop-rating">
+                            <div className="rating-stars-display">
+                              {renderStars(shopRating.averageRating)}
+                            </div>
+                            <span className="rating-text">
+                              {shopRating.averageRating.toFixed(1)}
+                            </span>
+                            <span className="rating-count">
+                              ({shopRating.totalReviews}{shopRating.totalReviews === 1 ? '' : ''})
+                            </span>
+                          </div>
+                        )}
+                        {!shopRating && (
+                          <div className="shop-rating">
+                            <span className="no-ratings">No ratings yet</span>
+                          </div>
+                        )}
                       </div>
                     </div>
                     <div className="product-count">

@@ -11,10 +11,12 @@ import {
   FaShoppingCart,
   FaTruck,
   FaArrowRight,
+  FaStar,
 } from "react-icons/fa";
 import BannerImg from "../assets/bg-2.jpg";
 import "./BuyerDashboard.css";
 import BuyerHeader from "./BuyerHeader";
+import SellerFeedbackModal from "./SellerFeedbackModal";
 
 // Import cart utilities
 import { addToCart as addToCartUtil } from "../utils/cartUtils";
@@ -24,12 +26,15 @@ const BuyerDashboard = () => {
   const [recentPurchases, setRecentPurchases] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
   const [stats, setStats] = useState({
     totalOrders: 0,
     activeOrders: 0,
     completedOrders: 0,
     totalSpent: 0
   });
+  const [feedbackStatus, setFeedbackStatus] = useState({});
 
   const CUSTOMER_ID = sessionStorage.getItem("customer_id");
   const navigate = useNavigate();
@@ -61,7 +66,6 @@ const BuyerDashboard = () => {
     }
   };
 
-  // Fetch recent purchases for THIS specific buyer
   const loadRecentPurchases = async () => {
     if (!CUSTOMER_ID) {
       setRecentPurchases([]);
@@ -81,7 +85,6 @@ const BuyerDashboard = () => {
       
       const data = await res.json();
       
-      // ✅ Remove duplicates based on order_id and product_id
       const uniquePurchases = data.reduce((acc, current) => {
         const exists = acc.find(
           item => item.order_id === current.order_id && 
@@ -95,6 +98,9 @@ const BuyerDashboard = () => {
       
       setRecentPurchases(uniquePurchases);
       calculateStats(uniquePurchases);
+      
+      // Check feedback status for completed orders
+      await checkAllFeedbackStatus(uniquePurchases);
     } catch (err) {
       console.error("Error fetching purchases:", err);
       setRecentPurchases([]);
@@ -140,7 +146,138 @@ const BuyerDashboard = () => {
     showToast(`${product.name} added to cart!`);
   };
 
+
+// Check feedback status for all completed orders
+const checkAllFeedbackStatus = async (purchases) => {
+  const completedOrders = purchases.filter(p => p.status === 'Completed');
+  const statusMap = {};
   
+  for (const order of completedOrders) {
+    const hasFeedback = await checkExistingFeedback(order.order_id);
+    statusMap[order.order_id] = hasFeedback;
+  }
+  
+  setFeedbackStatus(statusMap);
+};
+
+  // Check if buyer has already submitted feedback for an order
+const checkExistingFeedback = async (orderId) => {
+  try {
+    console.log('Checking feedback for order:', orderId, 'customer:', CUSTOMER_ID);
+    
+    // Get buyer's numeric ID from buyer_authentication table
+    const buyerRes = await fetch(
+      `${process.env.REACT_APP_BUYER_API_URL}/api/buyer/get-numeric-id/${CUSTOMER_ID}`
+    );
+    
+    if (!buyerRes.ok) {
+      console.error('Failed to get buyer numeric ID');
+      return false;
+    }
+    
+    const buyerData = await buyerRes.json();
+    const numericBuyerId = buyerData.buyer_id;
+    
+    console.log('Got numeric buyer ID:', numericBuyerId);
+
+    const res = await fetch(
+      `${process.env.REACT_APP_BUYER_API_URL}/api/seller-feedback/check/${orderId}/${numericBuyerId}`
+    );
+    const data = await res.json();
+    
+    console.log('Feedback exists:', data.hasFeedback);
+    return data.hasFeedback;
+  } catch (error) {
+    console.error('Error checking feedback:', error);
+    return false;
+  }
+};
+
+
+  const handleCompletedOrderClick = async (purchase) => {
+    if (purchase.status !== 'Completed') return;
+
+    console.log('Clicked completed order:', purchase.order_id);
+
+    const hasFeedback = await checkExistingFeedback(purchase.order_id);
+    
+    if (hasFeedback) {
+      showToast('You have already submitted feedback for this order');
+      return;
+    }
+
+    // Set selected order info
+    setSelectedOrder({
+      orderId: purchase.order_id,
+      shopName: purchase.shop_name || 'Shop',
+      sellerId: purchase.seller_id
+    });
+    
+    console.log('Opening feedback modal for:', {
+      orderId: purchase.order_id,
+      sellerId: purchase.seller_id
+    });
+    
+    setShowFeedbackModal(true);
+  };
+
+  // Handle feedback submission
+  const handleFeedbackSubmit = async (feedbackData) => {
+    try {
+      console.log('Submitting feedback:', feedbackData);
+      console.log('Order info:', selectedOrder);
+      
+      // Get buyer's numeric ID
+      const buyerRes = await fetch(
+        `${process.env.REACT_APP_BUYER_API_URL}/api/buyer/get-numeric-id/${CUSTOMER_ID}`
+      );
+      
+      if (!buyerRes.ok) {
+        throw new Error('Failed to get buyer ID');
+      }
+      
+      const buyerData = await buyerRes.json();
+      const numericBuyerId = buyerData.buyer_id;
+      
+      console.log('Got numeric buyer ID:', numericBuyerId);
+
+      // Submit feedback
+      const payload = {
+        ...feedbackData,
+        order_id: selectedOrder.orderId,
+        buyer_id: numericBuyerId,
+        seller_id: selectedOrder.sellerId
+      };
+      
+      console.log('Sending payload:', payload);
+
+      const response = await fetch(`${process.env.REACT_APP_BUYER_API_URL}/api/seller-feedback`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const result = await response.json();
+      
+      console.log('Response:', result);
+
+      if (!response.ok) {
+        throw new Error(result.message || 'Failed to submit feedback');
+      }
+      
+      console.log("Seller feedback submitted successfully");
+      setShowFeedbackModal(false);
+      setSelectedOrder(null);
+      
+      // Reload purchases to update the UI
+      loadRecentPurchases();
+      
+      showToast('Thank you for your feedback!');
+    } catch (error) {
+      console.error('Error submitting feedback:', error);
+      showToast(error.message || 'Failed to submit feedback. Please try again.');
+    }
+  };
 
   if (loading) return <p>Loading dashboard...</p>;
 
@@ -232,16 +369,6 @@ const BuyerDashboard = () => {
               <p>{stats.activeOrders} Active</p>
             </div>
           </div>
-
-          {/* <div className="action-card">
-            <div className="action-icon green">
-              <FaHeart />
-            </div>
-            <div className="action-info">
-              <h3>Favorites</h3>
-              <p>Save Items</p>
-            </div>
-          </div> */}
         </div>
 
 
@@ -260,7 +387,12 @@ const BuyerDashboard = () => {
           ) : (
             <div className="product-list">
               {recentPurchases.map((prod, index) => (
-                <div key={index} className="product-card recent-card">
+                <div 
+                  key={index} 
+                  className={`product-card recent-card ${prod.status === 'Completed' ? 'completed-order' : ''}`}
+                  onClick={() => handleCompletedOrderClick(prod)}
+                  style={{ cursor: prod.status === 'Completed' ? 'pointer' : 'default' }}
+                >
                   <img
                     src={
                       prod.image_url
@@ -288,6 +420,30 @@ const BuyerDashboard = () => {
                   <p className="purchase-date">
                     {new Date(prod.created_at).toLocaleDateString()}
                   </p>
+                  
+                  {prod.status === 'Completed' && (
+                    <div 
+                      className="rate-order-badge"
+                      style={{
+                        background: feedbackStatus[prod.order_id] === true 
+                          ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' 
+                          : 'linear-gradient(135deg, #48bb78 0%, #38a169 100%)',
+                        cursor: feedbackStatus[prod.order_id] === true ? 'default' : 'pointer'
+                      }}
+                    >
+                      {feedbackStatus[prod.order_id] === false ? (
+                        <>
+                          Rate this order
+                        </>
+                      ) : feedbackStatus[prod.order_id] === true ? (
+                        <>
+                          Feedback submitted
+                        </>
+                      ) : (
+                        <>Checking...</>
+                      )}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -358,6 +514,17 @@ const BuyerDashboard = () => {
           )}
         </section>
       </main>
+
+      {/* Seller Feedback Modal */}
+      <SellerFeedbackModal
+        isOpen={showFeedbackModal}
+        onClose={() => {
+          setShowFeedbackModal(false);
+          setSelectedOrder(null);
+        }}
+        onSubmit={handleFeedbackSubmit}
+        orderInfo={selectedOrder}
+      />
     </div>
   );
 };

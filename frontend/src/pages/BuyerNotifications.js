@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaBell, FaBox, FaExclamationTriangle, FaInbox } from "react-icons/fa";
 import BuyerHeader from "./BuyerHeader";
+import SellerFeedbackModal from "./SellerFeedbackModal";
 import "./BuyerNotifications.css";
 
 export default function BuyerNotifications() {
@@ -11,6 +12,8 @@ export default function BuyerNotifications() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
 
   const buyerId = sessionStorage.getItem("customer_id");
   const navigate = useNavigate();
@@ -27,7 +30,6 @@ export default function BuyerNotifications() {
         `${process.env.REACT_APP_BUYER_API_URL}/api/buyer/${buyerId}/notifications`,
         {
           method: 'GET',
-          // Remove credentials: 'include' - not needed
         }
       );
 
@@ -60,7 +62,35 @@ export default function BuyerNotifications() {
     return () => clearInterval(interval);
   }, [buyerId, navigate]);
 
-  const markAsRead = async (notificationId) => {
+  const checkExistingFeedback = async (orderId) => {
+    try {
+      console.log('Checking feedback for order:', orderId);
+      
+      // Get buyer's numeric ID
+      const buyerRes = await fetch(
+        `${process.env.REACT_APP_BUYER_API_URL}/api/buyer/get-numeric-id/${buyerId}`
+      );
+      
+      if (!buyerRes.ok) {
+        console.error('Failed to get buyer numeric ID');
+        return false;
+      }
+      
+      const buyerData = await buyerRes.json();
+      const numericBuyerId = buyerData.buyer_id;
+
+      const res = await fetch(
+        `${process.env.REACT_APP_BUYER_API_URL}/api/seller-feedback/check/${orderId}/${numericBuyerId}`
+      );
+      const data = await res.json();
+      return data.hasFeedback;
+    } catch (error) {
+      console.error('Error checking feedback:', error);
+      return false;
+    }
+  };
+
+  const markAsRead = async (notificationId, notification) => {
     try {
       console.log(`📌 Marking notification ${notificationId} as read for buyer ${buyerId}`);
       
@@ -70,7 +100,6 @@ export default function BuyerNotifications() {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ buyer_id: buyerId }),
-          // Remove credentials: 'include' - not needed
         }
       );
 
@@ -90,12 +119,78 @@ export default function BuyerNotifications() {
       );
       
       setUnreadCount(prev => Math.max(0, prev - 1));
+
+      // Check if order is completed and show feedback modal
+      if (notification.message.includes('Completed')) {
+        const hasFeedback = await checkExistingFeedback(notification.order_id);
+        
+        if (!hasFeedback) {
+          setSelectedOrder({
+            orderId: notification.order_id,
+            shopName: notification.shop_name
+          });
+          setShowFeedbackModal(true);
+        }
+      }
     } catch (err) {
       console.error("Error marking notification as read:", err);
       alert(`Failed to mark notification as read: ${err.message}`);
     }
   };
 
+  const handleFeedbackSubmit = async (feedbackData) => {
+    try {
+      console.log('Submitting feedback from notification');
+      
+      // Get buyer's numeric ID
+      const buyerRes = await fetch(
+        `${process.env.REACT_APP_BUYER_API_URL}/api/buyer/get-numeric-id/${buyerId}`
+      );
+      
+      if (!buyerRes.ok) {
+        throw new Error('Failed to get buyer ID');
+      }
+      
+      const buyerData = await buyerRes.json();
+      const numericBuyerId = buyerData.buyer_id;
+
+      // Get order details to find seller_id
+      const orderRes = await fetch(
+        `${process.env.REACT_APP_BUYER_API_URL}/api/buyer/orders/${selectedOrder.orderId}?buyer_id=${buyerId}`
+      );
+      const orderData = await orderRes.json();
+
+      const payload = {
+        ...feedbackData,
+        order_id: selectedOrder.orderId,
+        buyer_id: numericBuyerId,
+        seller_id: orderData.order.seller_id
+      };
+      
+      console.log('Sending payload:', payload);
+
+      const response = await fetch(`${process.env.REACT_APP_BUYER_API_URL}/api/seller-feedback`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || 'Failed to submit feedback');
+      }
+      
+      console.log("✅ Seller feedback submitted:", result);
+      setShowFeedbackModal(false);
+      setSelectedOrder(null);
+      
+      alert('Thank you for your feedback!');
+    } catch (error) {
+      console.error('Error submitting feedback:', error);
+      alert(error.message || 'Failed to submit feedback. Please try again.');
+    }
+  };
 
   const markAllAsRead = async () => {
     try {
@@ -106,7 +201,6 @@ export default function BuyerNotifications() {
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          // Remove credentials: 'include' - not needed
         }
       );
 
@@ -220,7 +314,7 @@ export default function BuyerNotifications() {
               <div
                 key={notification.id}
                 className={`notif-item ${notification.is_read ? 'read' : 'unread'}`}
-                onClick={() => !notification.is_read && markAsRead(notification.id)}
+                onClick={() => !notification.is_read && markAsRead(notification.id, notification)}
                 style={{ cursor: notification.is_read ? 'default' : 'pointer' }}
               >
                 <div className="notif-icon">
@@ -251,6 +345,16 @@ export default function BuyerNotifications() {
           )}
         </div>
       </div>
+
+      <SellerFeedbackModal
+        isOpen={showFeedbackModal}
+        onClose={() => {
+          setShowFeedbackModal(false);
+          setSelectedOrder(null);
+        }}
+        onSubmit={handleFeedbackSubmit}
+        orderInfo={selectedOrder}
+      />
     </div>
   );
 }

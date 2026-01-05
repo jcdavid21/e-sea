@@ -4,6 +4,7 @@ import { FaFish } from "react-icons/fa";
 import './ShopProductPage.css';
 import BuyerHeader from "./BuyerHeader";
 import Logo from "../assets/logo.png";
+import ShopFeedback from "./ShopFeedback";
 
 // ✅ Import cart utilities
 import { addToCart as addToCartUtil, getCartCount } from "../utils/cartUtils";
@@ -185,6 +186,8 @@ const ShopProductPage = () => {
             })}
           </div>
         )}
+
+        <ShopFeedback sellerId={shopId} />
       </div>
     </div>
   );

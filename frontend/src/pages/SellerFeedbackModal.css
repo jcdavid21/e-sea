@@ -1,0 +1,246 @@
+.feedback-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 20px;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.feedback-modal {
+  background: white;
+  border-radius: 24px;
+  padding: 40px;
+  max-width: 550px;
+  width: 100%;
+  position: relative;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.feedback-modal-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.feedback-modal-close:hover {
+  background: #f0f0f0;
+  color: #333;
+}
+
+.feedback-modal-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.feedback-modal-header h2 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0 0 12px;
+}
+
+.feedback-shop-name {
+  font-size: 1rem;
+  color: #667eea;
+  font-weight: 600;
+  margin: 0;
+}
+
+.feedback-form {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.feedback-rating-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.feedback-rating-section label {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.feedback-stars {
+  display: flex;
+  gap: 12px;
+}
+
+.feedback-star {
+  font-size: 2.5rem;
+  color: #e0e0e0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.feedback-star:hover {
+  transform: scale(1.15);
+}
+
+.feedback-star.active {
+  color: #ffd700;
+  filter: drop-shadow(0 2px 8px rgba(255, 215, 0, 0.5));
+}
+
+.feedback-rating-text {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #667eea;
+  min-height: 28px;
+}
+
+.feedback-comment-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.feedback-comment-section label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.feedback-comment-section textarea {
+  width: 100%;
+  padding: 14px 18px;
+  border: 2px solid #f0f0f0;
+  border-radius: 16px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  resize: vertical;
+  transition: all 0.3s ease;
+  background: #fafafa;
+}
+
+.feedback-comment-section textarea:hover {
+  border-color: #e0e0e0;
+  background: #ffffff;
+}
+
+.feedback-comment-section textarea:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+  background: #ffffff;
+}
+
+.feedback-char-count {
+  font-size: 0.85rem;
+  color: #999;
+  text-align: right;
+}
+
+.feedback-modal-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.btn-feedback-skip,
+.btn-feedback-submit {
+  flex: 1;
+  padding: 14px 24px;
+  border-radius: 50px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+}
+
+.btn-feedback-skip {
+  background: #f0f0f0;
+  color: #666;
+}
+
+.btn-feedback-skip:hover:not(:disabled) {
+  background: #e0e0e0;
+  transform: translateY(-2px);
+}
+
+.btn-feedback-submit {
+  background: #667eea;
+  color: white;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.25);
+}
+
+.btn-feedback-submit:hover:not(:disabled) {
+  background: #5568d3;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.35);
+}
+
+.btn-feedback-submit:disabled,
+.btn-feedback-skip:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+@media (max-width: 768px) {
+  .feedback-modal {
+    padding: 28px 24px;
+    max-width: 100%;
+  }
+
+  .feedback-modal-header h2 {
+    font-size: 1.5rem;
+  }
+
+  .feedback-star {
+    font-size: 2rem;
+  }
+
+  .feedback-stars {
+    gap: 8px;
+  }
+
+  .feedback-modal-actions {
+    flex-direction: column;
+  }
+}

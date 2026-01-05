@@ -776,7 +776,7 @@
 
 .empty-pending h4 {
   margin: 0 0 8px 0;
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 800;
   color: #0f172a;
 }
@@ -1387,6 +1387,10 @@
   .chart-content {
     max-width: 100%;
   }
+}
+
+.section-header{
+  align-items: start !important;
 }
 
 /* ==================
