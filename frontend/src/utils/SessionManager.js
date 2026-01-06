@@ -28,6 +28,22 @@ export const useIdleTimeout = (userType) => {
     }
   };
 
+  const checkSession = () => {
+    let isValid = false;
+    
+    if (userType === 'buyer') {
+      isValid = !!sessionStorage.getItem('customer_id');
+    } else if (userType === 'seller') {
+      isValid = !!localStorage.getItem('seller_unique_id');
+    } else if (userType === 'admin') {
+      isValid = !!localStorage.getItem('admin_session');
+    }
+
+    if (!isValid) {
+      logout();
+    }
+  };
+
   const resetTimer = () => {
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
@@ -36,12 +52,35 @@ export const useIdleTimeout = (userType) => {
   };
 
   useEffect(() => {
+    // Prevent browser caching
+    window.history.pushState(null, '', window.location.href);
+    
+    const handlePopState = () => {
+      window.history.pushState(null, '', window.location.href);
+      checkSession();
+    };
+
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        checkSession();
+      }
+    };
+
+    // Check session on mount
+    checkSession();
+
     // Set up event listeners for user activity
     const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
     
     events.forEach(event => {
       document.addEventListener(event, resetTimer);
     });
+
+    // Listen for browser back/forward button
+    window.addEventListener('popstate', handlePopState);
+    
+    // Listen for page visibility changes
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     // Start the timer
     resetTimer();
@@ -54,6 +93,8 @@ export const useIdleTimeout = (userType) => {
       events.forEach(event => {
         document.removeEventListener(event, resetTimer);
       });
+      window.removeEventListener('popstate', handlePopState);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, []);
 };
