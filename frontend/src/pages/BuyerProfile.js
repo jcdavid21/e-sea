@@ -35,6 +35,17 @@ const BuyerProfile = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Prevent caching
+    window.history.pushState(null, null, window.location.href);
+    window.onpopstate = function () {
+      const customer_id = sessionStorage.getItem("customer_id");
+      if (!customer_id) {
+        window.location.replace("/buyer/login");
+      }
+    };
+  }, []);
+
+  useEffect(() => {
     fetchBuyerProfile();
   }, []);
 
@@ -44,7 +55,7 @@ const BuyerProfile = () => {
     if (!customer_id) {
       setError("Not logged in. Please login first.");
       setLoading(false);
-      navigate("/buyer/login");
+      window.location.replace("/buyer/login");
       return;
     }
 

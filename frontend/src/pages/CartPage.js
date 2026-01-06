@@ -55,6 +55,17 @@ const CartPage = () => {
   // Get customer ID from sessionStorage
   const CUSTOMER_ID = getCustomerId();
 
+  useEffect(() => {
+    // Prevent caching
+    window.history.pushState(null, null, window.location.href);
+    window.onpopstate = function () {
+      const customer_id = sessionStorage.getItem("customer_id");
+      if (!customer_id) {
+        window.location.replace("/buyer/login");
+      }
+    };
+  }, []);
+
   const fetchSellerLocation = async (sellerId) => {
     try {
       const response = await fetch(

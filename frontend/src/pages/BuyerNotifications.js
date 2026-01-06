@@ -50,6 +50,17 @@ export default function BuyerNotifications() {
   };
 
   useEffect(() => {
+    // Prevent caching
+    window.history.pushState(null, null, window.location.href);
+    window.onpopstate = function () {
+      const customer_id = sessionStorage.getItem("customer_id");
+      if (!customer_id) {
+        window.location.replace("/buyer/login");
+      }
+    };
+  }, []);
+
+  useEffect(() => {
     if (!buyerId) {
       navigate("/buyer/login");
       return;

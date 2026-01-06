@@ -15,6 +15,17 @@ const Shop = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Prevent caching
+    window.history.pushState(null, null, window.location.href);
+    window.onpopstate = function () {
+      const customer_id = sessionStorage.getItem("customer_id");
+      if (!customer_id) {
+        window.location.replace("/buyer/login");
+      }
+    };
+  }, []);
+
+  useEffect(() => {
     const loadShops = async () => {
       try {
         const res = await fetch(`${process.env.REACT_APP_BUYER_API_URL}/api/shop`);

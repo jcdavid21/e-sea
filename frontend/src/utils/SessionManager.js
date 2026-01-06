@@ -14,17 +14,18 @@ export const useIdleTimeout = (userType) => {
       sessionStorage.removeItem('buyerEmail');
       sessionStorage.removeItem('buyerName');
       sessionStorage.removeItem('loginTime');
-      window.location.href = '/buyer/login';
+      // Clear cache and reload
+      window.location.replace('/buyer/login');
     } else if (userType === 'seller') {
       localStorage.removeItem('seller_unique_id');
       localStorage.removeItem('sellerToken');
       localStorage.removeItem('uniqueId');
       localStorage.removeItem('loginTime');
-      window.location.href = '/seller/login';
+      window.location.replace('/seller/login');
     } else if (userType === 'admin') {
       localStorage.removeItem('admin_session');
       localStorage.removeItem('loginTime');
-      window.location.href = '/admin/login';
+      window.location.replace('/admin/login');
     }
   };
 
@@ -41,7 +42,9 @@ export const useIdleTimeout = (userType) => {
 
     if (!isValid) {
       logout();
+      return false;
     }
+    return true;
   };
 
   const resetTimer = () => {
@@ -52,12 +55,28 @@ export const useIdleTimeout = (userType) => {
   };
 
   useEffect(() => {
-    // Prevent browser caching
-    window.history.pushState(null, '', window.location.href);
-    
-    const handlePopState = () => {
-      window.history.pushState(null, '', window.location.href);
+    // Immediate session check
+    if (!checkSession()) {
+      return;
+    }
+
+    // Disable browser cache for this page
+    window.onpageshow = function(event) {
+      if (event.persisted) {
+        checkSession();
+      }
+    };
+
+    // Check session every second (aggressive checking)
+    const sessionCheckInterval = setInterval(() => {
       checkSession();
+    }, 1000);
+
+    const handlePopState = (e) => {
+      e.preventDefault();
+      if (!checkSession()) {
+        window.history.go(-1);
+      }
     };
 
     const handleVisibilityChange = () => {
@@ -66,8 +85,12 @@ export const useIdleTimeout = (userType) => {
       }
     };
 
-    // Check session on mount
-    checkSession();
+    const handleBeforeUnload = () => {
+      // Mark that user is navigating away
+      if (userType === 'buyer') {
+        sessionStorage.setItem('navigating', 'true');
+      }
+    };
 
     // Set up event listeners for user activity
     const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
@@ -76,11 +99,11 @@ export const useIdleTimeout = (userType) => {
       document.addEventListener(event, resetTimer);
     });
 
-    // Listen for browser back/forward button
     window.addEventListener('popstate', handlePopState);
-    
-    // Listen for page visibility changes
     document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('pageshow', checkSession);
+    window.addEventListener('focus', checkSession);
 
     // Start the timer
     resetTimer();
@@ -90,13 +113,17 @@ export const useIdleTimeout = (userType) => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
+      clearInterval(sessionCheckInterval);
       events.forEach(event => {
         document.removeEventListener(event, resetTimer);
       });
       window.removeEventListener('popstate', handlePopState);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('pageshow', checkSession);
+      window.removeEventListener('focus', checkSession);
     };
-  }, []);
+  }, [userType]);
 };
 
 export const checkSession = () => {

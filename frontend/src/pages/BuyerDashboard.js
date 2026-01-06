@@ -39,6 +39,17 @@ const BuyerDashboard = () => {
   const CUSTOMER_ID = sessionStorage.getItem("customer_id");
   const navigate = useNavigate();
 
+  useEffect(() => {
+    // Prevent caching
+    window.history.pushState(null, null, window.location.href);
+    window.onpopstate = function () {
+      const customer_id = sessionStorage.getItem("customer_id");
+      if (!customer_id) {
+        window.location.replace("/buyer/login");
+      }
+    };
+  }, []);
+
   // Calculate user stats
   const calculateStats = (purchases) => {
     const totalOrders = purchases.length;
