@@ -5,6 +5,7 @@ import Swal from "sweetalert2";
 import AddSellerModal from "./AddSellerModal";
 import ViewRequirementsModal from "./ViewRequirementsModal";
 import "./ApproveSellers.css";
+import { FiDownload } from "react-icons/fi";
 
 const getDaysDiff = (dateString) => {
   if (!dateString) return 0;
@@ -12,6 +13,199 @@ const getDaysDiff = (dateString) => {
   const dateCreated = new Date(dateString);
   const today = new Date();
   return Math.round(Math.abs((today - dateCreated) / oneDay));
+};
+
+const downloadCSV = async (type, sellers) => {
+  const result = await Swal.fire({
+    title: 'Download Report?',
+    text: `Do you want to download the Sellers report as CSV?`,
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonColor: '#1e3c72',
+    cancelButtonColor: '#6c757d',
+    confirmButtonText: 'Yes, Download',
+    cancelButtonText: 'Cancel'
+  });
+
+  if (!result.isConfirmed) {
+    return;
+  }
+
+  let csvData = [];
+  let filename = "";
+
+  // Add headers
+  csvData.push(['Generated ID', 'Full Name', 'Shop Name', 'Address', 'Days Since Registration', 'Requirements Status', 'Status']);
+
+  // Add data rows
+  sellers.forEach(seller => {
+    const daysSince = getDaysDiff(seller.date_added);
+    const isCompliant = Object.values(seller.requirements).every(Boolean);
+    const reqStatus = isCompliant ? 'Complete' : 'Incomplete';
+    const fullAddress = `${seller.street}, ${seller.barangay}, ${seller.municipality}, ${seller.province}`;
+    const fullName = `${seller.first_name} ${seller.middle_name} ${seller.last_name}`;
+
+    csvData.push([
+      seller.unique_id,
+      fullName,
+      seller.shop_name,
+      fullAddress,
+      `${daysSince} day${daysSince !== 1 ? 's' : ''}`,
+      reqStatus,
+      seller.display_status
+    ]);
+  });
+
+  filename = `sellers_report_${new Date().toISOString().split('T')[0]}.csv`;
+
+  // Convert array to CSV string
+  const csvContent = csvData.map(row =>
+    row.map(cell => {
+      const cellStr = String(cell || '');
+      if (cellStr.includes(',') || cellStr.includes('"') || cellStr.includes('\n')) {
+        return `"${cellStr.replace(/"/g, '""')}"`;
+      }
+      return cellStr;
+    }).join(',')
+  ).join('\n');
+
+  // Create blob and download
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement("a");
+  const url = URL.createObjectURL(blob);
+
+  link.setAttribute("href", url);
+  link.setAttribute("download", filename);
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+
+  Swal.fire({
+    icon: "success",
+    title: "Downloaded!",
+    text: `${filename} has been downloaded successfully`,
+    confirmButtonColor: "#1e3c72",
+    timer: 2000,
+    timerProgressBar: true,
+  });
+};
+
+const printReport = async (sellers) => {
+  const result = await Swal.fire({
+    title: 'Print Report?',
+    text: 'Do you want to print the Sellers report?',
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonColor: '#1e3c72',
+    cancelButtonColor: '#6c757d',
+    confirmButtonText: 'Yes, Print',
+    cancelButtonText: 'Cancel'
+  });
+
+  if (!result.isConfirmed) {
+    return;
+  }
+
+  const printWindow = window.open('', '_blank');
+  
+  const sellersHTML = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Sellers Report - ${new Date().toLocaleDateString()}</title>
+      <style>
+        body { font-family: Arial, sans-serif; padding: 40px; }
+        h1 { color: #1e3c72; margin-bottom: 10px; }
+        .date { color: #666; margin-bottom: 30px; }
+        .summary { background: #f0f9ff; padding: 20px; border-radius: 8px; margin-bottom: 30px; }
+        .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+        .summary-item { text-align: center; }
+        .summary-label { color: #666; font-size: 14px; margin-bottom: 5px; }
+        .summary-value { color: #1e3c72; font-size: 24px; font-weight: bold; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th { background: #1e3c72; color: white; padding: 12px; text-align: left; }
+        td { padding: 10px; border-bottom: 1px solid #ddd; }
+        tr:hover { background: #f5f5f5; }
+        .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+        .status-badge.pending { background: #fff6d5; color: #856404; }
+        .status-badge.accepted { background: #d4edda; color: #155724; }
+        .status-badge.rejected { background: #f8d7da; color: #721c24; }
+        @media print {
+          body { padding: 20px; }
+          .no-print { display: none; }
+        }
+      </style>
+    </head>
+    <body>
+      <h1>Sellers Report</h1>
+      <div class="date">Generated on: ${new Date().toLocaleString()}</div>
+      
+      <div class="summary">
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="summary-label">Total Sellers</div>
+            <div class="summary-value">${sellers.length}</div>
+          </div>
+          <div class="summary-item">
+            <div class="summary-label">Pending</div>
+            <div class="summary-value">${sellers.filter(s => s.display_status === "pending").length}</div>
+          </div>
+          <div class="summary-item">
+            <div class="summary-label">Accepted</div>
+            <div class="summary-value">${sellers.filter(s => s.display_status === "accepted").length}</div>
+          </div>
+        </div>
+      </div>
+      
+      <table>
+        <thead>
+          <tr>
+            <th>Generated ID</th>
+            <th>Full Name</th>
+            <th>Shop Name</th>
+            <th>Address</th>
+            <th>Days Since</th>
+            <th>Requirements</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${sellers.map(seller => {
+            const daysSince = getDaysDiff(seller.date_added);
+            const isCompliant = Object.values(seller.requirements).every(Boolean);
+            const fullName = `${seller.first_name} ${seller.middle_name} ${seller.last_name}`;
+            const fullAddress = `${seller.street}, ${seller.barangay}, ${seller.municipality}, ${seller.province}`;
+            
+            return `
+              <tr>
+                <td>${seller.unique_id}</td>
+                <td>${fullName}</td>
+                <td>${seller.shop_name}</td>
+                <td>${fullAddress}</td>
+                <td>${daysSince} day${daysSince !== 1 ? 's' : ''}</td>
+                <td>${isCompliant ? 'Complete' : 'Incomplete'}</td>
+                <td><span class="status-badge ${seller.display_status}">${seller.display_status}</span></td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      </table>
+    </body>
+    </html>
+  `;
+  
+  printWindow.document.write(sellersHTML);
+  printWindow.document.close();
+  
+  printWindow.onload = function() {
+    printWindow.focus();
+    printWindow.print();
+  };
+
+  printWindow.onafterprint = function() {
+    printWindow.close();
+  };
 };
 
 const handlePrintSeller = (seller) => {
@@ -557,6 +751,36 @@ const ApproveSellers = () => {
           <FiUserPlus size={18} />
           Add Seller
         </button>
+      </div>
+
+      <div className="download-section">
+        <div className="action-dropdown-group">
+          <label htmlFor="report-action">Generate Report:</label>
+          <select 
+            id="report-action"
+            className="action-select"
+            onChange={(e) => {
+              const [action, type] = e.target.value.split('-');
+              if (action && type) {
+                if (action === 'download') {
+                  downloadCSV(type, filteredSellers);
+                } else if (action === 'print') {
+                  printReport(filteredSellers);
+                }
+              }
+              e.target.value = '';
+            }}
+            defaultValue=""
+          >
+            <option value="" disabled>Select an action...</option>
+            <optgroup label="Download CSV">
+              <option value="download-sellers">Sellers Report</option>
+            </optgroup>
+            <optgroup label="Print Report">
+              <option value="print-sellers">Sellers Report</option>
+            </optgroup>
+          </select>
+        </div>
       </div>
 
       <div className="filter-bar">

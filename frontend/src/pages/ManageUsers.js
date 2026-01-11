@@ -129,103 +129,103 @@ const ManageUsers = () => {
   };
 
   const fetchAdmins = async () => {
-  try {
-    const res = await axios.get(`${process.env.REACT_APP_ADMIN_API_URL}/api/all-admins`);
-    setAdmins(res.data);
-  } catch (error) {
-    console.error("Error fetching admins:", error);
-  }
-};
+    try {
+      const res = await axios.get(`${process.env.REACT_APP_ADMIN_API_URL}/api/all-admins`);
+      setAdmins(res.data);
+    } catch (error) {
+      console.error("Error fetching admins:", error);
+    }
+  };
 
-const filterAdmins = () => {
-  if (!searchTerm.trim()) {
-    setFilteredAdmins(admins);
-    return;
-  }
+  const filterAdmins = () => {
+    if (!searchTerm.trim()) {
+      setFilteredAdmins(admins);
+      return;
+    }
 
-  const filtered = admins.filter(admin => {
-    const username = admin.username?.toLowerCase() || "";
-    const adminId = admin.admin_id?.toLowerCase() || "";
-    const search = searchTerm.toLowerCase();
+    const filtered = admins.filter(admin => {
+      const username = admin.username?.toLowerCase() || "";
+      const adminId = admin.admin_id?.toLowerCase() || "";
+      const search = searchTerm.toLowerCase();
 
-    return username.includes(search) || adminId.includes(search);
-  });
-
-  setFilteredAdmins(filtered);
-};
-
-const handleViewAdmin = (admin) => {
-  setSelectedAdmin(admin);
-};
-
-const handlePasswordFormChange = (e) => {
-  setPasswordForm({
-    ...passwordForm,
-    [e.target.name]: e.target.value
-  });
-};
-
-const handleUpdatePassword = async (e) => {
-  e.preventDefault();
-
-  if (!passwordForm.admin_id || !passwordForm.old_password || !passwordForm.new_password || !passwordForm.confirm_password) {
-    Swal.fire({
-      icon: 'error',
-      title: 'Validation Error',
-      text: 'All fields are required!',
-    });
-    return;
-  }
-
-  if (passwordForm.new_password.length < 8) {
-    Swal.fire({
-      icon: 'error',
-      title: 'Weak Password',
-      text: 'New password must be at least 8 characters long!',
-    });
-    return;
-  }
-
-  if (passwordForm.new_password !== passwordForm.confirm_password) {
-    Swal.fire({
-      icon: 'error',
-      title: 'Password Mismatch',
-      text: 'New password and confirm password do not match!',
-    });
-    return;
-  }
-
-  try {
-    const response = await axios.put(
-      `${process.env.REACT_APP_ADMIN_API_URL}/api/admin/update-password`,
-      {
-        admin_id: passwordForm.admin_id,
-        old_password: passwordForm.old_password,
-        new_password: passwordForm.new_password
-      }
-    );
-
-    Swal.fire({
-      icon: 'success',
-      title: 'Success!',
-      text: response.data.message || 'Password updated successfully!',
+      return username.includes(search) || adminId.includes(search);
     });
 
+    setFilteredAdmins(filtered);
+  };
+
+  const handleViewAdmin = (admin) => {
+    setSelectedAdmin(admin);
+  };
+
+  const handlePasswordFormChange = (e) => {
     setPasswordForm({
-      admin_id: "",
-      old_password: "",
-      new_password: "",
-      confirm_password: ""
+      ...passwordForm,
+      [e.target.name]: e.target.value
     });
-    setShowUpdatePasswordModal(false);
-  } catch (error) {
-    Swal.fire({
-      icon: 'error',
-      title: 'Error',
-      text: error.response?.data?.message || 'Failed to update password. Please try again.',
-    });
-  }
-};
+  };
+
+  const handleUpdatePassword = async (e) => {
+    e.preventDefault();
+
+    if (!passwordForm.admin_id || !passwordForm.old_password || !passwordForm.new_password || !passwordForm.confirm_password) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Validation Error',
+        text: 'All fields are required!',
+      });
+      return;
+    }
+
+    if (passwordForm.new_password.length < 8) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Weak Password',
+        text: 'New password must be at least 8 characters long!',
+      });
+      return;
+    }
+
+    if (passwordForm.new_password !== passwordForm.confirm_password) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Password Mismatch',
+        text: 'New password and confirm password do not match!',
+      });
+      return;
+    }
+
+    try {
+      const response = await axios.put(
+        `${process.env.REACT_APP_ADMIN_API_URL}/api/admin/update-password`,
+        {
+          admin_id: passwordForm.admin_id,
+          old_password: passwordForm.old_password,
+          new_password: passwordForm.new_password
+        }
+      );
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Success!',
+        text: response.data.message || 'Password updated successfully!',
+      });
+
+      setPasswordForm({
+        admin_id: "",
+        old_password: "",
+        new_password: "",
+        confirm_password: ""
+      });
+      setShowUpdatePasswordModal(false);
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: error.response?.data?.message || 'Failed to update password. Please try again.',
+      });
+    }
+  };
 
 
 
@@ -327,14 +327,14 @@ const handleUpdatePassword = async (e) => {
         icon: 'warning',
         title: 'No Data to Export',
         text: 'There are no users to export in the current view.',
-      }); 
+      });
       return;
     }
 
     Swal.fire({
       title: 'Export to CSV',
       text: `Are you sure you want to export the current ${activeTab} data to a CSV file?`,
-      icon: 'question', 
+      icon: 'question',
       showCancelButton: true,
       confirmButtonText: 'Yes, Export',
       cancelButtonText: 'Cancel',
@@ -392,6 +392,293 @@ const handleUpdatePassword = async (e) => {
     });
   };
 
+  const downloadCSV = async (type) => {
+    let dataToExport;
+    let reportType = "";
+
+    if (type === "buyers") {
+      dataToExport = filteredBuyers;
+      reportType = "Buyers";
+    } else if (type === "sellers") {
+      dataToExport = filteredSellers;
+      reportType = "Sellers";
+    } else {
+      dataToExport = filteredAdmins;
+      reportType = "Admins";
+    }
+
+    if (dataToExport.length === 0) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'No Data',
+        text: `There are no ${reportType.toLowerCase()} to export.`,
+        confirmButtonColor: '#1e3c72',
+      });
+      return;
+    }
+
+    const result = await Swal.fire({
+      title: 'Download Report?',
+      text: `Do you want to download the ${reportType} report as CSV?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#1e3c72',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Yes, Download',
+      cancelButtonText: 'Cancel'
+    });
+
+    if (!result.isConfirmed) {
+      return;
+    }
+
+    let csvData = [];
+    let filename = "";
+
+    if (type === "buyers") {
+      csvData.push(['Full Name', 'Username', 'Email', 'Contact', 'Date Registered', 'Account ID']);
+      dataToExport.forEach(buyer => {
+        csvData.push([
+          `${buyer.first_name} ${buyer.middle_name} ${buyer.last_name}`,
+          buyer.username || "N/A",
+          buyer.email || "N/A",
+          buyer.contact || "N/A",
+          formatDate(buyer.created_at),
+          buyer.id
+        ]);
+      });
+      filename = `buyers_report_${new Date().toISOString().split('T')[0]}.csv`;
+    } else if (type === "sellers") {
+      csvData.push(['Unique ID', 'Email', 'Date Registered', 'Account ID']);
+      dataToExport.forEach(seller => {
+        csvData.push([
+          seller.unique_id,
+          seller.email || "N/A",
+          formatDate(seller.date_registered),
+          seller.id
+        ]);
+      });
+      filename = `sellers_report_${new Date().toISOString().split('T')[0]}.csv`;
+    } else {
+      csvData.push(['Username', 'Admin ID', 'Date Created', 'Account ID']);
+      dataToExport.forEach(admin => {
+        csvData.push([
+          admin.username,
+          admin.admin_id,
+          formatDate(admin.created_at),
+          admin.id
+        ]);
+      });
+      filename = `admins_report_${new Date().toISOString().split('T')[0]}.csv`;
+    }
+
+    const csvContent = csvData.map(row =>
+      row.map(cell => {
+        const cellStr = String(cell || '');
+        if (cellStr.includes(',') || cellStr.includes('"') || cellStr.includes('\n')) {
+          return `"${cellStr.replace(/"/g, '""')}"`;
+        }
+        return cellStr;
+      }).join(',')
+    ).join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+
+    link.setAttribute("href", url);
+    link.setAttribute("download", filename);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    Swal.fire({
+      icon: "success",
+      title: "Downloaded!",
+      text: `${filename} has been downloaded successfully`,
+      confirmButtonColor: "#1e3c72",
+      timer: 2000,
+      timerProgressBar: true,
+    });
+  };
+
+  const printReport = async (type) => {
+    let dataToExport;
+    let reportType = "";
+
+    if (type === "buyers") {
+      dataToExport = filteredBuyers;
+      reportType = "Buyers";
+    } else if (type === "sellers") {
+      dataToExport = filteredSellers;
+      reportType = "Sellers";
+    } else {
+      dataToExport = filteredAdmins;
+      reportType = "Admins";
+    }
+
+    if (dataToExport.length === 0) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'No Data',
+        text: `There are no ${reportType.toLowerCase()} to print.`,
+        confirmButtonColor: '#1e3c72',
+      });
+      return;
+    }
+
+    const result = await Swal.fire({
+      title: 'Print Report?',
+      text: `Do you want to print the ${reportType} report?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#1e3c72',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Yes, Print',
+      cancelButtonText: 'Cancel'
+    });
+
+    if (!result.isConfirmed) {
+      return;
+    }
+
+    const printWindow = window.open('', '_blank');
+
+    let tableRows = '';
+    let tableHeaders = '';
+    let summaryStats = '';
+
+    if (type === "buyers") {
+      tableHeaders = `
+      <th>Full Name</th>
+      <th>Username</th>
+      <th>Email</th>
+      <th>Contact</th>
+      <th>Date Registered</th>
+      <th>Account ID</th>
+    `;
+      tableRows = dataToExport.map(buyer => `
+      <tr>
+        <td>${buyer.first_name} ${buyer.middle_name} ${buyer.last_name}</td>
+        <td>${buyer.username || 'N/A'}</td>
+        <td>${buyer.email || 'N/A'}</td>
+        <td>${buyer.contact || 'N/A'}</td>
+        <td>${formatDate(buyer.created_at)}</td>
+        <td>#${buyer.id}</td>
+      </tr>
+    `).join('');
+      summaryStats = `
+      <div class="summary-item">
+        <div class="summary-label">Total Buyers</div>
+        <div class="summary-value">${dataToExport.length}</div>
+      </div>
+    `;
+    } else if (type === "sellers") {
+      tableHeaders = `
+      <th>Unique ID</th>
+      <th>Email</th>
+      <th>Date Registered</th>
+      <th>Account ID</th>
+    `;
+      tableRows = dataToExport.map(seller => `
+      <tr>
+        <td>${seller.unique_id}</td>
+        <td>${seller.email || 'N/A'}</td>
+        <td>${formatDate(seller.date_registered)}</td>
+        <td>#${seller.id}</td>
+      </tr>
+    `).join('');
+      summaryStats = `
+      <div class="summary-item">
+        <div class="summary-label">Total Sellers</div>
+        <div class="summary-value">${dataToExport.length}</div>
+      </div>
+    `;
+    } else {
+      tableHeaders = `
+      <th>Username</th>
+      <th>Admin ID</th>
+      <th>Date Created</th>
+      <th>Account ID</th>
+    `;
+      tableRows = dataToExport.map(admin => `
+      <tr>
+        <td>${admin.username}</td>
+        <td>${admin.admin_id}</td>
+        <td>${formatDate(admin.created_at)}</td>
+        <td>#${admin.id}</td>
+      </tr>
+    `).join('');
+      summaryStats = `
+      <div class="summary-item">
+        <div class="summary-label">Total Admins</div>
+        <div class="summary-value">${dataToExport.length}</div>
+      </div>
+    `;
+    }
+
+    const reportHTML = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>${reportType} Report - ${new Date().toLocaleDateString()}</title>
+      <style>
+        body { font-family: Arial, sans-serif; padding: 40px; }
+        h1 { color: #1e3c72; margin-bottom: 10px; }
+        .date { color: #666; margin-bottom: 30px; }
+        .summary { background: #f0f9ff; padding: 20px; border-radius: 8px; margin-bottom: 30px; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
+        .summary-item { text-align: center; }
+        .summary-label { color: #666; font-size: 14px; margin-bottom: 5px; }
+        .summary-value { color: #1e3c72; font-size: 24px; font-weight: bold; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th { background: #1e3c72; color: white; padding: 12px; text-align: left; }
+        td { padding: 10px; border-bottom: 1px solid #ddd; }
+        tr:hover { background: #f5f5f5; }
+        @media print {
+          body { padding: 20px; }
+          .no-print { display: none; }
+        }
+      </style>
+    </head>
+    <body>
+      <h1>${reportType} Report</h1>
+      <div class="date">Generated on: ${new Date().toLocaleString()}</div>
+      
+      <div class="summary">
+        <div class="summary-grid">
+          ${summaryStats}
+        </div>
+      </div>
+      
+      <table>
+        <thead>
+          <tr>
+            ${tableHeaders}
+          </tr>
+        </thead>
+        <tbody>
+          ${tableRows}
+        </tbody>
+      </table>
+    </body>
+    </html>
+  `;
+
+    printWindow.document.write(reportHTML);
+    printWindow.document.close();
+
+    printWindow.onload = function () {
+      printWindow.focus();
+      printWindow.print();
+    };
+
+    printWindow.onafterprint = function () {
+      printWindow.close();
+    };
+  };
+
   const currentData = activeTab === "buyers" ? filteredBuyers : activeTab === "sellers" ? filteredSellers : filteredAdmins;
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -427,6 +714,70 @@ const handleUpdatePassword = async (e) => {
             <FiUserPlus size={18} />
             Add Admin
           </button>
+        </div>
+      </div>
+
+      {/* Download and Print Section */}
+      <div className="download-section" style={{
+        display: 'flex',
+        gap: '16px',
+        marginBottom: '1.5rem',
+        flexWrap: 'wrap'
+      }}>
+        <div className="action-dropdown-group" style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          width: '100%',
+          maxWidth: '400px'
+        }}>
+          <label htmlFor="report-action" style={{
+            fontWeight: 600,
+            color: '#1e3c72',
+            fontSize: '0.95rem',
+            whiteSpace: 'nowrap'
+          }}>Generate Report:</label>
+          <select
+            id="report-action"
+            className="action-select"
+            style={{
+              flex: 1,
+              padding: '12px 16px',
+              border: '2px solid #bae6fd',
+              borderRadius: '8px',
+              background: 'white',
+              color: '#1e3c72',
+              fontSize: '0.95rem',
+              fontWeight: 500,
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              outline: 'none'
+            }}
+            onChange={(e) => {
+              const [action, type] = e.target.value.split('-');
+              if (action && type) {
+                if (action === 'download') {
+                  downloadCSV(type);
+                } else if (action === 'print') {
+                  printReport(type);
+                }
+              }
+              e.target.value = '';
+            }}
+            defaultValue=""
+          >
+            <option value="" disabled>Select an action...</option>
+            <optgroup label="Download CSV">
+              <option value="download-buyers">Buyers Report</option>
+              <option value="download-sellers">Sellers Report</option>
+              <option value="download-admins">Admins Report</option>
+            </optgroup>
+            <optgroup label="Print Report">
+              <option value="print-buyers">Buyers Report</option>
+              <option value="print-sellers">Sellers Report</option>
+              <option value="print-admins">Admins Report</option>
+            </optgroup>
+          </select>
         </div>
       </div>
 
@@ -932,7 +1283,7 @@ const handleUpdatePassword = async (e) => {
                 </button>
                 <button
                   type="submit"
-                  style={{...styles.submitButton, background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)'}}
+                  style={{ ...styles.submitButton, background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)' }}
                   className="submit-btn"
                 >
                   <FiEdit2 size={18} />

@@ -1612,3 +1612,35 @@
     font-size: 12px !important;
   }
 }
+
+/* Clickable headers */
+.clickable-header {
+  cursor: pointer;
+  transition: all 0.2s;
+  border-radius: 8px;
+  padding: 4px;
+  margin: -4px;
+  display: inline-block;
+}
+
+.clickable-header:hover {
+  background: rgba(8, 145, 178, 0.05);
+  color: #0891b2 !important;
+  transform: translateX(4px);
+}
+
+.clickable-header:active {
+  transform: translateX(2px);
+}
+/* Seller Ratings Responsive */
+@media (max-width: 768px) {
+  .chart-content > div[style*="gridTemplateColumns"] {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .chart-content > div[style*="gridTemplateColumns"] {
+    gap: 12px !important;
+  }
+}

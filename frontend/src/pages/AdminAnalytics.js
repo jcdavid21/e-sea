@@ -6,7 +6,8 @@ import {
   FaMoneyBillWave,
   FaChartLine,
   FaTrophy,
-  FaFilter
+  FaFilter,
+  FaStar
 } from 'react-icons/fa';
 import {
   BarChart,
@@ -55,6 +56,8 @@ const AdminAnalytics = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(4); // Show 6 sellers per page
 
+  const [sellerRatings, setSellerRatings] = useState([]);
+
   const [startDate, setStartDate] = useState(() => {
     const date = new Date();
     date.setMonth(date.getMonth() - 6);
@@ -64,6 +67,16 @@ const AdminAnalytics = () => {
   const [endDate, setEndDate] = useState(() => {
     return new Date().toISOString().split('T')[0];
   });
+
+  const fetchSellerRatings = async () => {
+    try {
+      const res = await fetch(`${process.env.REACT_APP_ADMIN_API_URL}/api/admin/seller-ratings`);
+      const data = await res.json();
+      setSellerRatings(data);
+    } catch (err) {
+      console.error('Error fetching seller ratings:', err);
+    }
+  };
 
   // 2. DEFINE ALL HELPER FUNCTIONS BEFORE useEffect
   const prepareSalesTrendData = (sortedSellers) => {
@@ -315,6 +328,7 @@ const AdminAnalytics = () => {
   // 3. useEffect HOOKS
   useEffect(() => {
     fetchAnalytics();
+    fetchSellerRatings();
   }, []);
 
   useEffect(() => {
@@ -529,7 +543,11 @@ const AdminAnalytics = () => {
       </div>
 
       <div className="stats-grid">
-        <div className="stat-card stat-revenue">
+        <div
+          className="stat-card stat-revenue"
+          onClick={() => window.location.href = '/admin/dashboard'}
+          style={{ cursor: 'pointer' }}
+        >
           <div className="stat-icon-wrapper">
             <FaMoneyBillWave className="stat-icon" size={48} />
           </div>
@@ -540,7 +558,11 @@ const AdminAnalytics = () => {
           </div>
         </div>
 
-        <div className="stat-card stat-orders">
+        <div
+          className="stat-card stat-orders"
+          onClick={() => window.location.href = '/admin/dashboard?tab=approve'}
+          style={{ cursor: 'pointer' }}
+        >
           <div className="stat-icon-wrapper">
             <FaStore className="stat-icon" size={48} />
           </div>
@@ -551,7 +573,11 @@ const AdminAnalytics = () => {
           </div>
         </div>
 
-        <div className="stat-card stat-products">
+        <div
+          className="stat-card stat-products"
+          onClick={() => window.location.href = '/admin/dashboard?tab=manageUsers'}
+          style={{ cursor: 'pointer' }}
+        >
           <div className="stat-icon-wrapper">
             <FaShoppingCart className="stat-icon" size={48} />
           </div>
@@ -562,7 +588,11 @@ const AdminAnalytics = () => {
           </div>
         </div>
 
-        <div className="stat-card stat-pending">
+        <div
+          className="stat-card stat-pending"
+          onClick={() => window.location.href = '/admin/dashboard/manage-products'}
+          style={{ cursor: 'pointer' }}
+        >
           <div className="stat-icon-wrapper">
             <FaFish className="stat-icon" size={48} />
           </div>
@@ -578,7 +608,13 @@ const AdminAnalytics = () => {
         <div className='chart-grid'>
           <div className="chart-card chart-area">
             <div className="card-header">
-              <h3><FaChartLine size={18} style={{ display: 'inline', marginRight: '8px' }} /> Sales Trend by Seller</h3>
+              <h3
+                className="clickable-header"
+                onClick={() => window.location.href = '/admin/dashboard?tab=approve'}
+                style={{ cursor: 'pointer' }}
+              >
+                <FaChartLine size={18} style={{ display: 'inline', marginRight: '8px' }} /> Sales Trend by Seller
+              </h3>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <FaFilter size={14} />
@@ -679,7 +715,13 @@ const AdminAnalytics = () => {
 
           <div className="chart-card chart-pie">
             <div className="card-header">
-              <h3><FaTrophy size={18} style={{ display: 'inline', marginRight: '8px' }} /> Revenue Distribution</h3>
+              <h3
+                className="clickable-header"
+                onClick={() => window.location.href = '/admin/dashboard?tab=approve'}
+                style={{ cursor: 'pointer' }}
+              >
+                <FaTrophy size={18} style={{ display: 'inline', marginRight: '8px' }} /> Revenue Distribution
+              </h3>
               <span className="chart-period">Top 8 Sellers</span>
             </div>
             <div className="chart-content">
@@ -689,7 +731,7 @@ const AdminAnalytics = () => {
                     <Pie
                       data={preparePieChartData()}
                       // center the pie chart in mobile view
-                      cx={ window.innerWidth <= 768 ? '30%' : '50%' }
+                      cx={window.innerWidth <= 768 ? '30%' : '50%'}
                       cy="45%"
                       labelLine={false}
                       label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
@@ -730,7 +772,13 @@ const AdminAnalytics = () => {
 
       <div className="chart-card">
         <div className="card-header">
-          <h3>Top Selling Products</h3>
+          <h3
+            className="clickable-header"
+            onClick={() => window.location.href = '/admin/dashboard/manage-products'}
+            style={{ cursor: 'pointer' }}
+          >
+            Top Selling Products
+          </h3>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <FaFilter size={14} />
             <select
@@ -819,7 +867,13 @@ const AdminAnalytics = () => {
       {/* Supply and Demand Analysis */}
       <div className="chart-card" style={{ marginTop: '28px' }}>
         <div className="card-header">
-          <h3><FaChartLine size={18} style={{ display: 'inline', marginRight: '8px' }} /> Supply vs Demand Analysis</h3>
+          <h3
+            className="clickable-header"
+            onClick={() => window.location.href = '/admin/dashboard/manage-products'}
+            style={{ cursor: 'pointer' }}
+          >
+            <FaChartLine size={18} style={{ display: 'inline', marginRight: '8px' }} /> Supply vs Demand Analysis
+          </h3>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <FaFilter size={14} />
             <select
@@ -905,7 +959,13 @@ const AdminAnalytics = () => {
       {/* Price Comparison Analysis */}
       <div className="chart-card" style={{ marginTop: '28px' }}>
         <div className="card-header">
-          <h3><FaMoneyBillWave size={18} style={{ display: 'inline', marginRight: '8px' }} /> Price Comparison by Variety</h3>
+          <h3
+            className="clickable-header"
+            onClick={() => window.location.href = '/admin/dashboard/manage-products'}
+            style={{ cursor: 'pointer' }}
+          >
+            <FaMoneyBillWave size={18} style={{ display: 'inline', marginRight: '8px' }} /> Price Comparison by Variety
+          </h3>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
             <FaFilter size={14} />
             <select
@@ -1263,11 +1323,344 @@ const AdminAnalytics = () => {
           )}
         </div>
       </div>
+      {/* Seller Ratings Analytics */}
+      <div className="chart-card" style={{ marginTop: '28px' }}>
+        <div className="card-header">
+          <h3
+            className="clickable-header"
+            onClick={() => window.location.href = '/admin/dashboard?tab=feedbacks'}
+            style={{ cursor: 'pointer' }}
+          >
+            <FaTrophy size={18} style={{ display: 'inline', marginRight: '8px' }} />
+            Seller Ratings & Reviews
+          </h3>
+          <span className="chart-period">Based on Customer Feedback</span>
+        </div>
+
+        <div className="chart-content">
+          {sellerRatings.length > 0 ? (
+            <>
+              {/* Bar Chart for Ratings */}
+              <ResponsiveContainer width="100%" height={400}>
+                <BarChart
+                  data={sellerRatings.slice(0, 10)}
+                  margin={{ top: 20, right: 30, left: 20, bottom: 80 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis
+                    dataKey="shop_name"
+                    angle={-45}
+                    textAnchor="end"
+                    height={100}
+                    fontSize={11}
+                    tick={{ fill: '#64748b' }}
+                  />
+                  <YAxis
+                    domain={[0, 5]}
+                    fontSize={11}
+                    tick={{ fill: '#64748b' }}
+                    label={{
+                      value: 'Rating (out of 5)',
+                      angle: -90,
+                      position: 'insideLeft',
+                      style: { fontSize: 13, fontWeight: 700, fill: '#0e7490' }
+                    }}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'white',
+                      border: 'none',
+                      borderRadius: '12px',
+                      padding: '12px',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+                    }}
+                    content={({ active, payload }) => {
+                      if (active && payload && payload.length) {
+                        const data = payload[0].payload;
+                        return (
+                          <div style={{
+                            backgroundColor: 'white',
+                            border: 'none',
+                            borderRadius: '12px',
+                            padding: '12px',
+                            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                            minWidth: '200px'
+                          }}>
+                            <div style={{ fontWeight: '700', marginBottom: '8px', fontSize: '13px', color: '#0e7490' }}>
+                              {data.shop_name}
+                            </div>
+                            <div style={{ fontSize: '12px', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <FaStar color="#fbbf24" size={14} />
+                              <strong>Rating:</strong> {parseFloat(data.avg_rating).toFixed(1)} / 5.0
+                            </div>
+                            <div style={{ fontSize: '12px', marginBottom: '6px' }}>
+                              <strong>Total Reviews:</strong> {data.review_count}
+                            </div>
+                            <div style={{ fontSize: '11px', color: '#64748b', marginTop: '8px', borderTop: '1px solid #e2e8f0', paddingTop: '6px' }}>
+                              <div>⭐⭐⭐⭐⭐ {data.five_star}</div>
+                              <div>⭐⭐⭐⭐ {data.four_star}</div>
+                              <div>⭐⭐⭐ {data.three_star}</div>
+                              <div>⭐⭐ {data.two_star}</div>
+                              <div>⭐ {data.one_star}</div>
+                            </div>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
+                  <Bar
+                    dataKey="avg_rating"
+                    radius={[8, 8, 0, 0]}
+                  >
+                    {sellerRatings.slice(0, 10).map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={
+                          entry.avg_rating >= 4.5 ? '#10b981' :
+                            entry.avg_rating >= 4.0 ? '#0891b2' :
+                              entry.avg_rating >= 3.5 ? '#f59e0b' :
+                                entry.avg_rating > 0 ? '#ef4444' : '#cbd5e1'
+                        }
+                      />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+
+              {/* Detailed Ratings Cards */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+                gap: '16px',
+                marginTop: '24px'
+              }}>
+                {sellerRatings.slice(0, 6).map((seller, index) => {
+                  const rating = parseFloat(seller.avg_rating);
+                  const fullStars = Math.floor(rating);
+                  const hasHalfStar = rating % 1 >= 0.5;
+
+                  return (
+                    <div
+                      key={seller.seller_id}
+                      style={{
+                        background: 'white',
+                        padding: '16px',
+                        borderRadius: '12px',
+                        border: '2px solid #e0f2fe',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+                        transition: 'all 0.3s',
+                        cursor: 'pointer',
+                        position: 'relative'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-4px)';
+                        e.currentTarget.style.boxShadow = '0 8px 16px rgba(8,145,178,0.15)';
+                        e.currentTarget.style.borderColor = '#0891b2';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.05)';
+                        e.currentTarget.style.borderColor = '#e0f2fe';
+                      }}
+                    >
+
+                      {/* Shop Name */}
+                      <div style={{
+                        fontSize: '14px',
+                        fontWeight: '800',
+                        color: '#0e7490',
+                        marginBottom: '12px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px'
+                      }}>
+                        <FaStore size={14} />
+                        {seller.shop_name}
+                      </div>
+
+                      {/* Rating Display */}
+                      {seller.review_count > 0 ? (
+                        <>
+                          <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            marginBottom: '12px'
+                          }}>
+                            <div style={{
+                              fontSize: '32px',
+                              fontWeight: '900',
+                              color: rating >= 4.5 ? '#10b981' :
+                                rating >= 4.0 ? '#0891b2' :
+                                  rating >= 3.5 ? '#f59e0b' : '#ef4444'
+                            }}>
+                              {rating.toFixed(1)}
+                            </div>
+                            <div>
+                              <div style={{ fontSize: '18px', display: 'flex', gap: '2px' }}>
+                                {[...Array(5)].map((_, i) => (
+                                  <FaStar
+                                    key={i}
+                                    size={16}
+                                    color={i < fullStars ? '#fbbf24' : '#e5e7eb'}
+                                  />
+                                ))}
+                              </div>
+                              <div style={{ fontSize: '11px', color: '#64748b', fontWeight: '600' }}>
+                                {seller.review_count} review{seller.review_count !== 1 ? 's' : ''}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Star Distribution */}
+                          <div style={{
+                            padding: '8px 12px',
+                            background: '#f0f9ff',
+                            borderRadius: '6px',
+                            fontSize: '10px',
+                            color: '#0369a1'
+                          }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
+                              <span>5 <FaStar /></span>
+                              <strong>{seller.five_star}</strong>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
+                              <span>4 <FaStar /></span>
+                              <strong>{seller.four_star}</strong>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
+                              <span>3 <FaStar /></span>
+                              <strong>{seller.three_star}</strong>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
+                              <span>2 <FaStar /></span>
+                              <strong>{seller.two_star}</strong>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                              <span>1 <FaStar /></span>
+                              <strong>{seller.one_star}</strong>
+                            </div>
+                          </div>
+                        </>
+                      ) : (
+                        <div style={{
+                          padding: '20px',
+                          textAlign: 'center',
+                          color: '#94a3b8',
+                          fontSize: '12px',
+                          fontWeight: '600'
+                        }}>
+                          No reviews yet
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Rating Distribution Summary */}
+              <div style={{
+                marginTop: '24px',
+                padding: '20px',
+                background: '#f8fafc',
+                borderRadius: '12px',
+                border: '2px solid #e0f2fe'
+              }}>
+                <h4 style={{
+                  margin: '0 0 16px 0',
+                  fontSize: '16px',
+                  fontWeight: '800',
+                  color: '#0f172a',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}>
+                  <FaChartLine size={16} />
+                  Rating Distribution
+                </h4>
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+                  gap: '16px'
+                }}>
+                  {[
+                    {
+                      label: 'Excellent (4.5+)',
+                      count: sellerRatings.filter(s => parseFloat(s.avg_rating) >= 4.5 && s.review_count > 0).length,
+                      color: '#10b981',
+                      icon: <FaStar />
+                    },
+                    {
+                      label: 'Good (4.0-4.4)',
+                      count: sellerRatings.filter(s => parseFloat(s.avg_rating) >= 4.0 && parseFloat(s.avg_rating) < 4.5 && s.review_count > 0).length,
+                      color: '#0891b2',
+                      icon: <FaStar />
+                    },
+                    {
+                      label: 'Average (3.5-3.9)',
+                      count: sellerRatings.filter(s => parseFloat(s.avg_rating) >= 3.5 && parseFloat(s.avg_rating) < 4.0 && s.review_count > 0).length,
+                      color: '#f59e0b',
+                      icon: <FaStar />
+                    },
+                    {
+                      label: 'Below Avg (<3.5)',
+                      count: sellerRatings.filter(s => parseFloat(s.avg_rating) > 0 && parseFloat(s.avg_rating) < 3.5 && s.review_count > 0).length,
+                      color: '#ef4444',
+                      icon: <FaStar />
+                    },
+                    {
+                      label: 'No Reviews',
+                      count: sellerRatings.filter(s => s.review_count === 0).length,
+                      color: '#cbd5e1',
+                      icon: <FaStore />
+                    }
+                  ].map((item, idx) => (
+                    <div key={idx} style={{
+                      textAlign: 'center',
+                      padding: '12px',
+                      background: 'white',
+                      borderRadius: '8px',
+                      border: `2px solid ${item.color}20`
+                    }}>
+                      <div style={{
+                        fontSize: '24px',
+                        fontWeight: '900',
+                        color: item.color,
+                        marginBottom: '4px'
+                      }}>
+                        {item.count}
+                      </div>
+                      <div style={{
+                        fontSize: '11px',
+                        color: '#64748b',
+                        fontWeight: '600'
+                      }}>
+                        {item.label}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="empty-state">
+              <p><FaTrophy size={18} style={{ display: 'inline', marginRight: '8px' }} /> No rating data available yet</p>
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* Top Products Table */}
       <div className="pending-orders-section">
         <div className="section-header">
-          <h3> Product Rankings</h3>
+          <h3
+            className="clickable-header"
+            onClick={() => window.location.href = '/admin/dashboard/manage-products'}
+            style={{ cursor: 'pointer' }}
+          >
+            Product Rankings
+          </h3>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <FaFilter size={14} />
             <select
@@ -1333,10 +1726,17 @@ const AdminAnalytics = () => {
         </div>
       </div>
 
+
       {/* Summary Report Section */}
       <div className="pending-orders-section revenue-section" style={{ marginTop: '28px' }}>
         <div className="section-header">
-          <h3>Sales & Revenue Summary Report</h3>
+          <h3
+            className="clickable-header"
+            onClick={() => window.location.href = '/admin/dashboard?tab=reports'}
+            style={{ cursor: 'pointer' }}
+          >
+            Sales & Revenue Summary Report
+          </h3>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <FaFilter size={14} />
             <select

@@ -20,6 +20,15 @@ const AdminDashboard = () => {
   const MANAGE_PRODUCTS_PATH = "/admin/dashboard/manage-products";
   const SELLER_PRODUCTS_PATH = "/admin/dashboard/seller-products";
 
+  // Handle URL query parameters to set active tab
+  React.useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const tab = searchParams.get('tab');
+    if (tab) {
+      setActiveTab(tab);
+    }
+  }, [location.search]);
+
   // Render main content based on URL or activeTab
   const renderContent = () => {
     // Check if we're in any nested route (manage-products or seller-products)
