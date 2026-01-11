@@ -472,6 +472,38 @@ app.get('/api/seller-feedback/:seller_id', async (req, res) => {
   }
 });
 
+// Get seller ratings analytics for admin
+app.get('/api/admin/seller-ratings', async (req, res) => {
+  try {
+    const sql = `
+      SELECT 
+        s.unique_id as seller_id,
+        s.shop_name,
+        COALESCE(AVG(sf.rating), 0) as avg_rating,
+        COUNT(sf.id) as review_count,
+        COALESCE(SUM(CASE WHEN sf.rating = 5 THEN 1 ELSE 0 END), 0) as five_star,
+        COALESCE(SUM(CASE WHEN sf.rating = 4 THEN 1 ELSE 0 END), 0) as four_star,
+        COALESCE(SUM(CASE WHEN sf.rating = 3 THEN 1 ELSE 0 END), 0) as three_star,
+        COALESCE(SUM(CASE WHEN sf.rating = 2 THEN 1 ELSE 0 END), 0) as two_star,
+        COALESCE(SUM(CASE WHEN sf.rating = 1 THEN 1 ELSE 0 END), 0) as one_star
+      FROM sellers s
+      LEFT JOIN seller_feedback sf ON s.unique_id = sf.seller_id
+      WHERE s.status = 'accepted'
+      GROUP BY s.unique_id, s.shop_name
+      ORDER BY avg_rating DESC, review_count DESC
+    `;
+
+    const [results] = await db.query(sql);
+
+    console.log(`Fetched ratings for ${results.length} sellers`);
+    
+    res.json(results);
+  } catch (error) {
+    console.error('❌ Error fetching seller ratings:', error);
+    res.status(500).json({ error: 'Failed to fetch seller ratings' });
+  }
+});
+
 app.post("/api/seller/login", async (req, res) => {
   const { unique_id, password } = req.body;
 
@@ -495,6 +527,153 @@ app.post("/api/seller/login", async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error." });
+  }
+});
+
+
+// =============================
+//  SELLER REQUIREMENTS FILE UPLOAD ROUTES
+// =============================
+
+// Upload requirement file for a seller
+app.post("/api/sellers/:seller_id/upload-requirement", upload.single("file"), async (req, res) => {
+  const { seller_id } = req.params;
+  const { requirement_type, uploaded_by } = req.body;
+
+  if (!req.file) {
+    return res.status(400).json({ message: "No file uploaded" });
+  }
+
+  if (!requirement_type || !uploaded_by) {
+    return res.status(400).json({ message: "Requirement type and uploader ID required" });
+  }
+
+  const validTypes = ['barangayClearance', 'businessPermit', 'idProof'];
+  if (!validTypes.includes(requirement_type)) {
+    return res.status(400).json({ message: "Invalid requirement type" });
+  }
+
+  const filePath = "/uploads/" + req.file.filename;
+
+  try {
+    // Check if seller exists
+    const [seller] = await db.query("SELECT id FROM sellers WHERE id = ?", [seller_id]);
+    
+    if (seller.length === 0) {
+      return res.status(404).json({ message: "Seller not found" });
+    }
+
+    // Check if file already exists for this requirement type
+    const [existing] = await db.query(
+      "SELECT id, file_path FROM seller_requirement_files WHERE seller_id = ? AND requirement_type = ?",
+      [seller_id, requirement_type]
+    );
+
+    if (existing.length > 0) {
+      // Delete old file
+      const oldFileName = existing[0].file_path.replace('/uploads/', '');
+      const oldPath = path.join(UPLOAD_DIR, oldFileName);
+      fs.unlink(oldPath, (err) => {
+        if (err) console.warn("⚠️ Could not delete old file:", err.message);
+      });
+
+      // Update existing record
+      await db.query(
+        "UPDATE seller_requirement_files SET file_path = ?, uploaded_by = ?, uploaded_at = NOW() WHERE id = ?",
+        [filePath, uploaded_by, existing[0].id]
+      );
+    } else {
+      // Insert new record
+      await db.query(
+        "INSERT INTO seller_requirement_files (seller_id, requirement_type, file_path, uploaded_by) VALUES (?, ?, ?, ?)",
+        [seller_id, requirement_type, filePath, uploaded_by]
+      );
+    }
+
+    // Update seller requirements status
+    const [sellerData] = await db.query("SELECT requirements FROM sellers WHERE id = ?", [seller_id]);
+    const requirements = typeof sellerData[0].requirements === "string" 
+      ? JSON.parse(sellerData[0].requirements) 
+      : sellerData[0].requirements;
+    
+    requirements[requirement_type] = true;
+    
+    await db.query(
+      "UPDATE sellers SET requirements = ? WHERE id = ?",
+      [JSON.stringify(requirements), seller_id]
+    );
+
+    console.log(`✅ Requirement file uploaded: ${requirement_type} for seller ${seller_id}`);
+
+    res.json({
+      message: "Requirement file uploaded successfully",
+      file_path: filePath,
+      requirement_type
+    });
+  } catch (err) {
+    console.error("❌ Upload requirement error:", err);
+    res.status(500).json({ message: "Error uploading requirement file" });
+  }
+});
+
+// Get all requirement files for a seller
+app.get("/api/sellers/:seller_id/requirement-files", async (req, res) => {
+  const { seller_id } = req.params;
+
+  try {
+    const [files] = await db.query(
+      "SELECT id, requirement_type, file_path, uploaded_by, uploaded_at FROM seller_requirement_files WHERE seller_id = ? ORDER BY uploaded_at DESC",
+      [seller_id]
+    );
+
+    res.json(files);
+  } catch (err) {
+    console.error("❌ Fetch requirement files error:", err);
+    res.status(500).json({ message: "Error fetching requirement files" });
+  }
+});
+
+// Delete a requirement file
+app.delete("/api/sellers/:seller_id/requirement-files/:file_id", async (req, res) => {
+  const { seller_id, file_id } = req.params;
+
+  try {
+    const [file] = await db.query(
+      "SELECT file_path, requirement_type FROM seller_requirement_files WHERE id = ? AND seller_id = ?",
+      [file_id, seller_id]
+    );
+
+    if (file.length === 0) {
+      return res.status(404).json({ message: "File not found" });
+    }
+
+    // Delete file from filesystem
+    const fileName = file[0].file_path.replace('/uploads/', '');
+    const filePath = path.join(UPLOAD_DIR, fileName);
+    fs.unlink(filePath, (err) => {
+      if (err) console.warn("⚠️ Could not delete file:", err.message);
+    });
+
+    // Delete from database
+    await db.query("DELETE FROM seller_requirement_files WHERE id = ?", [file_id]);
+
+    // Update seller requirements status
+    const [sellerData] = await db.query("SELECT requirements FROM sellers WHERE id = ?", [seller_id]);
+    const requirements = typeof sellerData[0].requirements === "string" 
+      ? JSON.parse(sellerData[0].requirements) 
+      : sellerData[0].requirements;
+    
+    requirements[file[0].requirement_type] = false;
+    
+    await db.query(
+      "UPDATE sellers SET requirements = ? WHERE id = ?",
+      [JSON.stringify(requirements), seller_id]
+    );
+
+    res.json({ message: "File deleted successfully" });
+  } catch (err) {
+    console.error("❌ Delete file error:", err);
+    res.status(500).json({ message: "Error deleting file" });
   }
 });
 
