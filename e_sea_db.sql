@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Jan 05, 2026 at 02:09 PM
+-- Generation Time: Jan 13, 2026 at 01:09 PM
 -- Server version: 10.4.28-MariaDB
 -- PHP Version: 8.0.28
 
@@ -92,7 +92,7 @@ CREATE TABLE `buyer_notifications` (
 --
 
 INSERT INTO `buyer_notifications` (`id`, `customer_id`, `order_id`, `seller_id`, `message`, `is_read`, `created_at`) VALUES
-(2, 'KianAndreiPortes09090909090', 5, 'SELLER-QS2594', 'Your order #5 status has been updated to: Completed', 1, '2026-01-01 11:44:05'),
+(2, 'KianAndreiPortes09090909090', 5, 'SELLER-QS2594', 'Your order #5 status has been updated to: Completed', 2, '2026-01-01 11:44:05'),
 (3, 'KianAndreiPortes09090909090', 5, 'SELLER-QS2594', 'Your order #5 status has been updated to: Preparing', 1, '2026-01-02 11:00:07'),
 (4, 'KianAndreiPortes09090909090', 5, 'SELLER-QS2594', 'Your order #5 status has been updated to: Ready for Pickup', 1, '2026-01-02 11:00:14'),
 (5, 'KianAndreiPortes09090909090', 5, 'SELLER-QS2594', 'Your order #5 status has been updated to: Completed', 1, '2026-01-02 11:00:18');
@@ -274,7 +274,7 @@ CREATE TABLE `sellers` (
 
 INSERT INTO `sellers` (`id`, `unique_id`, `last_name`, `first_name`, `middle_name`, `shop_name`, `street`, `barangay`, `municipality`, `province`, `requirements`, `status`, `date_added`) VALUES
 (1, 'SELLER-QS2594', 'David', 'Juancarlo', '', 'doys', 'Loraine Street', 'doys', 'doys', 'Bulacan', '\"{\\\"barangayClearance\\\":true,\\\"businessPermit\\\":true,\\\"idProof\\\":true}\"', 'accepted', '2025-12-20 03:19:43'),
-(2, 'SELLER-SG6500', 'Ivan', 'Josh', '', 'JoshShop', 'Bayan', 'Kaligayahan', 'Quezon City', '', '\"{\\\"barangayClearance\\\":true,\\\"businessPermit\\\":true,\\\"idProof\\\":true}\"', 'accepted', '2026-01-02 15:22:16');
+(2, 'SELLER-SG6500', 'Ivan', 'Josh', '', 'JoshShop', 'Bayan', 'Kaligayahan', 'Quezon City', '', '{\"barangayClearance\":false,\"businessPermit\":true,\"idProof\":true}', 'accepted', '2026-01-02 15:22:16');
 
 -- --------------------------------------------------------
 
@@ -313,6 +313,13 @@ CREATE TABLE `seller_feedback` (
   `comment` text DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `seller_feedback`
+--
+
+INSERT INTO `seller_feedback` (`id`, `order_id`, `buyer_id`, `seller_id`, `rating`, `comment`, `created_at`) VALUES
+(1, 5, 2, 'SELLER-QS2594', 5, 'Malinis', '2026-01-05 13:39:39');
 
 -- --------------------------------------------------------
 
@@ -356,7 +363,8 @@ CREATE TABLE `seller_notifications` (
 --
 
 INSERT INTO `seller_notifications` (`id`, `seller_id`, `message`, `type`, `is_read`, `created_at`) VALUES
-(1, 'SELLER-QS2594', 'You have a new order (#5) from Juancarlo David.', 'order', 0, '2026-01-01 11:42:43');
+(1, 'SELLER-QS2594', 'You have a new order (#5) from Juancarlo David.', 'order', 0, '2026-01-01 11:42:43'),
+(2, 'SELLER-QS2594', 'Kian Andrei Portes gave you 5★ for order #5: \"Malinis\"', 'info', 0, '2026-01-05 13:39:39');
 
 -- --------------------------------------------------------
 
@@ -379,6 +387,21 @@ CREATE TABLE `seller_profiles` (
 
 INSERT INTO `seller_profiles` (`id`, `seller_id`, `logo`, `qr`, `created_at`, `updated_at`) VALUES
 (1, 'SELLER-QS2594', '/uploads/1767364636103-Golden-crowned_flying_fox.jpg', '/uploads/1767267719717-solo-parent-id.jpg', '2026-01-01 11:41:59', '2026-01-02 14:37:16');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `seller_requirement_files`
+--
+
+CREATE TABLE `seller_requirement_files` (
+  `id` int(11) NOT NULL,
+  `seller_id` int(11) NOT NULL,
+  `requirement_type` enum('barangayClearance','businessPermit','idProof') NOT NULL,
+  `file_path` varchar(500) NOT NULL,
+  `uploaded_by` varchar(50) NOT NULL COMMENT 'admin_id or seller_id',
+  `uploaded_at` timestamp NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -534,6 +557,13 @@ ALTER TABLE `seller_profiles`
   ADD UNIQUE KEY `unique_seller_id` (`seller_id`);
 
 --
+-- Indexes for table `seller_requirement_files`
+--
+ALTER TABLE `seller_requirement_files`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_seller_id` (`seller_id`);
+
+--
 -- Indexes for table `store_hours`
 --
 ALTER TABLE `store_hours`
@@ -614,7 +644,7 @@ ALTER TABLE `seller_credentials`
 -- AUTO_INCREMENT for table `seller_feedback`
 --
 ALTER TABLE `seller_feedback`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `seller_locations`
@@ -626,13 +656,19 @@ ALTER TABLE `seller_locations`
 -- AUTO_INCREMENT for table `seller_notifications`
 --
 ALTER TABLE `seller_notifications`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `seller_profiles`
 --
 ALTER TABLE `seller_profiles`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `seller_requirement_files`
+--
+ALTER TABLE `seller_requirement_files`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `store_hours`
@@ -655,6 +691,12 @@ ALTER TABLE `system_feedback`
 --
 ALTER TABLE `seller_locations`
   ADD CONSTRAINT `fk_seller_location` FOREIGN KEY (`seller_id`) REFERENCES `sellers` (`unique_id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `seller_requirement_files`
+--
+ALTER TABLE `seller_requirement_files`
+  ADD CONSTRAINT `seller_requirement_files_ibfk_1` FOREIGN KEY (`seller_id`) REFERENCES `sellers` (`id`) ON DELETE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
