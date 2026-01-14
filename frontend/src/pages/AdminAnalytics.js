@@ -526,7 +526,6 @@ const AdminAnalytics = () => {
 
   const totalPages = Math.ceil(getFilteredSellersForReport().length / itemsPerPage);
 
-
   return (
     <div className="seller-home">
       <div className="top-bar">
@@ -725,41 +724,73 @@ const AdminAnalytics = () => {
               <span className="chart-period">Top 8 Sellers</span>
             </div>
             <div className="chart-content">
-              {preparePieChartData().length > 0 ? (
-                <ResponsiveContainer width="100%" height={380}>
-                  <PieChart>
-                    <Pie
-                      data={preparePieChartData()}
-                      // center the pie chart in mobile view
-                      cx={window.innerWidth <= 768 ? '30%' : '50%'}
-                      cy="45%"
-                      labelLine={false}
-                      label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
-                      outerRadius={90}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {preparePieChartData().map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip
-                      formatter={(value) => `₱${Number(value).toLocaleString()}`}
-                      contentStyle={{
-                        backgroundColor: 'white',
-                        border: 'none',
-                        borderRadius: '12px',
-                        padding: '12px',
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
-                      }}
-                    />
-                    <Legend
-                      verticalAlign="bottom"
-                      height={60}
-                      wrapperStyle={{ fontSize: '11px' }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
+              {allSellers.length > 0 ? (
+                <div style={{ padding: '20px' }}>
+                  {allSellers.slice(0, 8).map((seller, index) => {
+                    const maxRevenue = Math.max(...allSellers.slice(0, 8).map(s => s.totalRevenue));
+                    const percentage = (seller.totalRevenue / maxRevenue) * 100;
+
+                    return (
+                      <div key={seller.sellerId} style={{ marginBottom: '20px' }}>
+                        {/* Seller Name and Revenue */}
+                        <div style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          marginBottom: '8px'
+                        }}>
+                          <span style={{
+                            fontSize: '13px',
+                            fontWeight: '700',
+                            color: '#0f172a'
+                          }}>
+                            {seller.sellerName}
+                          </span>
+                          <span style={{
+                            fontSize: '14px',
+                            fontWeight: '800',
+                            color: COLORS[index % COLORS.length]
+                          }}>
+                            ₱{seller.totalRevenue.toLocaleString()}
+                          </span>
+                        </div>
+
+                        {/* Progress Bar */}
+                        <div style={{
+                          width: '100%',
+                          height: '32px',
+                          backgroundColor: '#f1f5f9',
+                          borderRadius: '8px',
+                          overflow: 'hidden',
+                          position: 'relative',
+                          boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.06)'
+                        }}>
+                          <div style={{
+                            width: `${Math.max(percentage, 5)}%`,
+                            height: '100%',
+                            background: `linear-gradient(90deg, ${COLORS[index % COLORS.length]} 0%, ${COLORS[index % COLORS.length]}dd 100%)`,
+                            borderRadius: '8px',
+                            transition: 'width 0.8s ease-out',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'flex-end',
+                            paddingRight: '12px',
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+                          }}>
+                            <span style={{
+                              fontSize: '11px',
+                              fontWeight: '700',
+                              color: 'white',
+                              textShadow: '0 1px 2px rgba(0,0,0,0.3)'
+                            }}>
+                              {percentage.toFixed(0)}%
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               ) : (
                 <div className="empty-state">
                   <p><FaTrophy size={18} style={{ display: 'inline', marginRight: '8px' }} /> No revenue data</p>
@@ -983,10 +1014,11 @@ const AdminAnalytics = () => {
             <span className="chart-period">Multi-Seller Products</span>
           </div>
         </div>
+
         <div className="chart-content" style={{ position: 'relative', zIndex: 1 }}>
           {priceTrendData.length > 0 ? (
             <>
-              <ResponsiveContainer width="100%" height={420}>
+              <ResponsiveContainer width="100%" height={380}>
                 <BarChart
                   data={selectedVariety === 'all' ? priceTrendData.slice(0, 10) : priceTrendData.filter(v => v.name === selectedVariety)}
                   margin={{ top: 40, right: 30, left: 20, bottom: 100 }}
@@ -1028,29 +1060,13 @@ const AdminAnalytics = () => {
                       zIndex: 1000
                     }}
                     wrapperStyle={{ zIndex: 1000 }}
-                    formatter={(value, name, props) => {
-                      const item = props.payload;
-                      const priceType = name === 'minPrice' ? 'Minimum Price' :
-                        name === 'avgPrice' ? 'Average Price' : 'Maximum Price';
-
-                      return [
-                        <div key="tooltip" style={{ minWidth: '180px' }}>
-                          <div style={{ fontWeight: '700', marginBottom: '8px', fontSize: '13px', color: '#0e7490' }}>
-                            {item.name}
-                          </div>
-                          <div style={{ fontSize: '12px', marginBottom: '6px', padding: '4px 8px', background: '#f1f5f9', borderRadius: '4px' }}>
-                            <strong>{priceType}:</strong> ₱{Number(value).toFixed(2)}
-                          </div>
-                          <div style={{ fontSize: '11px', color: '#64748b', marginTop: '8px', borderTop: '1px solid #e2e8f0', paddingTop: '6px' }}>
-                            <div>Min: ₱{item.minPrice.toFixed(2)}</div>
-                            <div>Avg: ₱{item.avgPrice.toFixed(2)}</div>
-                            <div>Max: ₱{item.maxPrice.toFixed(2)}</div>
-                            <div style={{ marginTop: '4px', fontWeight: '600' }}>
-                              Range: ₱{item.priceRange.toFixed(2)}
-                            </div>
-                          </div>
-                        </div>
-                      ];
+                    formatter={(value, name) => {
+                      const labels = {
+                        minPrice: 'Min',
+                        avgPrice: 'Avg',
+                        maxPrice: 'Max'
+                      };
+                      return [`₱${Number(value).toFixed(2)}`, labels[name] || name];
                     }}
                   />
                   <Legend
@@ -1066,9 +1082,9 @@ const AdminAnalytics = () => {
                     iconSize={12}
                     formatter={(value) => {
                       const labels = {
-                        minPrice: 'Minimum Price (₱)',
-                        avgPrice: 'Average Price (₱)',
-                        maxPrice: 'Maximum Price (₱)'
+                        minPrice: 'Minimum',
+                        avgPrice: 'Average',
+                        maxPrice: 'Maximum'
                       };
                       return <span style={{ fontSize: '12px', fontWeight: '600', color: '#475569' }}>{labels[value] || value}</span>;
                     }}
@@ -1079,242 +1095,243 @@ const AdminAnalytics = () => {
                 </BarChart>
               </ResponsiveContainer>
 
-              {/* X-axis Label */}
-              <div style={{
-                textAlign: 'center',
-                marginTop: '-30px',
-                marginBottom: '10px',
-                position: 'relative',
-                zIndex: 10
-              }}>
-                <span style={{
-                  fontSize: '13px',
-                  fontWeight: 700,
-                  color: '#0e7490'
-                }}>
-                  Product Name
-                </span>
-              </div>
+              {/* ALWAYS SHOW TABLE AND STATS */}
+              <div style={{ marginTop: '24px' }}>
+                {/* Statistics Cards - Only for single variety */}
+                {selectedVariety !== 'all' && (() => {
+                  const variety = priceTrendData.find(v => v.name === selectedVariety);
+                  if (!variety) return null;
 
-              {/* Information Cards */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
-                gap: '12px',
-                padding: '16px',
-                background: '#f8fafc',
-                borderRadius: '12px',
-                marginTop: '16px',
-                position: 'relative',
-                zIndex: 10
-              }}>
-                <div style={{
-                  textAlign: 'center',
-                  padding: '12px',
-                  background: 'white',
-                  borderRadius: '8px',
-                  border: '2px solid #e0f2fe'
-                }}>
-                  <div style={{ fontSize: '11px', color: '#64748b', fontWeight: '600', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                    Product Name
-                  </div>
-                  <div style={{ fontSize: '13px', fontWeight: '800', color: '#0e7490' }}>
-                    Fish Variety
-                  </div>
-                </div>
-                <div style={{
-                  textAlign: 'center',
-                  padding: '12px',
-                  background: 'white',
-                  borderRadius: '8px',
-                  border: '2px solid #e0f2fe'
-                }}>
-                  <div style={{ fontSize: '11px', color: '#64748b', fontWeight: '600', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                    Price Category
-                  </div>
-                  <div style={{ fontSize: '13px', fontWeight: '800', color: '#0e7490' }}>
-                    Min / Avg / Max
-                  </div>
-                </div>
-                <div style={{
-                  textAlign: 'center',
-                  padding: '12px',
-                  background: 'white',
-                  borderRadius: '8px',
-                  border: '2px solid #e0f2fe'
-                }}>
-                  <div style={{ fontSize: '11px', color: '#64748b', fontWeight: '600', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                    Price Name
-                  </div>
-                  <div style={{ fontSize: '13px', fontWeight: '800', color: '#0e7490' }}>
-                    Philippine Peso (₱)
-                  </div>
-                </div>
-              </div>
-
-              {/* Detailed Price Breakdown */}
-              {selectedVariety !== 'all' && (
-                <div style={{ marginTop: '20px', padding: '16px', background: '#f8fafc', borderRadius: '12px', position: 'relative', zIndex: 5 }}>
-                  <h4 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: '800', color: '#0f172a', borderBottom: '2px solid #e0f2fe', paddingBottom: '12px' }}>
-                    Detailed Price Breakdown: {selectedVariety}
-                  </h4>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '16px' }}>
-                    {(() => {
-                      const variety = priceTrendData.find(v => v.name === selectedVariety);
-                      if (!variety || !variety.sellers) return null;
-
-                      // Create a copy of the array before sorting
-                      const sortedSellers = [...variety.sellers].sort((a, b) => a.price - b.price);
-
-                      return sortedSellers.map((seller, idx) => (
-                        <div key={idx} style={{
-                          background: 'white',
-                          padding: '16px',
-                          borderRadius: '12px',
-                          border: '2px solid #e0f2fe',
-                          boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-                          transition: 'all 0.3s',
-                          cursor: 'pointer',
-                          position: 'relative',
-                          zIndex: 1
-                        }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.transform = 'translateY(-4px)';
-                            e.currentTarget.style.boxShadow = '0 8px 16px rgba(8,145,178,0.15)';
-                            e.currentTarget.style.borderColor = '#0891b2';
-                            e.currentTarget.style.zIndex = '10';
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.transform = 'translateY(0)';
-                            e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.05)';
-                            e.currentTarget.style.borderColor = '#e0f2fe';
-                            e.currentTarget.style.zIndex = '1';
-                          }}
-                        >
-                          {/* Shop Name */}
-                          <div style={{
-                            fontSize: '13px',
-                            fontWeight: '800',
-                            color: '#0e7490',
-                            marginBottom: '10px',
-                            paddingBottom: '8px',
-                            borderBottom: '2px solid #e0f2fe',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '6px'
-                          }}>
-                            <FaStore size={12} />
-                            {seller.seller}
-                          </div>
-
-                          {/* Price Category Badge */}
-                          <div style={{ marginBottom: '12px' }}>
-                            <span style={{
-                              fontSize: '10px',
-                              fontWeight: '700',
-                              padding: '4px 10px',
-                              borderRadius: '12px',
-                              background: idx === 0 ? '#dcfce7' :
-                                idx === sortedSellers.length - 1 ? '#fee2e2' : '#dbeafe',
-                              color: idx === 0 ? '#16a34a' :
-                                idx === sortedSellers.length - 1 ? '#dc2626' : '#2563eb',
-                              letterSpacing: '0.5px',
-                              display: 'inline-block'
-                            }}>
-                              {idx === 0 ? 'LOWEST PRICE' :
-                                idx === sortedSellers.length - 1 ? 'HIGHEST PRICE' : 'COMPETITIVE'}
-                            </span>
-                          </div>
-
-                          {/* Price Display */}
-                          <div style={{ marginBottom: '12px' }}>
-                            <div style={{ fontSize: '10px', color: '#64748b', fontWeight: '600', marginBottom: '4px', letterSpacing: '0.5px' }}>
-                              SELLING PRICE
-                            </div>
-                            <div style={{
-                              fontSize: '24px',
-                              fontWeight: '900',
-                              color: '#0891b2',
-                              display: 'flex',
-                              alignItems: 'baseline',
-                              gap: '4px'
-                            }}>
-                              ₱{seller.price.toFixed(2)}
-                              <span style={{ fontSize: '11px', color: '#64748b', fontWeight: '600' }}>
-                                per kg
-                              </span>
-                            </div>
-                          </div>
-
-                          {/* Price Difference from Average */}
-                          {sortedSellers.length > 1 && (
-                            <div style={{ marginTop: '10px', fontSize: '10px', color: '#64748b', textAlign: 'center' }}>
-                              {(() => {
-                                const avgPrice = variety.avgPrice;
-                                const diff = seller.price - avgPrice;
-                                const percentage = ((diff / avgPrice) * 100).toFixed(1);
-
-                                if (Math.abs(diff) < 0.01) {
-                                  return <span style={{ color: '#0891b2', fontWeight: '600' }}>At average price</span>;
-                                }
-
-                                return (
-                                  <span style={{
-                                    color: diff < 0 ? '#16a34a' : '#dc2626',
-                                    fontWeight: '700'
-                                  }}>
-                                    {diff < 0 ? '▼' : '▲'} {Math.abs(percentage)}% {diff < 0 ? 'below' : 'above'} average
-                                  </span>
-                                );
-                              })()}
-                            </div>
-                          )}
+                  return (
+                    <div style={{
+                      padding: '16px',
+                      background: 'white',
+                      borderRadius: '12px',
+                      border: '2px solid #e0f2fe',
+                      marginBottom: '20px'
+                    }}>
+                      <h5 style={{ margin: '0 0 12px 0', fontSize: '13px', fontWeight: '700', color: '#0f172a' }}>
+                        Price Statistics for {selectedVariety}
+                      </h5>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '12px' }}>
+                        <div style={{ textAlign: 'center', padding: '12px', background: '#dcfce7', borderRadius: '8px' }}>
+                          <div style={{ fontSize: '10px', color: '#166534', fontWeight: '600', marginBottom: '4px' }}>LOWEST</div>
+                          <div style={{ fontSize: '18px', fontWeight: '900', color: '#16a34a' }}>₱{variety.minPrice.toFixed(2)}</div>
                         </div>
-                      ));
-                    })()}
-                  </div>
-
-                  {/* Price Statistics Summary */}
-                  {(() => {
-                    const variety = priceTrendData.find(v => v.name === selectedVariety);
-                    if (!variety) return null;
-
-                    return (
-                      <div style={{
-                        marginTop: '20px',
-                        padding: '16px',
-                        background: 'white',
-                        borderRadius: '12px',
-                        border: '2px solid #e0f2fe',
-                        position: 'relative',
-                        zIndex: 1
-                      }}>
-                        <h5 style={{ margin: '0 0 12px 0', fontSize: '13px', fontWeight: '700', color: '#0f172a' }}>
-                          Price Statistics
-                        </h5>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '12px' }}>
-                          <div style={{ textAlign: 'center', padding: '12px', background: '#dcfce7', borderRadius: '8px' }}>
-                            <div style={{ fontSize: '10px', color: '#166534', fontWeight: '600', marginBottom: '4px' }}>LOWEST</div>
-                            <div style={{ fontSize: '18px', fontWeight: '900', color: '#16a34a' }}>₱{variety.minPrice.toFixed(2)}</div>
-                          </div>
-                          <div style={{ textAlign: 'center', padding: '12px', background: '#dbeafe', borderRadius: '8px' }}>
-                            <div style={{ fontSize: '10px', color: '#1e40af', fontWeight: '600', marginBottom: '4px' }}>AVERAGE</div>
-                            <div style={{ fontSize: '18px', fontWeight: '900', color: '#0891b2' }}>₱{variety.avgPrice.toFixed(2)}</div>
-                          </div>
-                          <div style={{ textAlign: 'center', padding: '12px', background: '#fee2e2', borderRadius: '8px' }}>
-                            <div style={{ fontSize: '10px', color: '#991b1b', fontWeight: '600', marginBottom: '4px' }}>HIGHEST</div>
-                            <div style={{ fontSize: '18px', fontWeight: '900', color: '#dc2626' }}>₱{variety.maxPrice.toFixed(2)}</div>
-                          </div>
-                          <div style={{ textAlign: 'center', padding: '12px', background: '#fef3c7', borderRadius: '8px' }}>
-                            <div style={{ fontSize: '10px', color: '#92400e', fontWeight: '600', marginBottom: '4px' }}>PRICE RANGE</div>
-                            <div style={{ fontSize: '18px', fontWeight: '900', color: '#d97706' }}>₱{variety.priceRange.toFixed(2)}</div>
-                          </div>
+                        <div style={{ textAlign: 'center', padding: '12px', background: '#dbeafe', borderRadius: '8px' }}>
+                          <div style={{ fontSize: '10px', color: '#1e40af', fontWeight: '600', marginBottom: '4px' }}>AVERAGE</div>
+                          <div style={{ fontSize: '18px', fontWeight: '900', color: '#0891b2' }}>₱{variety.avgPrice.toFixed(2)}</div>
+                        </div>
+                        <div style={{ textAlign: 'center', padding: '12px', background: '#fee2e2', borderRadius: '8px' }}>
+                          <div style={{ fontSize: '10px', color: '#991b1b', fontWeight: '600', marginBottom: '4px' }}>HIGHEST</div>
+                          <div style={{ fontSize: '18px', fontWeight: '900', color: '#dc2626' }}>₱{variety.maxPrice.toFixed(2)}</div>
+                        </div>
+                        <div style={{ textAlign: 'center', padding: '12px', background: '#fef3c7', borderRadius: '8px' }}>
+                          <div style={{ fontSize: '10px', color: '#92400e', fontWeight: '600', marginBottom: '4px' }}>RANGE</div>
+                          <div style={{ fontSize: '18px', fontWeight: '900', color: '#d97706' }}>₱{variety.priceRange.toFixed(2)}</div>
                         </div>
                       </div>
-                    );
-                  })()}
+                    </div>
+                  );
+                })()}
+
+                {/* Price Details Table - ALWAYS SHOW */}
+                <div style={{
+                  padding: '20px',
+                  background: '#f8fafc',
+                  borderRadius: '12px',
+                  border: '2px solid #e0f2fe'
+                }}>
+                  <h4 style={{
+                    margin: '0 0 16px 0',
+                    fontSize: '16px',
+                    fontWeight: '800',
+                    color: '#0f172a',
+                    borderBottom: '2px solid #e0f2fe',
+                    paddingBottom: '12px'
+                  }}>
+                    {selectedVariety === 'all' ? 'All Products Price Details' : `Price Details: ${selectedVariety}`}
+                  </h4>
+
+                  <div style={{ overflowX: 'auto' }}>
+                    <table style={{
+                      width: '100%',
+                      borderCollapse: 'collapse',
+                      background: 'white',
+                      borderRadius: '8px',
+                      overflow: 'hidden',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
+                    }}>
+                      <thead>
+                        <tr style={{ background: 'linear-gradient(135deg, #0891b2 0%, #0e7490 100%)' }}>
+                          <th style={{
+                            padding: '12px 16px',
+                            textAlign: 'left',
+                            color: 'white',
+                            fontSize: '12px',
+                            fontWeight: '700',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.5px'
+                          }}>Rank</th>
+                          {selectedVariety === 'all' && (
+                            <th style={{
+                              padding: '12px 16px',
+                              textAlign: 'left',
+                              color: 'white',
+                              fontSize: '12px',
+                              fontWeight: '700',
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.5px'
+                            }}>Product</th>
+                          )}
+                          <th style={{
+                            padding: '12px 16px',
+                            textAlign: 'left',
+                            color: 'white',
+                            fontSize: '12px',
+                            fontWeight: '700',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.5px'
+                          }}>Shop Name</th>
+                          <th style={{
+                            padding: '12px 16px',
+                            textAlign: 'right',
+                            color: 'white',
+                            fontSize: '12px',
+                            fontWeight: '700',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.5px'
+                          }}>Price</th>
+                          <th style={{
+                            padding: '12px 16px',
+                            textAlign: 'center',
+                            color: 'white',
+                            fontSize: '12px',
+                            fontWeight: '700',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.5px'
+                          }}>Category</th>
+                          <th style={{
+                            padding: '12px 16px',
+                            textAlign: 'right',
+                            color: 'white',
+                            fontSize: '12px',
+                            fontWeight: '700',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.5px'
+                          }}>vs Average</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {(() => {
+                          const varietiesToShow = selectedVariety === 'all'
+                            ? priceTrendData.slice(0, 10)
+                            : priceTrendData.filter(v => v.name === selectedVariety);
+
+                          let globalRank = 0;
+
+                          return varietiesToShow.map((variety, varietyIdx) => {
+                            const sortedSellers = [...variety.sellers].sort((a, b) => a.price - b.price);
+
+                            return sortedSellers.map((seller, sellerIdx) => {
+                              globalRank++;
+                              const diff = seller.price - variety.avgPrice;
+                              const percentage = ((diff / variety.avgPrice) * 100).toFixed(1);
+                              const isLowest = sellerIdx === 0;
+                              const isHighest = sellerIdx === sortedSellers.length - 1;
+
+                              return (
+                                <tr key={`${variety.name}-${seller.seller}-${sellerIdx}`} style={{
+                                  borderBottom: '1px solid #e2e8f0',
+                                  transition: 'all 0.2s',
+                                  background: globalRank % 2 === 0 ? '#f8fafc' : 'white'
+                                }}
+                                  onMouseEnter={(e) => e.currentTarget.style.background = '#e0f2fe'}
+                                  onMouseLeave={(e) => e.currentTarget.style.background = globalRank % 2 === 0 ? '#f8fafc' : 'white'}
+                                >
+                                  <td style={{
+                                    padding: '12px 16px',
+                                    fontSize: '14px',
+                                    fontWeight: '700',
+                                    color: '#0891b2'
+                                  }}>
+                                    #{globalRank}
+                                  </td>
+                                  {selectedVariety === 'all' && (
+                                    <td style={{
+                                      padding: '12px 16px',
+                                      fontSize: '13px',
+                                      fontWeight: '700',
+                                      color: '#0e7490'
+                                    }}>
+                                      {variety.name}
+                                    </td>
+                                  )}
+                                  <td style={{
+                                    padding: '12px 16px',
+                                    fontSize: '13px',
+                                    fontWeight: '600',
+                                    color: '#0f172a'
+                                  }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                      <FaStore size={12} color="#64748b" />
+                                      {seller.seller}
+                                    </div>
+                                  </td>
+                                  <td style={{
+                                    padding: '12px 16px',
+                                    textAlign: 'right',
+                                    fontSize: '16px',
+                                    fontWeight: '800',
+                                    color: '#0891b2'
+                                  }}>
+                                    ₱{seller.price.toFixed(2)}
+                                  </td>
+                                  <td style={{
+                                    padding: '12px 16px',
+                                    textAlign: 'center'
+                                  }}>
+                                    <span style={{
+                                      fontSize: '10px',
+                                      fontWeight: '700',
+                                      padding: '4px 10px',
+                                      borderRadius: '12px',
+                                      background: isLowest ? '#dcfce7' :
+                                        isHighest ? '#fee2e2' : '#dbeafe',
+                                      color: isLowest ? '#16a34a' :
+                                        isHighest ? '#dc2626' : '#2563eb',
+                                      letterSpacing: '0.5px',
+                                      display: 'inline-block'
+                                    }}>
+                                      {isLowest ? 'LOWEST' : isHighest ? 'HIGHEST' : 'COMPETITIVE'}
+                                    </span>
+                                  </td>
+                                  <td style={{
+                                    padding: '12px 16px',
+                                    textAlign: 'right',
+                                    fontSize: '12px',
+                                    fontWeight: '700',
+                                    color: Math.abs(diff) < 0.01 ? '#0891b2' :
+                                      diff < 0 ? '#16a34a' : '#dc2626'
+                                  }}>
+                                    {Math.abs(diff) < 0.01 ? (
+                                      'At average'
+                                    ) : (
+                                      <>
+                                        {diff < 0 ? '▼' : '▲'} {Math.abs(percentage)}%
+                                      </>
+                                    )}
+                                  </td>
+                                </tr>
+                              );
+                            });
+                          }).flat();
+                        })()}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
-              )}
+              </div>
             </>
           ) : (
             <div className="empty-state">
@@ -1323,6 +1340,8 @@ const AdminAnalytics = () => {
           )}
         </div>
       </div>
+
+
       {/* Seller Ratings Analytics */}
       <div className="chart-card" style={{ marginTop: '28px' }}>
         <div className="card-header">
