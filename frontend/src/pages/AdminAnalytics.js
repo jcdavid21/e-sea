@@ -542,7 +542,7 @@ const AdminAnalytics = () => {
       <div className="stats-grid">
         <div
           className="stat-card stat-revenue"
-          onClick={() => window.location.href = '/admin/dashboard'}
+          onClick={() => window.location.href = '/admin/dashboard?tab=reports'}
           style={{ cursor: 'pointer' }}
         >
           <div className="stat-icon-wrapper">
