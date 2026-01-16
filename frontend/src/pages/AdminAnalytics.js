@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   FaStore,
   FaShoppingCart,
@@ -68,7 +68,7 @@ const AdminAnalytics = () => {
     return new Date().toISOString().split('T')[0];
   });
 
-  const fetchSellerRatings = async () => {
+  const fetchSellerRatings = useCallback(async () => {
     try {
       const res = await fetch(`${process.env.REACT_APP_ADMIN_API_URL}/api/admin/seller-ratings`);
       const data = await res.json();
@@ -76,10 +76,10 @@ const AdminAnalytics = () => {
     } catch (err) {
       console.error('Error fetching seller ratings:', err);
     }
-  };
+  }, []);
 
   // 2. DEFINE ALL HELPER FUNCTIONS BEFORE useEffect
-  const prepareSalesTrendData = (sortedSellers) => {
+  const prepareSalesTrendData = useCallback((sortedSellers) => {
     const periods = [];
     const start = new Date(startDate);
     const end = new Date(endDate);
@@ -125,16 +125,16 @@ const AdminAnalytics = () => {
 
       return dataPoint;
     });
-  };
+  }, [startDate, endDate]);
 
-  const preparePieChartData = () => {
-    return allSellers.slice(0, 8).map(seller => ({
-      name: seller.sellerName,
-      value: seller.totalRevenue
-    }));
-  };
+  // const preparePieChartData = () => {
+  //   return allSellers.slice(0, 8).map(seller => ({
+  //     name: seller.sellerName,
+  //     value: seller.totalRevenue
+  //   }));
+  // };
 
-  const prepareSupplyDemandData = (allProducts, orders) => {
+  const prepareSupplyDemandData = useCallback((allProducts, orders) => {
     const varietyStats = {};
 
     allProducts.forEach(product => {
@@ -169,9 +169,9 @@ const AdminAnalytics = () => {
       sellers: stat.sellers.size,
       trend: stat.supply > stat.demand ? 'Oversupply' : stat.demand > stat.supply ? 'High Demand' : 'Balanced'
     })).sort((a, b) => b.demand - a.demand);
-  };
+  }, []);
 
-  const preparePriceTrendData = (allProducts) => {
+  const preparePriceTrendData = useCallback((allProducts) => {
     const priceByVariety = {};
 
     allProducts.forEach(product => {
@@ -201,9 +201,9 @@ const AdminAnalytics = () => {
       }))
       .filter(v => v.sellers.length > 1)
       .sort((a, b) => b.priceRange - a.priceRange);
-  };
+  }, []);
 
-  const fetchAnalytics = async () => {
+  const fetchAnalytics = useCallback(async () => {
     setLoading(true);
     try {
       const sellersRes = await fetch(`${process.env.REACT_APP_ADMIN_API_URL}/api/sellers`);
@@ -323,13 +323,13 @@ const AdminAnalytics = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [prepareSalesTrendData, prepareSupplyDemandData, preparePriceTrendData]);
 
   // 3. useEffect HOOKS
   useEffect(() => {
     fetchAnalytics();
     fetchSellerRatings();
-  }, []);
+  }, [fetchAnalytics, fetchSellerRatings]);
 
   useEffect(() => {
     if (allSellers.length > 0) {
@@ -337,7 +337,7 @@ const AdminAnalytics = () => {
       setSalesData(salesTrendData);
       setDisplayedSellersCount(5);
     }
-  }, [startDate, endDate, allSellers]);
+  }, [startDate, endDate, allSellers, prepareSalesTrendData]);
 
   // Add the tooltip positioning useEffect here
   useEffect(() => {
