@@ -1077,79 +1077,6 @@
 }
 
 /* ==================
-   PIE CHART SPECIFIC FIXES
-   ================== */
-
-.chart-pie {
-  flex: 1;
-  min-width: 350px;
-}
-
-.chart-pie .chart-content {
-  overflow: visible !important;
-  position: relative;
-}
-
-.chart-pie .recharts-responsive-container {
-  min-width: 100% !important;
-  width: 100% !important;
-}
-
-@media (max-width: 768px) {
-  .chart-pie {
-    min-width: 100%;
-    width: 100%;
-  }
-
-  .chart-pie .chart-content {
-    overflow: visible !important;
-    min-height: 380px;
-    padding: 10px 0;
-  }
-
-  .chart-pie .recharts-responsive-container {
-    min-width: 100% !important;
-    width: 100% !important;
-  }
-
-  .chart-pie .recharts-wrapper {
-    margin: 0 auto;
-    overflow: visible !important;
-  }
-
-  .chart-pie .recharts-surface {
-    overflow: visible !important;
-  }
-}
-
-@media (max-width: 480px) {
-  .chart-pie {
-    min-width: 100%;
-  }
-
-  .chart-pie .chart-content {
-    min-height: 400px;
-    padding: 15px 0;
-  }
-
-  .chart-pie .recharts-pie-sector {
-    cursor: pointer;
-  }
-
-  .chart-pie .recharts-legend-wrapper {
-    font-size: 10px !important;
-    position: relative !important;
-    overflow: visible !important;
-  }
-}
-
-@media (max-width: 380px) {
-  .chart-pie .chart-content {
-    min-height: 420px;
-  }
-}
-
-/* ==================
    TOOLTIP FIXES FOR OVERFLOW
    ================== */
 
@@ -1642,10 +1569,6 @@
 @media (max-width: 480px) {
   .chart-content > div[style*="gridTemplateColumns"] {
     gap: 12px !important;
-  }
-
-  .progress-bar{
-    max-width: 280px !important;
   }
 }
 
