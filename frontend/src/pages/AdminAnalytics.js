@@ -20,8 +20,6 @@ import {
   ResponsiveContainer,
   AreaChart,
   Area,
-  PieChart,
-  Pie,
   Cell
 } from 'recharts';
 import { FiDownload } from 'react-icons/fi';
