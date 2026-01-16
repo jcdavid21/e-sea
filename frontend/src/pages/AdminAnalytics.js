@@ -574,7 +574,7 @@ const AdminAnalytics = () => {
 
         <div
           className="stat-card stat-products"
-          onClick={() => window.location.href = '/admin/dashboard?tab=manageUsers'}
+          onClick={() => window.location.href = '/admin/dashboard?tab=reports'}
           style={{ cursor: 'pointer' }}
         >
           <div className="stat-icon-wrapper">
@@ -716,14 +716,14 @@ const AdminAnalytics = () => {
             <div className="card-header">
               <h3
                 className="clickable-header"
-                onClick={() => window.location.href = '/admin/dashboard?tab=approve'}
+                onClick={() => window.location.href = '/admin/dashboard?tab=reports'}
                 style={{ cursor: 'pointer' }}
               >
                 <FaTrophy size={18} style={{ display: 'inline', marginRight: '8px' }} /> Revenue Distribution
               </h3>
               <span className="chart-period">Top 8 Sellers</span>
             </div>
-            <div className="chart-content">
+            <div className="chart-content" style={{ padding: '0' }}>
               {allSellers.length > 0 ? (
                 <div style={{ padding: '20px' }}>
                   {allSellers.slice(0, 8).map((seller, index) => {
@@ -736,27 +736,33 @@ const AdminAnalytics = () => {
                         <div style={{
                           display: 'flex',
                           justifyContent: 'space-between',
-                          alignItems: 'center',
-                          marginBottom: '8px'
+                          alignItems: 'flex-start',
+                          marginBottom: '8px',
+                          gap: '12px'
                         }}>
                           <span style={{
                             fontSize: '13px',
                             fontWeight: '700',
-                            color: '#0f172a'
+                            color: '#0f172a',
+                            lineHeight: '1.4',
+                            wordBreak: 'break-word',
+                            flex: '1'
                           }}>
                             {seller.sellerName}
                           </span>
                           <span style={{
                             fontSize: '14px',
                             fontWeight: '800',
-                            color: COLORS[index % COLORS.length]
+                            color: COLORS[index % COLORS.length],
+                            whiteSpace: 'nowrap',
+                            lineHeight: '1.4'
                           }}>
                             ₱{seller.totalRevenue.toLocaleString()}
                           </span>
                         </div>
 
                         {/* Progress Bar */}
-                        <div style={{
+                        <div className='progress-bar' style={{
                           width: '100%',
                           height: '32px',
                           backgroundColor: '#f1f5f9',

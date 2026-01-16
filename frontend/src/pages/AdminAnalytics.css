@@ -1643,5 +1643,9 @@
   .chart-content > div[style*="gridTemplateColumns"] {
     gap: 12px !important;
   }
+
+  .progress-bar{
+    max-width: 280px !important;
+  }
 }
 
