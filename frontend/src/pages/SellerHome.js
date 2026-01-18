@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Fish, Package, DollarSign, Clock, TrendingUp, TrendingDown, Minus, Calendar, User, Phone, MapPin, MessageCircle, Trophy, AlertTriangle, CheckCircle, List, BarChart3, Waves, ShoppingCart } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
+import { FaStar } from "react-icons/fa";
 import './SellerHome.css';
 import { useNavigate } from "react-router-dom";
 import SellerMapModal from './SellerMapModal';
@@ -27,6 +28,10 @@ const SellerHome = () => {
   // Map Modal State
   const [showMapModal, setShowMapModal] = useState(false);
   const [storeLocation, setStoreLocation] = useState(null);
+  const [feedbacks, setFeedbacks] = useState([]);
+
+  const [currentFeedbackPage, setCurrentFeedbackPage] = useState(1);
+  const feedbacksPerPage = 6;
 
   const SELLER_ID = localStorage.getItem("seller_unique_id");
   const navigate = useNavigate();
@@ -89,7 +94,6 @@ const SellerHome = () => {
 
         setProducts(Array.isArray(prodData) ? prodData : []);
 
-        // Extract orders array from the response
         const ordersArray = orderData.orders || [];
         setOrders(Array.isArray(ordersArray) ? ordersArray : []);
 
@@ -99,6 +103,7 @@ const SellerHome = () => {
         setSupplyDemandData(supplyDemand);
         await fetchStoreLocation();
         await fetchPriceAnalysisData(prodData);
+        await fetchSellerFeedbacks();
       } catch (err) {
         console.error("Error fetching seller data:", err);
         setProducts([]);
@@ -108,15 +113,12 @@ const SellerHome = () => {
       }
     };
 
-    // Initial fetch
     fetchData();
 
-    // Set up automatic refresh every 30 seconds
     const refreshInterval = setInterval(() => {
       fetchData();
     }, 30000);
 
-    // Cleanup interval on component unmount
     return () => clearInterval(refreshInterval);
   }, [SELLER_ID]);
 
@@ -189,6 +191,23 @@ const SellerHome = () => {
     } catch (err) {
       console.error("Error fetching price analysis:", err);
       setPriceAnalysisData([]);
+    }
+  };
+
+  const fetchSellerFeedbacks = async () => {
+    try {
+      const response = await fetch(
+        `${process.env.REACT_APP_SELLER_API_URL}/api/seller-feedback/${SELLER_ID}`
+      );
+      
+      if (response.ok) {
+        const data = await response.json();
+        setFeedbacks(data);
+        console.log('Fetched feedbacks:', data.length);
+      }
+    } catch (err) {
+      console.error("Error fetching feedbacks:", err);
+      setFeedbacks([]);
     }
   };
 
@@ -348,6 +367,32 @@ const SellerHome = () => {
     return ((lastWeekOrders - previousWeekOrders) / previousWeekOrders * 100).toFixed(1);
   };
 
+  // Calculate average rating
+  const getAverageRating = () => {
+    if (feedbacks.length === 0) return 0;
+    const total = feedbacks.reduce((sum, f) => sum + f.rating, 0);
+    return (total / feedbacks.length).toFixed(1);
+  };
+
+  // Get current feedbacks for pagination
+  const getCurrentFeedbacks = () => {
+    const indexOfLastFeedback = currentFeedbackPage * feedbacksPerPage;
+    const indexOfFirstFeedback = indexOfLastFeedback - feedbacksPerPage;
+    return feedbacks.slice(indexOfFirstFeedback, indexOfLastFeedback);
+  };
+
+  // Get total pages
+  const getTotalFeedbackPages = () => {
+    return Math.ceil(feedbacks.length / feedbacksPerPage);
+  };
+
+  // Change page
+  const handleFeedbackPageChange = (pageNumber) => {
+    setCurrentFeedbackPage(pageNumber);
+    // Scroll to feedbacks section
+    document.getElementById('feedbacks-section')?.scrollIntoView({ behavior: 'smooth' });
+  };
+
   const pendingOrders = orderStatusFilter === 'all'
     ? orders
     : orders.filter(o => o.status === orderStatusFilter);
@@ -496,6 +541,184 @@ const SellerHome = () => {
           </div>
         </div>
       </div>
+
+      {/* Customer Feedbacks Section */}
+<div 
+  id="feedbacks-section"
+  className="pending-orders-section feedback-section" 
+  style={{ 
+    borderTop: '4px solid #1e3a8a',
+    background: 'white'
+  }}
+>
+  <div className="section-header" style={{ borderBottom: '2px solid #e5e7eb' }}>
+    <h3 style={{ color: '#0f172a' }}>
+      <MessageCircle size={18} style={{ display: 'inline', marginRight: '8px' }} /> 
+      Customer Feedbacks
+    </h3>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+      {feedbacks.length > 0 && (
+        <div style={{
+          background: '#1e3a8a',
+          color: 'white',
+          padding: '8px 16px',
+          borderRadius: '20px',
+          fontSize: '13px',
+          fontWeight: '700',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px'
+        }}>
+          <FaStar color="#f59e0b" /> {getAverageRating()} / 5.0
+        </div>
+      )}
+      <span className="pending-count" style={{
+        background: '#1e3a8a',
+        color: 'white',
+        padding: '8px 18px',
+        borderRadius: '25px',
+        fontSize: '13px',
+        fontWeight: '800'
+      }}>
+        {feedbacks.length}
+      </span>
+    </div>
+  </div>
+
+  <div className="feedbacks-container">
+    <div className="pending-orders-grid">
+      {getCurrentFeedbacks().length > 0 ? (
+        getCurrentFeedbacks().map(feedback => (
+          <div key={feedback.id} className="pending-order-card" style={{ 
+            borderColor: '#cbd5e1',
+            background: 'white'
+          }}>
+            <div className="pending-order-header" style={{ 
+              background: '#1e3a8a',
+              padding: '12px 16px'
+            }}>
+              <div className="pending-order-id-section">
+                <span className="pending-order-number" style={{ color: 'white' }}>
+                  Order #{feedback.order_id}
+                </span>
+                <span className="pending-badge" style={{ 
+                  background: 'white', 
+                  color: '#1e3a8a',
+                  padding: '4px 10px',
+                  borderRadius: '12px',
+                  fontSize: '14px',
+                  fontWeight: '900'
+                }}>
+                  {Array.from({ length: feedback.rating }).map((_, index) => (
+                    <FaStar key={index} color="#f59e0b" />
+                  ))}
+                </span>
+              </div>
+            </div>
+
+            <div className="pending-order-body" style={{ 
+              background: 'white',
+              padding: '16px 18px'
+            }}>
+              <div className="customer-section" style={{ 
+                borderBottom: '2px solid #f1f5f9',
+                paddingBottom: '12px',
+                marginBottom: '12px'
+              }}>
+                <div className="customer-name-compact" style={{ 
+                  color: '#0f172a',
+                  fontSize: '14px',
+                  fontWeight: '800'
+                }}>
+                  <User size={14} style={{ display: 'inline', marginRight: '4px' }} /> 
+                  {feedback.first_name} {feedback.last_name}
+                </div>
+                <div style={{ 
+                  fontSize: '16px', 
+                  marginTop: '8px',
+                  color: '#1e3a8a',
+                  fontWeight: '700'
+                }}>
+                  {feedback.rating} out of 5 stars
+                </div>
+              </div>
+
+              {feedback.comment && (
+                <div style={{
+                  background: '#f8fafc',
+                  border: '2px solid #e2e8f0',
+                  borderLeft: '4px solid #1e3a8a',
+                  color: '#334155',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  fontSize: '13px',
+                  lineHeight: '1.6',
+                  marginTop: '12px'
+                }}>
+                  <MessageCircle size={14} style={{ display: 'inline', marginRight: '4px' }} /> 
+                  "{feedback.comment}"
+                </div>
+              )}
+
+              <div className="order-footer-info" style={{ 
+                borderTop: '2px solid #f1f5f9',
+                paddingTop: '12px',
+                marginTop: '12px'
+              }}>
+                <span className="order-time" style={{ color: '#64748b' }}>
+                  {new Date(feedback.created_at).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric'
+                  })}
+                </span>
+              </div>
+            </div>
+          </div>
+        ))
+      ) : (
+        <div className="empty-pending">
+          <div className="empty-icon"><MessageCircle size={48} color="#64748b" /></div>
+          <h4 style={{ color: '#0f172a' }}>No Feedbacks Yet!</h4>
+          <p style={{ color: '#64748b' }}>Customer reviews will appear here once they submit feedback</p>
+        </div>
+      )}
+    </div>
+  </div>
+
+  {/* Pagination */}
+  {feedbacks.length > feedbacksPerPage && (
+    <div className="feedback-pagination">
+      <button
+        onClick={() => handleFeedbackPageChange(currentFeedbackPage - 1)}
+        disabled={currentFeedbackPage === 1}
+        className="pagination-btn"
+      >
+        Previous
+      </button>
+
+      <div className="pagination-numbers">
+        {[...Array(getTotalFeedbackPages())].map((_, index) => (
+          <button
+            key={index + 1}
+            onClick={() => handleFeedbackPageChange(index + 1)}
+            className={`pagination-number ${currentFeedbackPage === index + 1 ? 'active' : ''}`}
+          >
+            {index + 1}
+          </button>
+        ))}
+      </div>
+
+      <button
+        onClick={() => handleFeedbackPageChange(currentFeedbackPage + 1)}
+        disabled={currentFeedbackPage === getTotalFeedbackPages()}
+        className="pagination-btn"
+      >
+        Next
+      </button>
+    </div>
+  )}
+</div>
 
 
       {/* Main Content Grid */}

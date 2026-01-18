@@ -10,10 +10,14 @@ import {
   FaEnvelope,
   FaPhone,
   FaIdCard,
-  FaCalendarAlt
+  FaCalendarAlt,
+  FaShieldAlt,
+  FaQuestionCircle,
+  FaKey
 } from "react-icons/fa";
 import BuyerHeader from "./BuyerHeader";
 import FeedbackModal from "./FeedbackModal";
+import { secretQuestions } from "./SecretQuestions";
 import "./BuyerProfile.css";
 
 const BuyerProfile = () => {
@@ -29,7 +33,9 @@ const BuyerProfile = () => {
     contact: "",
     first_name: "",
     middle_name: "",
-    last_name: ""
+    last_name: "",
+    secret_question: "",
+    secret_ans: ""
   });
   const [updateLoading, setUpdateLoading] = useState(false);
   const navigate = useNavigate();
@@ -75,7 +81,9 @@ const BuyerProfile = () => {
           contact: res.data.contact,
           first_name: res.data.first_name,
           middle_name: res.data.middle_name || "",
-          last_name: res.data.last_name
+          last_name: res.data.last_name,
+          secret_question: res.data.secret_question || "",
+          secret_ans: res.data.secret_ans || ""
         });
       }
     } catch (err) {
@@ -165,7 +173,9 @@ const BuyerProfile = () => {
         contact: buyer.contact,
         first_name: buyer.first_name,
         middle_name: buyer.middle_name || "",
-        last_name: buyer.last_name
+        last_name: buyer.last_name,
+        secret_question: buyer.secret_question || "",
+        secret_ans: buyer.secret_ans || ""
       });
     }
     setIsEditing(!isEditing);
@@ -193,6 +203,11 @@ const BuyerProfile = () => {
     if (!editForm.username || !editForm.email || !editForm.contact || 
         !editForm.first_name || !editForm.last_name) {
       alert("Please fill in all required fields.");
+      return;
+    }
+
+    if (!editForm.secret_question || !editForm.secret_ans) {
+      alert("Please select a security question and provide an answer.");
       return;
     }
 
@@ -383,6 +398,46 @@ const BuyerProfile = () => {
                     </div>
                   </div>
 
+                  <div className="info-section">
+                    <h3>
+                      <FaShieldAlt /> Security Settings
+                    </h3>
+                    
+                    <div className="form-group">
+                      <label>
+                        <FaQuestionCircle /> Secret Question *
+                      </label>
+                      <select
+                        className="secret-question-value"
+                        name="secret_question"
+                        value={editForm.secret_question}
+                        onChange={handleInputChange}
+                        required
+                      >
+                        <option value="">Select a security question</option>
+                        {secretQuestions.map((question, index) => (
+                          <option key={index} value={question}>
+                            {question}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="form-group">
+                      <label>
+                        <FaKey /> Secret Answer *
+                      </label>
+                      <input
+                        type="password"
+                        name="secret_ans"
+                        value={editForm.secret_ans}
+                        onChange={handleInputChange}
+                        placeholder="Enter your answer"
+                        required
+                      />
+                    </div>
+                  </div>
+
                   <div className="profile-actions">
                     <button 
                       type="submit" 
@@ -463,6 +518,30 @@ const BuyerProfile = () => {
                           month: "long",
                           day: "numeric",
                         })}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="info-section">
+                    <h3>
+                      <FaShieldAlt /> Security Settings
+                    </h3>
+                    
+                    <div className="info-row">
+                      <span className="info-label">
+                        <FaQuestionCircle /> Secret Question:
+                      </span>
+                      <span className="info-value">
+                        {buyer.secret_question || "Not set"}
+                      </span>
+                    </div>
+
+                    <div className="info-row">
+                      <span className="info-label">
+                        <FaKey /> Secret Answer:
+                      </span>
+                      <span className="info-value">
+                        {buyer.secret_ans ? "••••••••" : "Not set"}
                       </span>
                     </div>
                   </div>

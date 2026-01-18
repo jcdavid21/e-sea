@@ -458,3 +458,8 @@
     font-size: 1rem;
   }
 }
+
+.secret-question-value {
+  word-break: break-word;
+  color: #1a1a1a;
+}

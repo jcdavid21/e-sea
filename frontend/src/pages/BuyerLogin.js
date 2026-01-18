@@ -83,6 +83,7 @@ const BuyerLogin = () => {
             />
             <button type="submit" className="buyer-btn">Login</button>
           </form>
+          <a href="/buyer/forgot-password" className="buyer-forgot-link"> Forgot Password?</a>
           {message && <p className="buyer-message">{message}</p>}
           <p>
             Don't have an account?{" "}

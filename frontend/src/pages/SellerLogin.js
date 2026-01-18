@@ -81,9 +81,8 @@ const SellerLogin = () => {
               Login
             </button>
           </form>
-
           <p className="seller-message">{message}</p>
-
+          <a href="/seller/forgot-password" className="seller-forgot-link"> Forgot Password?</a>
           <Link to="/seller/register" className="seller-link">
             New seller? Register here.
           </Link>

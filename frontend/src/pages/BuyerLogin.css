@@ -145,3 +145,16 @@
     transform: translateY(0);
   }
 }
+
+.buyer-forgot-link {
+  display: block;
+  margin-top: 10px;
+  font-size: 0.85rem;
+  color: #cce6ff;
+  text-decoration: underline;
+  transition: color 0.3s ease;
+}
+
+.buyer-forgot-link:hover {
+  color: #ffffff;
+}

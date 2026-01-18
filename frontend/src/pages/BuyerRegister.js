@@ -4,6 +4,7 @@ import axios from "axios";
 import "./BuyerRegister.css";
 import Navbar from "./Navbar";
 import TermsModal from "./TermsModal";
+import { secretQuestions } from "./SecretQuestions";
 
 const BuyerRegister = () => {
   const [formData, setFormData] = useState({
@@ -14,6 +15,8 @@ const BuyerRegister = () => {
     middleName: "",
     username: "",
     password: "",
+    secretQuestion: "",
+    secretAnswer: "",
   });
 
   const [message, setMessage] = useState("");
@@ -28,7 +31,14 @@ const BuyerRegister = () => {
   };
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const [ name, value ] = [ e.target.name, e.target.value ];
+
+    if (name === "contact") {
+      const sanitizedValue = value.replace(/\D/g, "");
+      setFormData({ ...formData, contact: sanitizedValue });
+      return;
+    }
+    setFormData({ ...formData, [name]: value });
   };
 
   const handleTermsAccept = () => {
@@ -48,6 +58,16 @@ const BuyerRegister = () => {
       setMessage(
         "Password must include: at least 1 lowercase, 1 uppercase, 1 number, 1 special character, and be 10+ characters long."
       );
+      return;
+    }
+
+    if (formData.secretAnswer.trim() === "") {
+      setMessage("Please provide an answer to the secret question.");
+      return;
+    }
+
+    if (formData.secretQuestion === "") {
+      setMessage("Please select a secret question.");
       return;
     }
 
@@ -82,6 +102,8 @@ const BuyerRegister = () => {
             <input
               type="text"
               name="contact"
+              value={formData.contact}
+              maxLength={11}
               onChange={handleChange}
               required
               placeholder="Enter your contact number"
@@ -129,6 +151,29 @@ const BuyerRegister = () => {
               onChange={handleChange}
               required
               placeholder="Create a strong password"
+            />
+
+            <label>Secret Question</label>
+            <select
+              name="secretQuestion"
+              onChange={handleChange}
+              required
+            >
+              <option value="">Select a secret question</option>
+              {secretQuestions.map((question, index) => (
+                <option key={index} value={question}>
+                  {question}
+                </option>
+              ))}
+            </select>
+
+            <label>Secret Answer</label>
+            <input
+              type="text"
+              name="secretAnswer"
+              onChange={handleChange}
+              required
+              placeholder="Enter your answer"
             />
 
             <div className="terms-checkbox-container">

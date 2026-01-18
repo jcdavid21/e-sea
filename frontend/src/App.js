@@ -42,6 +42,10 @@ import About from "./pages/About";
 import Policies from "./pages/Policies";
 import Contact from "./pages/Contact";
 
+// forgot password page
+import SellerForgotPassword from "./pages/SellerForgotPassword";
+import BuyerForgotPassword from "./pages/BuyerForgotPassword";
+
 function App() {
   return (
     <BrowserRouter>
@@ -88,6 +92,10 @@ function App() {
         <Route path="/about" element={<About />} />
         <Route path="/policies" element={<Policies />} />
         <Route path="/contact" element={<Contact />} />
+
+
+        <Route path="/buyer/forgot-password" element={<BuyerForgotPassword />} />
+        <Route path="/seller/forgot-password" element={<SellerForgotPassword />} />
 
       </Routes>
     </BrowserRouter>

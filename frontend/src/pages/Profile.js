@@ -11,9 +11,12 @@ import {
   FiShoppingBag,
   FiEdit3,
   FiX,
-  FiSave
+  FiSave,
+  FiShield,
+  FiKey
 } from "react-icons/fi";
 import Swal from "sweetalert2";
+import { secretQuestions } from "./SecretQuestions";
 
 function SellerProfile() {
   const [sellerInfo, setSellerInfo] = useState({
@@ -28,8 +31,17 @@ function SellerProfile() {
     province: "",
   });
 
+  const [securityInfo, setSecurityInfo] = useState({
+    secret_question: "",
+    secret_ans: ""
+  });
+
   const [editMode, setEditMode] = useState(false);
   const [editedInfo, setEditedInfo] = useState({});
+  const [editedSecurity, setEditedSecurity] = useState({
+    secret_question: "",
+    secret_ans: ""
+  });
 
   const [profileImages, setProfileImages] = useState({
     logo: "",
@@ -71,6 +83,23 @@ function SellerProfile() {
       if (infoRes.ok) {
         setSellerInfo(infoData);
         setEditedInfo(infoData);
+      }
+
+      // Fetch security info
+      const securityRes = await fetch(
+        `${process.env.REACT_APP_SELLER_API_URL}/api/seller/security/${seller_id}`
+      );
+      const securityData = await securityRes.json();
+
+      if (securityRes.ok) {
+        setSecurityInfo({
+          secret_question: securityData.secret_question || "",
+          secret_ans: securityData.secret_ans || ""
+        });
+        setEditedSecurity({
+          secret_question: securityData.secret_question || "",
+          secret_ans: securityData.secret_ans || ""
+        });
       }
 
       const profileRes = await fetch(
@@ -119,6 +148,10 @@ function SellerProfile() {
     if (editMode) {
       // Cancel editing - reset to original
       setEditedInfo(sellerInfo);
+      setEditedSecurity({
+        secret_question: securityInfo.secret_question || "",
+        secret_ans: securityInfo.secret_ans || ""
+      });
       setEditMode(false);
     } else {
       setEditMode(true);
@@ -132,13 +165,24 @@ function SellerProfile() {
     }));
   };
 
+  const handleSecurityChange = (field, value) => {
+    setEditedSecurity(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
   const handleSaveChanges = async () => {
     // Check if anything changed
-    const hasChanges = Object.keys(editedInfo).some(
+    const hasInfoChanges = Object.keys(editedInfo).some(
       key => key !== 'unique_id' && editedInfo[key] !== sellerInfo[key]
     );
 
-    if (!hasChanges) {
+    const hasSecurityChanges = 
+      editedSecurity.secret_question !== securityInfo.secret_question ||
+      editedSecurity.secret_ans !== securityInfo.secret_ans;
+
+    if (!hasInfoChanges && !hasSecurityChanges) {
       Swal.fire({
         icon: 'info',
         title: 'No Changes',
@@ -149,34 +193,66 @@ function SellerProfile() {
       return;
     }
 
+    // Validate security fields
+    if (editMode && (!editedSecurity.secret_question || !editedSecurity.secret_ans)) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Missing Security Information',
+        text: 'Please select a security question and provide an answer',
+        confirmButtonColor: '#1e3c72'
+      });
+      return;
+    }
+
     setSaving(true);
     try {
-      const res = await fetch(
-        `${process.env.REACT_APP_SELLER_API_URL}/api/seller/update-info/${seller_id}`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(editedInfo),
+      // Update basic info
+      if (hasInfoChanges) {
+        const infoRes = await fetch(
+          `${process.env.REACT_APP_SELLER_API_URL}/api/seller/update-info/${seller_id}`,
+          {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(editedInfo),
+          }
+        );
+
+        const infoData = await infoRes.json();
+        if (!infoRes.ok) {
+          throw new Error(infoData.message || 'Failed to update profile');
         }
-      );
-
-      const data = await res.json();
-
-      if (res.ok) {
-        await Swal.fire({
-          icon: 'success',
-          title: 'Profile Updated!',
-          text: 'Your information has been updated successfully',
-          confirmButtonColor: '#1e3c72',
-          timer: 2000,
-          showConfirmButton: false
-        });
-
-        setSellerInfo(editedInfo);
-        setEditMode(false);
-      } else {
-        throw new Error(data.message || 'Failed to update profile');
       }
+
+      // Update security info
+      if (hasSecurityChanges) {
+        const securityRes = await fetch(
+          `${process.env.REACT_APP_SELLER_API_URL}/api/seller/update-security/${seller_id}`,
+          {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(editedSecurity),
+          }
+        );
+
+        const securityData = await securityRes.json();
+        if (!securityRes.ok) {
+          throw new Error(securityData.message || 'Failed to update security information');
+        }
+      }
+
+      await Swal.fire({
+        icon: 'success',
+        title: 'Profile Updated!',
+        text: 'Your information has been updated successfully',
+        confirmButtonColor: '#1e3c72',
+        timer: 2000,
+        showConfirmButton: false
+      });
+
+      setSellerInfo(editedInfo);
+      setSecurityInfo(editedSecurity);
+      setEditMode(false);
+
     } catch (err) {
       console.error("Failed to update profile:", err);
       Swal.fire({
@@ -299,6 +375,7 @@ function SellerProfile() {
           </div>
         </div>
       </div>
+
       {/* Personal Information Card */}
       <div className="profile-card">
         <div className="card-header">
@@ -447,6 +524,77 @@ function SellerProfile() {
           </div>
         )}
       </div>
+
+      {/* Security Settings Card */}
+      <div className="profile-card">
+        <div className="card-header">
+          <div className="header-title">
+            <FiShield size={20} />
+            <h3>Security Settings</h3>
+          </div>
+        </div>
+
+        <div className="info-grid">
+          {editMode ? (
+            <>
+              <div className="info-item full-width">
+                <label>Secret Question *</label>
+                <select
+                  className="info-input"
+                  value={editedSecurity.secret_question}
+                  onChange={(e) => handleSecurityChange('secret_question', e.target.value)}
+                  required
+                >
+                  <option value="">Select a security question</option>
+                  {secretQuestions.map((question, index) => (
+                    <option key={index} value={question}>
+                      {question}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="info-item full-width">
+                <label>Secret Answer *</label>
+                <input
+                  type="password"
+                  className="info-input"
+                  value={editedSecurity.secret_ans}
+                  onChange={(e) => handleSecurityChange('secret_ans', e.target.value)}
+                  placeholder="Enter your answer"
+                  required
+                />
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="info-item full-width">
+                <label>Secret Question</label>
+                <div className="info-value security-value">
+                  <FiKey size={16} />
+                  {securityInfo.secret_question || "Not set"}
+                </div>
+              </div>
+
+              <div className="info-item full-width">
+                <label>Secret Answer</label>
+                <div className="info-value security-value">
+                  <FiKey size={16} />
+                  {securityInfo.secret_ans ? "••••••••" : "Not set"}
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+
+        {!editMode && (
+          <div className="notice-box info">
+            <FiAlertCircle size={18} />
+            <p>Security questions help you recover your account if you forget your password.</p>
+          </div>
+        )}
+      </div>
+
       <div className="content-grid">
         {/* Shop Logo Card */}
         <div className="profile-card">
@@ -480,7 +628,6 @@ function SellerProfile() {
                 onChange={(e) => setSelectedLogo(e.target.files[0])}
                 id="logo-input"
                 className="file-input"
-
               />
               <label htmlFor="logo-input" className="file-label">
                 <FiUpload />
@@ -488,7 +635,7 @@ function SellerProfile() {
               </label>
 
               {selectedLogo && (
-                <div className="selected-file" // the file name are overflowing
+                <div className="selected-file"
                   style={{ maxWidth: "150px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                   <FiCheck />
                   <span>{selectedLogo.name}</span>
@@ -546,7 +693,7 @@ function SellerProfile() {
               </label>
 
               {selectedQr && (
-                <div className="selected-file" // the file name are overflowing
+                <div className="selected-file"
                   style={{ maxWidth: "150px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                   <FiCheck />
                   <span>{selectedQr.name}</span>
@@ -802,8 +949,13 @@ function SellerProfile() {
           font-style: italic;
         }
 
+        .info-input select {
+          cursor: pointer;
+        }
+
         .info-value.shop-name,
-        .info-value.address {
+        .info-value.address,
+        .info-value.security-value {
           display: flex;
           align-items: center;
           gap: 8px;
