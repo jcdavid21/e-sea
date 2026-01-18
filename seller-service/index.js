@@ -682,11 +682,11 @@ app.delete("/api/sellers/:seller_id/requirement-files/:file_id", async (req, res
 // =============================
 
 app.post("/api/buyer/register", async (req, res) => {
-  const { email, contact, lastName, firstName, middleName, username, password } = req.body;
+  const { email, contact, lastName, firstName, middleName, username, password, secretQuestion, secretAnswer } = req.body;
 
   const missing = validateRequiredFields(
-    { email, contact, lastName, firstName, username, password },
-    ["email", "contact", "lastName", "firstName", "username", "password"]
+    { email, contact, lastName, firstName, username, password, secretQuestion, secretAnswer },
+    ["email", "contact", "lastName", "firstName", "username", "password", "secretQuestion", "secretAnswer"]
   );
 
   if (missing) {
@@ -707,13 +707,13 @@ app.post("/api/buyer/register", async (req, res) => {
 
     const sql = `
       INSERT INTO buyer_authentication 
-      (email, contact, last_name, first_name, middle_name, username, password_hash)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      (email, contact, last_name, first_name, middle_name, username, password_hash, secret_question, secret_ans)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     await db.query(
       sql,
-      [email, contact, lastName, firstName, middleName, username, hashedPassword]
+      [email, contact, lastName, firstName, middleName, username, hashedPassword, secretQuestion, secretAnswer]
     );
 
     return res.status(201).json({ message: "Registration successful!" });
@@ -767,6 +767,215 @@ app.post("/api/buyer/login", async (req, res) => {
   } catch (err) {
     console.error("Password comparison error:", err);
     return res.status(500).json({ message: "Server error during login." });
+  }
+});
+
+// =============================
+//  BUYER FORGOT PASSWORD ROUTES
+// =============================
+
+// Step 1: Verify email and return secret question
+app.post("/api/buyer/verify-email", async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return res.status(400).json({ message: "Email is required." });
+  }
+
+  try {
+    console.log("🔍 Verifying email:", email);
+
+    const [results] = await db.query(
+      "SELECT secret_question FROM buyer_authentication WHERE email = ?",
+      [email]
+    );
+
+    if (results.length === 0) {
+      return res.status(404).json({ message: "Email not found." });
+    }
+
+    if (!results[0].secret_question) {
+      return res.status(400).json({ 
+        message: "No security question set for this account. Please contact support." 
+      });
+    }
+
+    console.log("✅ Email verified, returning secret question");
+
+    return res.status(200).json({
+      message: "Email verified.",
+      secretQuestion: results[0].secret_question
+    });
+  } catch (err) {
+    console.error("❌ Verify email error:", err);
+    return res.status(500).json({ message: "Server error during verification." });
+  }
+});
+
+// Step 2: Verify secret answer
+app.post("/api/buyer/verify-secret", async (req, res) => {
+  const { email, secretAnswer } = req.body;
+
+  if (!email || !secretAnswer) {
+    return res.status(400).json({ message: "Email and answer are required." });
+  }
+
+  try {
+    console.log("🔍 Verifying secret answer for:", email);
+
+    const [results] = await db.query(
+      "SELECT secret_ans FROM buyer_authentication WHERE email = ?",
+      [email]
+    );
+
+    if (results.length === 0) {
+      return res.status(404).json({ message: "Account not found." });
+    }
+
+    // Case-insensitive comparison
+    const storedAnswer = results[0].secret_ans.toLowerCase().trim();
+    const providedAnswer = secretAnswer.toLowerCase().trim();
+
+    if (storedAnswer !== providedAnswer) {
+      console.log("❌ Incorrect answer");
+      return res.status(401).json({ message: "Incorrect answer." });
+    }
+
+    console.log("✅ Secret answer verified");
+
+    return res.status(200).json({
+      message: "Answer verified successfully."
+    });
+  } catch (err) {
+    console.error("❌ Verify secret error:", err);
+    return res.status(500).json({ message: "Server error during verification." });
+  }
+});
+
+// Step 3: Reset password
+app.post("/api/buyer/reset-password", async (req, res) => {
+  const { email, newPassword } = req.body;
+
+  if (!email || !newPassword) {
+    return res.status(400).json({ message: "Email and new password are required." });
+  }
+
+  if (!validatePasswordStrength(newPassword)) {
+    return res.status(400).json({
+      message: "Password must contain at least 10 characters, including 1 lowercase, 1 uppercase, 1 number, and 1 special character."
+    });
+  }
+
+  try {
+    console.log("🔄 Resetting password for:", email);
+
+    // Check if user exists
+    const [user] = await db.query(
+      "SELECT id FROM buyer_authentication WHERE email = ?",
+      [email]
+    );
+
+    if (user.length === 0) {
+      return res.status(404).json({ message: "Account not found." });
+    }
+
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, SALT_ROUNDS);
+
+    // Update password
+    await db.query(
+      "UPDATE buyer_authentication SET password_hash = ? WHERE email = ?",
+      [hashedPassword, email]
+    );
+
+    console.log("✅ Password reset successful for:", email);
+
+    return res.status(200).json({
+      message: "Password reset successful!"
+    });
+  } catch (err) {
+    console.error("❌ Reset password error:", err);
+    return res.status(500).json({ message: "Server error during password reset." });
+  }
+});
+
+
+// Update this existing route in your index.js
+app.put("/api/buyer/profile/:buyer_id", async (req, res) => {
+  const { buyer_id } = req.params;
+  const { username, email, contact, first_name, middle_name, last_name, secret_question, secret_ans } = req.body;
+
+  if (!buyer_id) {
+    return res.status(400).json({ message: "Buyer ID is required." });
+  }
+
+  const missing = validateRequiredFields(
+    { username, email, contact, first_name, last_name, secret_question, secret_ans },
+    ["username", "email", "contact", "first_name", "last_name", "secret_question", "secret_ans"]
+  );
+
+  if (missing) {
+    return res.status(400).json({
+      message: "Please fill in all required fields.",
+      missing_fields: missing
+    });
+  }
+
+  try {
+    console.log("🔄 Updating profile for buyer_id:", buyer_id);
+
+    const checkSql = `
+      SELECT id FROM buyer_authentication 
+      WHERE (username = ? OR email = ?) AND id != ?
+    `;
+
+    const [existing] = await db.query(checkSql, [username, email, buyer_id]);
+
+    if (existing.length > 0) {
+      return res.status(400).json({ message: "Username or email already exists." });
+    }
+
+    const updateSql = `
+      UPDATE buyer_authentication 
+      SET username = ?, email = ?, contact = ?, first_name = ?, middle_name = ?, last_name = ?, secret_question = ?, secret_ans = ?
+      WHERE id = ?
+    `;
+
+    const [result] = await db.query(
+      updateSql,
+      [username, email, contact, first_name, middle_name || null, last_name, secret_question, secret_ans, buyer_id]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "Buyer not found." });
+    }
+
+    console.log("✅ Profile updated successfully");
+
+    const selectSql = `
+      SELECT id, email, contact, last_name, first_name, middle_name, username, secret_question, secret_ans, created_at
+      FROM buyer_authentication 
+      WHERE id = ?
+    `;
+
+    const [updated] = await db.query(selectSql, [buyer_id]);
+
+    return res.status(200).json({
+      message: "Profile updated successfully!",
+      buyer: updated[0]
+    });
+
+  } catch (err) {
+    console.error("❌ Error updating buyer profile:", err);
+
+    if (err.code === "ER_DUP_ENTRY") {
+      return res.status(400).json({ message: "Username or email already exists." });
+    }
+
+    return res.status(500).json({
+      message: "Server error updating profile.",
+      error: err.message
+    });
   }
 });
 
@@ -1453,6 +1662,29 @@ app.get("/api/seller/info/:seller_id", async (req, res) => {
   }
 });
 
+app.get('/api/seller/security/:seller_id', async (req, res) => {
+  const { seller_id } = req.params;
+
+  try{
+    const [rows] = await db.query(
+      "SELECT secret_question, secret_ans FROM seller_authentication WHERE id = ?",
+      [seller_id]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ message: "Seller not found" });
+    }
+
+    res.json({
+      secret_question: rows[0].secret_question,
+      secret_ans: rows[0].secret_ans
+    });
+  } catch (err) {
+    console.error("Error fetching seller security info:", err);
+    res.status(500).json({ message: "Error fetching seller security information" });
+  }
+});
+
 app.get("/api/seller/profile/:seller_id", async (req, res) => {
   const { seller_id } = req.params;
 
@@ -1611,6 +1843,36 @@ app.put("/api/seller/update-info/:seller_id", async (req, res) => {
   } catch (err) {
     console.error("❌ Update Seller Info Error:", err);
     res.status(500).json({ message: "Server error while updating seller information." });
+  }
+});
+
+app.put("/api/seller/update-security/:seller_id", async (req, res) => {
+  try {
+    const { seller_id } = req.params;
+    const { secret_question, secret_ans } = req.body;
+
+    if (!secret_question || !secret_ans) {
+      return res.status(400).json({ message: "Both question and answer are required." });
+    }
+
+    const [existing] = await db.query(
+      "SELECT unique_id FROM seller_credentials WHERE unique_id = ?",
+      [seller_id]
+    );
+
+    if (existing.length === 0) {
+      return res.status(404).json({ message: "Seller not found." });
+    }
+
+    await db.query(
+      "UPDATE seller_credentials SET secret_question = ?, secret_ans = ? WHERE unique_id = ?",
+      [secret_question, secret_ans, seller_id]
+    );
+
+    res.json({ message: "Security information updated successfully." });
+  } catch (err) {
+    console.error("❌ Update Seller Security Error:", err);
+    res.status(500).json({ message: "Server error while updating security information." });
   }
 });
 
@@ -2324,6 +2586,135 @@ app.get("/api/store-hours/global", async (req, res) => {
 });
 
 // =============================
+//  SELLER FORGOT PASSWORD ROUTES
+// =============================
+
+// Step 1: Verify seller ID and return secret question
+app.post("/api/seller/verify-id", async (req, res) => {
+  const { unique_id } = req.body;
+
+  if (!unique_id) {
+    return res.status(400).json({ message: "Seller ID is required." });
+  }
+
+  try {
+    console.log("🔍 Verifying seller ID:", unique_id);
+
+    const [results] = await db.query(
+      "SELECT secret_question FROM seller_credentials WHERE unique_id = ?",
+      [unique_id]
+    );
+
+    if (results.length === 0) {
+      return res.status(404).json({ message: "Seller ID not found." });
+    }
+
+    if (!results[0].secret_question) {
+      return res.status(400).json({ 
+        message: "No security question set for this account. Please contact support." 
+      });
+    }
+
+    console.log("✅ Seller ID verified, returning secret question");
+
+    return res.status(200).json({
+      message: "Seller ID verified.",
+      secretQuestion: results[0].secret_question
+    });
+  } catch (err) {
+    console.error("❌ Verify seller ID error:", err);
+    return res.status(500).json({ message: "Server error during verification." });
+  }
+});
+
+// Step 2: Verify secret answer for seller
+app.post("/api/seller/verify-secret", async (req, res) => {
+  const { unique_id, secretAnswer } = req.body;
+
+  if (!unique_id || !secretAnswer) {
+    return res.status(400).json({ message: "Seller ID and answer are required." });
+  }
+
+  try {
+    console.log("🔍 Verifying secret answer for seller:", unique_id);
+
+    const [results] = await db.query(
+      "SELECT secret_ans FROM seller_credentials WHERE unique_id = ?",
+      [unique_id]
+    );
+
+    if (results.length === 0) {
+      return res.status(404).json({ message: "Seller not found." });
+    }
+
+    // Case-insensitive comparison
+    const storedAnswer = results[0].secret_ans.toLowerCase().trim();
+    const providedAnswer = secretAnswer.toLowerCase().trim();
+
+    if (storedAnswer !== providedAnswer) {
+      console.log("❌ Incorrect answer");
+      return res.status(401).json({ message: "Incorrect answer." });
+    }
+
+    console.log("✅ Secret answer verified");
+
+    return res.status(200).json({
+      message: "Answer verified successfully."
+    });
+  } catch (err) {
+    console.error("❌ Verify secret error:", err);
+    return res.status(500).json({ message: "Server error during verification." });
+  }
+});
+
+// Step 3: Reset seller password
+app.post("/api/seller/reset-password", async (req, res) => {
+  const { unique_id, newPassword } = req.body;
+
+  if (!unique_id || !newPassword) {
+    return res.status(400).json({ message: "Seller ID and new password are required." });
+  }
+
+  if (newPassword.length < 6) {
+    return res.status(400).json({
+      message: "Password must be at least 6 characters."
+    });
+  }
+
+  try {
+    console.log("🔄 Resetting password for seller:", unique_id);
+
+    // Check if seller exists
+    const [seller] = await db.query(
+      "SELECT id FROM seller_credentials WHERE unique_id = ?",
+      [unique_id]
+    );
+
+    if (seller.length === 0) {
+      return res.status(404).json({ message: "Seller not found." });
+    }
+
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, SALT_ROUNDS);
+
+    // Update password
+    await db.query(
+      "UPDATE seller_credentials SET password_hash = ? WHERE unique_id = ?",
+      [hashedPassword, unique_id]
+    );
+
+    console.log("✅ Password reset successful for seller:", unique_id);
+
+    return res.status(200).json({
+      message: "Password reset successful!"
+    });
+  } catch (err) {
+    console.error("❌ Reset password error:", err);
+    return res.status(500).json({ message: "Server error during password reset." });
+  }
+});
+
+// =============================
 //  BUYER PROFILE ROUTES
 // =============================
 
@@ -2339,7 +2730,7 @@ app.get("/api/buyer/profile/:buyer_id", async (req, res) => {
 
     const sql = `
       SELECT 
-        id, email, contact, last_name, first_name, middle_name, username, created_at
+        id, email, contact, last_name, first_name, middle_name, username, secret_question, secret_ans, created_at
       FROM buyer_authentication 
       WHERE id = ?
     `;
@@ -2362,6 +2753,8 @@ app.get("/api/buyer/profile/:buyer_id", async (req, res) => {
       first_name: buyer.first_name,
       middle_name: buyer.middle_name,
       username: buyer.username,
+      secret_question: buyer.secret_question,
+      secret_ans: buyer.secret_ans,
       created_at: buyer.created_at
     });
 
@@ -2376,15 +2769,15 @@ app.get("/api/buyer/profile/:buyer_id", async (req, res) => {
 
 app.put("/api/buyer/profile/:buyer_id", async (req, res) => {
   const { buyer_id } = req.params;
-  const { username, email, contact, first_name, middle_name, last_name } = req.body;
+  const { username, email, contact, first_name, middle_name, last_name, secret_question, secret_ans } = req.body;
 
   if (!buyer_id) {
     return res.status(400).json({ message: "Buyer ID is required." });
   }
 
   const missing = validateRequiredFields(
-    { username, email, contact, first_name, last_name },
-    ["username", "email", "contact", "first_name", "last_name"]
+    { username, email, contact, first_name, last_name, secret_question, secret_ans },
+    ["username", "email", "contact", "first_name", "last_name", "secret_question", "secret_ans"]
   );
 
   if (missing) {
@@ -2395,7 +2788,7 @@ app.put("/api/buyer/profile/:buyer_id", async (req, res) => {
   }
 
   try {
-    console.log("🔍 Updating profile for buyer_id:", buyer_id);
+    console.log("🔄 Updating profile for buyer_id:", buyer_id);
 
     const checkSql = `
       SELECT id FROM buyer_authentication 
@@ -2410,13 +2803,13 @@ app.put("/api/buyer/profile/:buyer_id", async (req, res) => {
 
     const updateSql = `
       UPDATE buyer_authentication 
-      SET username = ?, email = ?, contact = ?, first_name = ?, middle_name = ?, last_name = ?
+      SET username = ?, email = ?, contact = ?, first_name = ?, middle_name = ?, last_name = ?, secret_question = ?, secret_ans = ?
       WHERE id = ?
     `;
 
     const [result] = await db.query(
       updateSql,
-      [username, email, contact, first_name, middle_name || null, last_name, buyer_id]
+      [username, email, contact, first_name, middle_name || null, last_name, secret_question, secret_ans, buyer_id]
     );
 
     if (result.affectedRows === 0) {
@@ -2426,7 +2819,7 @@ app.put("/api/buyer/profile/:buyer_id", async (req, res) => {
     console.log("✅ Profile updated successfully");
 
     const selectSql = `
-      SELECT id, email, contact, last_name, first_name, middle_name, username, created_at
+      SELECT id, email, contact, last_name, first_name, middle_name, username, secret_question, secret_ans, created_at
       FROM buyer_authentication 
       WHERE id = ?
     `;
