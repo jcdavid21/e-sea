@@ -247,9 +247,9 @@ app.post('/api/feedback', async (req, res) => {
 // =============================
 
 app.post("/api/seller/register", async (req, res) => {
-  const { email, unique_id, password } = req.body;
+  const { email, unique_id, password, secret_question, secret_answer } = req.body;
 
-  if (!email || !unique_id || !password)
+  if (!email || !unique_id || !password || !secret_question || !secret_answer)
     return res.status(400).json({ message: "All fields required" });
 
   try {
@@ -277,8 +277,8 @@ app.post("/api/seller/register", async (req, res) => {
     // Hash password and insert
     const hash = await bcrypt.hash(password, SALT_ROUNDS);
     await db.query(
-      "INSERT INTO seller_credentials (unique_id, email, password_hash) VALUES (?, ?, ?)",
-      [unique_id, email, hash]
+      "INSERT INTO seller_credentials (unique_id, email, password_hash, secret_question, secret_ans) VALUES (?, ?, ?, ?, ?)",
+      [unique_id, email, hash, secret_question, secret_answer]
     );
 
     // Auto-create default categories
