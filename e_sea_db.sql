@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Jan 13, 2026 at 01:09 PM
+-- Generation Time: Jan 18, 2026 at 09:30 AM
 -- Server version: 10.4.28-MariaDB
 -- PHP Version: 8.0.28
 
@@ -57,6 +57,8 @@ CREATE TABLE `buyer_authentication` (
   `middle_name` varchar(50) DEFAULT NULL,
   `username` varchar(50) NOT NULL,
   `password_hash` varchar(255) NOT NULL,
+  `secret_question` varchar(100) DEFAULT NULL,
+  `secret_ans` varchar(100) DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -64,12 +66,13 @@ CREATE TABLE `buyer_authentication` (
 -- Dumping data for table `buyer_authentication`
 --
 
-INSERT INTO `buyer_authentication` (`id`, `email`, `contact`, `last_name`, `first_name`, `middle_name`, `username`, `password_hash`, `created_at`) VALUES
-(1, 'catherinegraceclosa@gmail.com', '09517397968', 'Closa', 'Kathrine', 'Belarmino', 'kathrine', '$2b$10$5bQ9uzzQi1MB9L.1gmEBxebSi9T9tNsjo0M5sWQ330wA46ER7HMUO', '2025-11-12 04:58:33'),
-(2, 'kian@gmail.com', '09090909090', 'Portes', 'Kian Andrei', 'P.', 'kian', '$2b$10$NtIRFQ24DzD73uzV6CiIhebPim/nLCL1ooE3BkcISdp3S/h6.1nGm', '2025-11-15 15:57:15'),
-(3, 'cath@gmail.com', '09517397968', 'Closa', 'Kath', 'Belarmino', 'kath', '$2b$10$AvhHgAeLVLBMKYCDxvya..eDRrp/GXVYroyr7PrnfteQ1jMIvjb82', '2025-11-26 07:58:33'),
-(4, 'kian123@gmail.com', '09090909090', 'Portes', 'Kian Andrei', 'P.', 'kians', '$2b$10$R0EWusYrt7hJb3Owm98m0uP.E7FR.3Z3itONvUXrpeEwa6mVsFAQi', '2025-11-27 12:58:45'),
-(5, 'kian12345@gmail.com', '09876543212', 'Portes', 'Kian', 'Andrei', 'Kianp', '$2b$10$BdwId/3SCI2Deg6GwFusFuaoMNy7pXE8w6jcMXS7fM0fSAj.MYEW.', '2025-11-28 08:39:22');
+INSERT INTO `buyer_authentication` (`id`, `email`, `contact`, `last_name`, `first_name`, `middle_name`, `username`, `password_hash`, `secret_question`, `secret_ans`, `created_at`) VALUES
+(1, 'catherinegraceclosa@gmail.com', '09517397968', 'Closa', 'Kathrine', 'Belarmino', 'kathrine', '$2b$10$5bQ9uzzQi1MB9L.1gmEBxebSi9T9tNsjo0M5sWQ330wA46ER7HMUO', NULL, NULL, '2025-11-12 04:58:33'),
+(2, 'kian@gmail.com', '09090909090', 'Portes', 'Kian Andrei', 'P.', 'kian', '$2b$10$NtIRFQ24DzD73uzV6CiIhebPim/nLCL1ooE3BkcISdp3S/h6.1nGm', NULL, NULL, '2025-11-15 15:57:15'),
+(3, 'cath@gmail.com', '09517397968', 'Closa', 'Kath', 'Belarmino', 'kath', '$2b$10$AvhHgAeLVLBMKYCDxvya..eDRrp/GXVYroyr7PrnfteQ1jMIvjb82', NULL, NULL, '2025-11-26 07:58:33'),
+(4, 'kian123@gmail.com', '09090909090', 'Portes', 'Kian Andrei', 'P.', 'kians', '$2b$10$R0EWusYrt7hJb3Owm98m0uP.E7FR.3Z3itONvUXrpeEwa6mVsFAQi', NULL, NULL, '2025-11-27 12:58:45'),
+(5, 'kian12345@gmail.com', '09876543212', 'Portes', 'Kian', 'Andrei', 'Kianp', '$2b$10$BdwId/3SCI2Deg6GwFusFuaoMNy7pXE8w6jcMXS7fM0fSAj.MYEW.', NULL, NULL, '2025-11-28 08:39:22'),
+(8, 'kyle@gmail.com', '09512847442', 'Ampil', 'Kyle', 'A.', 'kyleampil', '$2b$10$w/zOBNwhxhsj26hCh86tVu0Qs3Q9pMl2psSZLMxBxTakVw59UnYUq', 'What is your favorite team?', 'goldenstate', '2026-01-18 06:12:10');
 
 -- --------------------------------------------------------
 
@@ -287,6 +290,8 @@ CREATE TABLE `seller_credentials` (
   `unique_id` varchar(15) NOT NULL,
   `email` varchar(255) NOT NULL,
   `password_hash` varchar(255) NOT NULL,
+  `secret_question` varchar(100) DEFAULT NULL,
+  `secret_ans` varchar(100) DEFAULT NULL,
   `date_registered` timestamp NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -294,9 +299,9 @@ CREATE TABLE `seller_credentials` (
 -- Dumping data for table `seller_credentials`
 --
 
-INSERT INTO `seller_credentials` (`id`, `unique_id`, `email`, `password_hash`, `date_registered`) VALUES
-(1, 'SELLER-QS2594', 'jcdavid@gmail.com', '$2b$10$W09eLo0uZNYKAA5G2cAB.u9TsSOAMjUtahDUqYgbSUR2xRsrM5Si6', '2025-12-20 03:20:02'),
-(2, 'SELLER-SG6500', 'josh@gmail.com', '$2b$10$A6SoH/jFH2Lq2iVwxQ/ezeruC8jGe/r/Lzs1qrHZzxduDgvMxhZFa', '2026-01-02 15:22:40');
+INSERT INTO `seller_credentials` (`id`, `unique_id`, `email`, `password_hash`, `secret_question`, `secret_ans`, `date_registered`) VALUES
+(1, 'SELLER-QS2594', 'jcdavid@gmail.com', '$2b$10$rDresWzufPw.kSLVqmSofep997jy94Gb7dvHMjLezdPsukS5q3sBO', 'What is your favorite team?', 'lakers', '2025-12-20 03:20:02'),
+(2, 'SELLER-SG6500', 'josh@gmail.com', '$2b$10$A6SoH/jFH2Lq2iVwxQ/ezeruC8jGe/r/Lzs1qrHZzxduDgvMxhZFa', NULL, NULL, '2026-01-02 15:22:40');
 
 -- --------------------------------------------------------
 
@@ -590,7 +595,7 @@ ALTER TABLE `admins`
 -- AUTO_INCREMENT for table `buyer_authentication`
 --
 ALTER TABLE `buyer_authentication`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `buyer_notifications`
