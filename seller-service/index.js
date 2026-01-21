@@ -276,9 +276,10 @@ app.post("/api/seller/register", async (req, res) => {
 
     // Hash password and insert
     const hash = await bcrypt.hash(password, SALT_ROUNDS);
+    const secret_answer_hash = await bcrypt.hash(secret_answer, SALT_ROUNDS);
     await db.query(
       "INSERT INTO seller_credentials (unique_id, email, password_hash, secret_question, secret_ans) VALUES (?, ?, ?, ?, ?)",
-      [unique_id, email, hash, secret_question, secret_answer]
+      [unique_id, email, hash, secret_question, secret_answer_hash]
     );
 
     // Auto-create default categories
@@ -704,6 +705,7 @@ app.post("/api/buyer/register", async (req, res) => {
 
   try {
     const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
+    const hashedSecretAns = await bcrypt.hash(secretAnswer, SALT_ROUNDS);
 
     const sql = `
       INSERT INTO buyer_authentication 
@@ -713,7 +715,7 @@ app.post("/api/buyer/register", async (req, res) => {
 
     await db.query(
       sql,
-      [email, contact, lastName, firstName, middleName, username, hashedPassword, secretQuestion, secretAnswer]
+      [email, contact, lastName, firstName, middleName, username, hashedPassword, secretQuestion, hashedSecretAns]
     );
 
     return res.status(201).json({ message: "Registration successful!" });
@@ -832,11 +834,10 @@ app.post("/api/buyer/verify-secret", async (req, res) => {
       return res.status(404).json({ message: "Account not found." });
     }
 
-    // Case-insensitive comparison
-    const storedAnswer = results[0].secret_ans.toLowerCase().trim();
-    const providedAnswer = secretAnswer.toLowerCase().trim();
+    // ✅ Use bcrypt.compare instead of string comparison
+    const isMatch = await bcrypt.compare(secretAnswer, results[0].secret_ans);
 
-    if (storedAnswer !== providedAnswer) {
+    if (!isMatch) {
       console.log("❌ Incorrect answer");
       return res.status(401).json({ message: "Incorrect answer." });
     }
@@ -900,7 +901,6 @@ app.post("/api/buyer/reset-password", async (req, res) => {
 });
 
 
-// Update this existing route in your index.js
 app.put("/api/buyer/profile/:buyer_id", async (req, res) => {
   const { buyer_id } = req.params;
   const { username, email, contact, first_name, middle_name, last_name, secret_question, secret_ans } = req.body;
@@ -935,6 +935,9 @@ app.put("/api/buyer/profile/:buyer_id", async (req, res) => {
       return res.status(400).json({ message: "Username or email already exists." });
     }
 
+    // ✅ Hash the secret answer before updating
+    const hashedSecretAnswer = await bcrypt.hash(secret_ans, SALT_ROUNDS);
+
     const updateSql = `
       UPDATE buyer_authentication 
       SET username = ?, email = ?, contact = ?, first_name = ?, middle_name = ?, last_name = ?, secret_question = ?, secret_ans = ?
@@ -943,7 +946,7 @@ app.put("/api/buyer/profile/:buyer_id", async (req, res) => {
 
     const [result] = await db.query(
       updateSql,
-      [username, email, contact, first_name, middle_name || null, last_name, secret_question, secret_ans, buyer_id]
+      [username, email, contact, first_name, middle_name || null, last_name, secret_question, hashedSecretAnswer, buyer_id] // ✅ CHANGED
     );
 
     if (result.affectedRows === 0) {
@@ -1638,6 +1641,74 @@ app.put("/api/seller/fish-price/:id/accept-suggestion", async (req, res) => {
   }
 });
 
+//Get price analysis for dashboard (shows all products with price history)
+app.get("/api/seller/price-analysis-dashboard/:seller_id", async (req, res) => {
+  try {
+    const { seller_id } = req.params;
+
+    if (!seller_id) {
+      return res.status(400).json({ message: "Seller ID required" });
+    }
+
+    // Get all products for this seller that have price history
+    const [productsWithHistory] = await db.query(
+      `SELECT DISTINCT 
+        fp.id, 
+        fp.name, 
+        fp.price as current_price,
+        fp.previous_price
+      FROM fish_products fp
+      INNER JOIN price_history ph ON fp.id = ph.product_id
+      WHERE fp.seller_id = ?
+      GROUP BY fp.id
+      ORDER BY fp.name ASC
+      LIMIT 5`,
+      [seller_id]
+    );
+
+    const priceAnalysisData = [];
+
+    for (const product of productsWithHistory) {
+      // Get price history for each product
+      const [history] = await db.query(
+        `SELECT old_price, new_price, change_date 
+         FROM price_history 
+         WHERE product_id = ? AND seller_id = ? 
+         ORDER BY change_date DESC
+         LIMIT 10`,
+        [product.id, seller_id]
+      );
+
+      if (history.length > 0) {
+        // Calculate average suggested price
+        const allPrices = [Number(product.current_price)];
+        history.forEach(h => {
+          allPrices.push(Number(h.new_price));
+          allPrices.push(Number(h.old_price));
+        });
+
+        const uniquePrices = [...new Set(allPrices)];
+        const avgPrice = uniquePrices.reduce((sum, p) => sum + p, 0) / uniquePrices.length;
+        const suggestedPrice = avgPrice * 1.05; // 5% markup
+
+        priceAnalysisData.push({
+          name: product.name.length > 15 ? product.name.substring(0, 15) + '...' : product.name,
+          current: parseFloat(Number(product.current_price).toFixed(2)),
+          suggested: parseFloat(suggestedPrice.toFixed(2)),
+          min: parseFloat(Math.min(...uniquePrices).toFixed(2)),
+          max: parseFloat(Math.max(...uniquePrices).toFixed(2))
+        });
+      }
+    }
+
+    res.json(priceAnalysisData);
+
+  } catch (err) {
+    console.error("❌ Fetch Dashboard Price Analysis Error:", err);
+    res.status(500).json({ message: "Server error fetching price analysis" });
+  }
+});
+
 // =============================
 //  SELLER PROFILE ROUTES
 // =============================
@@ -1864,9 +1935,12 @@ app.put("/api/seller/update-security/:seller_id", async (req, res) => {
       return res.status(404).json({ message: "Seller not found." });
     }
 
+    // ✅ Hash the secret answer before updating
+    const hashedSecretAnswer = await bcrypt.hash(secret_ans, SALT_ROUNDS);
+
     await db.query(
       "UPDATE seller_credentials SET secret_question = ?, secret_ans = ? WHERE unique_id = ?",
-      [secret_question, secret_ans, seller_id]
+      [secret_question, hashedSecretAnswer, seller_id] // ✅ CHANGED
     );
 
     res.json({ message: "Security information updated successfully." });
@@ -1911,7 +1985,7 @@ app.post("/api/upload-payment-proof", upload.single("proof"), async (req, res) =
 });
 
 app.post("/api/orders", async (req, res) => {
-  const { customer, cart, payment_mode, proof_of_payment, paid, buyer_id } = req.body;
+  const { customer, cart, payment_mode, proof_of_payment, paid, buyer_id, notes } = req.body;
 
   if (!customer || !cart || !Array.isArray(cart) || cart.length === 0) {
     return res.status(400).json({ message: "Invalid order data." });
@@ -1981,22 +2055,22 @@ app.post("/api/orders", async (req, res) => {
       // ✅ Updated INSERT with location fields
       const [orderResult] = await db.query(
         `INSERT INTO orders 
-        (seller_id, customer_name, address, contact, notes, total, payment_mode, paid, proof_of_payment, customer_id, delivery_latitude, delivery_longitude, distance_km)
+        (seller_id, customer_name, address, contact, total, payment_mode, paid, proof_of_payment, customer_id, delivery_latitude, delivery_longitude, distance_km, notes)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           sellerOrder.seller_id,
           customer.name,
           customer.address,
           customer.contact,
-          customer.notes || "",
           sellerOrder.subtotal,
           payment_mode || "Gcash QR",
           paid ? 1 : 0,
           proof_of_payment,
           notificationCustomerId,
-          deliveryLat,      // ✅ Added
-          deliveryLng,      // ✅ Added
-          distanceKm        // ✅ Added
+          deliveryLat,
+          deliveryLng,
+          distanceKm,
+          notes || ""
         ]
       );
 
@@ -2035,7 +2109,7 @@ app.post("/api/orders", async (req, res) => {
         [sellerOrder.seller_id, message, 'order']
       );
 
-      console.log(`✅ Order ${orderId} created for seller: ${sellerOrder.seller_id}`);
+      console.log(`Order ${orderId} created for seller: ${sellerOrder.seller_id}`);
     }
 
     await db.query("COMMIT");
@@ -2647,11 +2721,10 @@ app.post("/api/seller/verify-secret", async (req, res) => {
       return res.status(404).json({ message: "Seller not found." });
     }
 
-    // Case-insensitive comparison
-    const storedAnswer = results[0].secret_ans.toLowerCase().trim();
-    const providedAnswer = secretAnswer.toLowerCase().trim();
+    // ✅ Use bcrypt.compare instead of string comparison
+    const isMatch = await bcrypt.compare(secretAnswer, results[0].secret_ans);
 
-    if (storedAnswer !== providedAnswer) {
+    if (!isMatch) {
       console.log("❌ Incorrect answer");
       return res.status(401).json({ message: "Incorrect answer." });
     }
@@ -2807,9 +2880,11 @@ app.put("/api/buyer/profile/:buyer_id", async (req, res) => {
       WHERE id = ?
     `;
 
+    const secret_ans_hash = await bcrypt.hash(secret_ans, SALT_ROUNDS);
+
     const [result] = await db.query(
       updateSql,
-      [username, email, contact, first_name, middle_name || null, last_name, secret_question, secret_ans, buyer_id]
+      [username, email, contact, first_name, middle_name || null, last_name, secret_question, secret_ans_hash, buyer_id]
     );
 
     if (result.affectedRows === 0) {
