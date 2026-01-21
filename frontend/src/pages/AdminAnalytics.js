@@ -142,11 +142,13 @@ const AdminAnalytics = () => {
           name: product.name,
           supply: 0,
           demand: 0,
-          sellers: new Set()
+          sellers: new Set(),
+          sellerIds: new Set() // Add this line
         };
       }
       varietyStats[variety].supply += Number(product.stock);
       varietyStats[variety].sellers.add(product.seller_id);
+      varietyStats[variety].sellerIds.add(product.seller_id); // Add this line
     });
 
     orders.forEach(order => {
@@ -165,6 +167,7 @@ const AdminAnalytics = () => {
       supply: stat.supply,
       demand: stat.demand,
       sellers: stat.sellers.size,
+      sellerIds: Array.from(stat.sellerIds), // Add this line
       trend: stat.supply > stat.demand ? 'Oversupply' : stat.demand > stat.supply ? 'High Demand' : 'Balanced'
     })).sort((a, b) => b.demand - a.demand);
   }, []);
@@ -390,10 +393,10 @@ const AdminAnalytics = () => {
 
   const getFilteredSupplyDemand = () => {
     if (supplyDemandFilter === 'all') return supplyDemandData.slice(0, 10);
-    const sellerProducts = topProducts.filter(p => p.sellerId === supplyDemandFilter);
-    const sellerProductNames = new Set(sellerProducts.map(p => p.name.toLowerCase()));
+    
+    // Filter by seller_id using the sellerIds array we added
     return supplyDemandData
-      .filter(item => sellerProductNames.has(item.name.toLowerCase()))
+      .filter(item => item.sellerIds && item.sellerIds.includes(supplyDemandFilter))
       .slice(0, 10);
   };
 
@@ -1694,7 +1697,8 @@ const AdminAnalytics = () => {
                 borderRadius: '6px',
                 border: '1px solid #e5e7eb',
                 fontSize: '12px',
-                cursor: 'pointer'
+                cursor: 'pointer',
+                color: '#0f172a'
               }}
             >
               <option value="all">All Sellers</option>
@@ -1770,7 +1774,8 @@ const AdminAnalytics = () => {
                 borderRadius: '6px',
                 border: '1px solid #e5e7eb',
                 fontSize: '12px',
-                cursor: 'pointer'
+                cursor: 'pointer',
+                color: '#0f172a'
               }}
             >
               <option value="all">All Sellers</option>

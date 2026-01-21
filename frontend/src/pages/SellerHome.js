@@ -161,38 +161,22 @@ const SellerHome = () => {
   };
 
   const fetchPriceAnalysisData = async (productsData) => {
-    try {
-      const priceData = [];
+  try {
+    const res = await fetch(
+      `${process.env.REACT_APP_SELLER_API_URL}/api/seller/price-analysis-dashboard/${SELLER_ID}`
+    );
 
-      for (const product of productsData.slice(0, 5)) {
-        try {
-          const res = await fetch(
-            `${process.env.REACT_APP_SELLER_API_URL}/api/seller/price-analysis/${product.id}?seller_id=${SELLER_ID}`
-          );
-
-          if (res.ok) {
-            const data = await res.json();
-            if (data.suggestions && data.suggestions.length > 0) {
-              priceData.push({
-                name: product.name.length > 15 ? product.name.substring(0, 15) + '...' : product.name,
-                current: parseFloat(data.currentPrice),
-                suggested: data.suggestions[0]?.price || parseFloat(data.currentPrice),
-                min: Math.min(...data.suggestions.map(s => s.price)),
-                max: Math.max(...data.suggestions.map(s => s.price))
-              });
-            }
-          }
-        } catch (err) {
-          console.log(`Could not fetch price analysis for product ${product.id}`);
-        }
-      }
-
-      setPriceAnalysisData(priceData);
-    } catch (err) {
-      console.error("Error fetching price analysis:", err);
+    if (res.ok) {
+      const data = await res.json();
+      setPriceAnalysisData(data);
+    } else {
       setPriceAnalysisData([]);
     }
-  };
+  } catch (err) {
+    console.error("Error fetching price analysis:", err);
+    setPriceAnalysisData([]);
+  }
+};
 
   const fetchSellerFeedbacks = async () => {
     try {

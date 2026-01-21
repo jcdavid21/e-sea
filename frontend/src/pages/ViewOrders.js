@@ -74,7 +74,7 @@ export default function ViewOrders() {
   useEffect(() => {
     fetchOrders(1);
   }, []);
-  
+
 
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= totalPages) {
@@ -306,16 +306,16 @@ export default function ViewOrders() {
       </body>
       </html>
     `;
-    
+
     printWindow.document.write(receiptHTML);
     printWindow.document.close();
-    
+
     // Auto-trigger print dialog when page loads
-    printWindow.onload = function() {
+    printWindow.onload = function () {
       printWindow.print();
     };
   };
-  
+
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
@@ -327,12 +327,12 @@ export default function ViewOrders() {
   const handleStatusChange = async (orderId, newStatus) => {
     const order = orders.find(o => o.orderId === orderId);
     const currentStatus = order?.status || "Pending";
-    
+
     // Define status progression order
     const statusOrder = ["Pending", "Preparing", "Ready for Pickup", "Completed", "Cancelled"];
     const currentIndex = statusOrder.indexOf(currentStatus);
     const newIndex = statusOrder.indexOf(newStatus);
-    
+
     // Block going back to previous statuses (except Cancelled)
     if (newStatus !== "Cancelled" && newIndex < currentIndex) {
       await Swal.fire({
@@ -343,7 +343,7 @@ export default function ViewOrders() {
       });
       return;
     }
-    
+
     // Warn if skipping statuses
     if (newStatus !== "Cancelled" && newIndex > currentIndex + 1) {
       const result = await Swal.fire({
@@ -356,7 +356,7 @@ export default function ViewOrders() {
         confirmButtonText: 'Yes, update it!',
         cancelButtonText: 'Cancel'
       });
-      
+
       if (!result.isConfirmed) return;
     } else {
       const result = await Swal.fire({
@@ -545,131 +545,143 @@ export default function ViewOrders() {
               </div>
             )}
           </div>
-           {filteredOrders.length === 0 ? (
-     <div className="empty-state">
-        <FiAlertCircle size={64} />
-        <h3>No Orders Found</h3>
-        <p>No orders match your current filters. Try adjusting your search.</p>
-      </div>
-    ) : (
-      <>
-          <div className="orders-grid">
-            {filteredOrders.map((order) => (
-              <div key={order.orderId} className="order-card">
-                <div className="order-card-header">
-                  <div className="order-id-section">
-                    <span className="order-id-label">Order ID</span>
-                    <span className="order-id">#{order.orderId}</span>
-                  </div>
-                  <div className={`status-badge status-${order.status?.toLowerCase().replace(/\s+/g, '-') || 'pending'}`}>
-                    {STATUS_ICONS[order.status || "Pending"]}
-                    <span>{order.status || "Pending"}</span>
-                  </div>
-                </div>
+          {filteredOrders.length === 0 ? (
+            <div className="empty-state">
+              <FiAlertCircle size={64} />
+              <h3>No Orders Found</h3>
+              <p>No orders match your current filters. Try adjusting your search.</p>
+            </div>
+          ) : (
+            <>
+              <div className="orders-grid">
+                {filteredOrders.map((order) => (
+                  <div key={order.orderId} className="order-card">
+                    <div className="order-card-header">
+                      <div className="order-id-section">
+                        <span className="order-id-label">Order ID</span>
+                        <span className="order-id">#{order.orderId}</span>
+                      </div>
+                      <div className={`status-badge status-${order.status?.toLowerCase().replace(/\s+/g, '-') || 'pending'}`}>
+                        {STATUS_ICONS[order.status || "Pending"]}
+                        <span>{order.status || "Pending"}</span>
+                      </div>
+                    </div>
 
-                <div className="order-card-body">
-                  <div className="order-info-row">
-                    <div className="info-item">
-                      <FiUser className="info-icon" />
-                      <div>
-                        <span className="info-label">Customer</span>
-                        <span className="info-value">{order.customerName}</span>
-                      </div>
-                    </div>
-                    <div className="info-item">
-                      <FiPhone className="info-icon" />
-                      <div>
-                        <span className="info-label">Contact</span>
-                        <span className="info-value">{order.contact}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="order-info-row">
-                    <div className="info-item">
-                      <FiCalendar className="info-icon" />
-                      <div>
-                        <span className="info-label">Order Date</span>
-                        <span className="info-value">{new Date(order.orderDate).toLocaleDateString()}</span>
-                      </div>
-                    </div>
-                    <div className="info-item total-section">
-                      <div>
-                        <span className="info-label">Total Amount</span>
-                        <span className="info-value total-amount">₱{Number(order.total).toFixed(2)}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="items-section">
-                    <h4 className="items-header">Order Items</h4>
-                    {order.items.length === 0 ? (
-                      <p className="no-items">No items in this order</p>
-                    ) : (
-                      <div className="items-list">
-                        {order.items.map((item) => (
-                          <div key={item.itemId} className="item-row">
-                            <span className="item-name">{item.productName}</span>
-                            <span className="item-qty">×{item.quantity}</span>
-                            <span className="item-price">₱{item.price}</span>
+                    <div className="order-card-body">
+                      <div className="order-info-row">
+                        <div className="info-item">
+                          <FiUser className="info-icon" />
+                          <div>
+                            <span className="info-label">Customer</span>
+                            <span className="info-value">{order.customerName}</span>
                           </div>
-                        ))}
+                        </div>
+                        <div className="info-item">
+                          <FiPhone className="info-icon" />
+                          <div>
+                            <span className="info-label">Contact</span>
+                            <span className="info-value">{order.contact}</span>
+                          </div>
+                        </div>
                       </div>
-                    )}
+
+                      <div className="order-info-row">
+                        <div className="info-item">
+                          <FiCalendar className="info-icon" />
+                          <div>
+                            <span className="info-label">Order Date</span>
+                            <span className="info-value">{new Date(order.orderDate).toLocaleDateString()}</span>
+                          </div>
+                        </div>
+                        <div className="info-item total-section">
+                          <div>
+                            <span className="info-label">Total Amount</span>
+                            <span className="info-value total-amount">₱{Number(order.total).toFixed(2)}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="items-section">
+                        <h4 className="items-header">Order Items</h4>
+                        {order.items.length === 0 ? (
+                          <p className="no-items">No items in this order</p>
+                        ) : (
+                          <div className="items-list">
+                            {order.items.map((item) => (
+                              <div key={item.itemId} className="item-row">
+                                <span className="item-name">{item.productName}</span>
+                                <span className="item-qty">×{item.quantity}</span>
+                                <span className="item-price">₱{item.price}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {order.notes ? (
+                        <div className="notes-section">
+                          <h4 className="notes-header">Customer Notes</h4>
+                          <p className="notes-text">{order.notes}</p>
+                        </div>
+                      ) : <div className="notes-section">
+                        <h4 className="notes-header">Customer Notes</h4>
+                        <p className="no-notes">No notes provided</p>
+                      </div>}
+
+                      <div className="order-actions-container">
+                        <div className="order-actions">
+                          {order.status === "Completed" && (
+                            <button
+                              className="btn btn-print"
+                              onClick={() => handlePrintReceipt(order)}
+                              title="Print Receipt"
+                            >
+                              <FiPrinter />
+                              Print
+                            </button>
+                          )}
+
+                          {order.proofOfPayment ? (
+                            <button
+                              className="btn btn-view-proof"
+                              onClick={() => viewProof(order.proofOfPayment, order)}
+                            >
+                              <FiImage />
+                              View Proof
+                            </button>
+                          ) : (
+                            <span className="no-proof-text">No proof available</span>
+                          )}
+
+                          <select
+                            className="status-select"
+                            value={order.status || "Pending"}
+                            onChange={(e) => handleStatusChange(order.orderId, e.target.value)}
+                            disabled={order.status === "Completed" || order.status === "Cancelled"}
+                          >
+                            {STATUS_OPTIONS.map((status) => {
+                              const statusOrder = ["Pending", "Preparing", "Ready for Pickup", "Completed", "Cancelled"];
+                              const currentIndex = statusOrder.indexOf(order.status || "Pending");
+                              const statusIndex = statusOrder.indexOf(status);
+
+                              // Disable previous statuses (except Cancelled which is always available)
+                              const isDisabled = status !== "Cancelled" && statusIndex < currentIndex;
+
+                              return (
+                                <option key={status} value={status} disabled={isDisabled}>
+                                  {status}
+                                </option>
+                              );
+                            })}
+                          </select>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-
-                  <div className="order-actions">
-                    {order.status === "Completed" && (
-                      <button
-                        className="btn btn-print"
-                        onClick={() => handlePrintReceipt(order)}
-                        title="Print Receipt"
-                      >
-                        <FiPrinter />
-                        Print
-                      </button>
-                    )}
-
-                    {order.proofOfPayment ? (
-                      <button
-                        className="btn btn-view-proof"
-                        onClick={() => viewProof(order.proofOfPayment, order)}
-                      >
-                        <FiImage />
-                        View Proof
-                      </button>
-                    ) : (
-                      <span className="no-proof-text">No proof available</span>
-                    )}
-
-                    <select
-                      className="status-select"
-                      value={order.status || "Pending"}
-                      onChange={(e) => handleStatusChange(order.orderId, e.target.value)}
-                      disabled={order.status === "Completed" || order.status === "Cancelled"}
-                    >
-                      {STATUS_OPTIONS.map((status) => {
-                        const statusOrder = ["Pending", "Preparing", "Ready for Pickup", "Completed", "Cancelled"];
-                        const currentIndex = statusOrder.indexOf(order.status || "Pending");
-                        const statusIndex = statusOrder.indexOf(status);
-                        
-                        // Disable previous statuses (except Cancelled which is always available)
-                        const isDisabled = status !== "Cancelled" && statusIndex < currentIndex;
-                        
-                        return (
-                          <option key={status} value={status} disabled={isDisabled}>
-                            {status}
-                          </option>
-                        );
-                      })}
-                    </select>
-                  </div>
-                </div>
+                ))}
               </div>
-            ))}
-          </div>
-          </>
-        )}
+            </>
+          )}
 
           <div className="pagination">
             <button
@@ -758,6 +770,18 @@ export default function ViewOrders() {
                     <span className="detail-value">{selectedOrder.contact}</span>
                   </div>
                 </div>
+
+                {selectedOrder.notes && (
+                  <div className="detail-card">
+                    <div className="detail-header">
+                      <FiPackage size={20} />
+                      <h4>Customer Notes</h4>
+                    </div>
+                    <div className="notes-content">
+                      <p>{selectedOrder.notes}</p>
+                    </div>
+                  </div>
+                )}
 
                 <div className="detail-card">
                   <div className="detail-header">
@@ -1084,6 +1108,27 @@ export default function ViewOrders() {
           padding: 16px;
           background: #f8f9fa;
           border-radius: 12px;
+          max-height: 250px;
+          height: auto;
+          overflow-y: auto;
+        }
+
+        .items-section::-webkit-scrollbar {
+          width: 6px;
+        }
+
+        .items-section::-webkit-scrollbar-track {
+          background: #e9ecef;
+          border-radius: 10px;
+        }
+
+        .items-section::-webkit-scrollbar-thumb {
+          background: #1e3c72;
+          border-radius: 10px;
+        }
+
+        .items-section::-webkit-scrollbar-thumb:hover {
+          background: #16325a;
         }
 
         .items-header {

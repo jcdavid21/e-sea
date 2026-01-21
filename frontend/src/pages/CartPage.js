@@ -379,7 +379,7 @@ const CartPage = () => {
       ...prev,
       name: address.name,
       address: address.address,
-      contact: address.contact
+      contact: address.contact,
     }));
 
     // Restore location if saved
@@ -864,6 +864,7 @@ const CartPage = () => {
           paid: true,
           proof_of_payment: proofFilePath,
           buyer_id: CUSTOMER_ID,
+          notes: orderData.notes || ""
         }),
       });
 
@@ -1329,16 +1330,6 @@ const CartPage = () => {
                           />
                         </div>
 
-                        <div className="form-group">
-                          <label>Order Notes (Optional)</label>
-                          <textarea
-                            value={orderData.notes}
-                            onChange={(e) => setOrderData({ ...orderData, notes: e.target.value })}
-                            placeholder="Special instructions"
-                            rows="2"
-                          />
-                        </div>
-
                         {deliveryLocation ? (
                           <div style={{
                             background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)',
@@ -1439,6 +1430,17 @@ const CartPage = () => {
                       <div className="payment-total">
                         <span>Total Amount</span>
                         <span className="amount">₱{totalPrice.toFixed(2)}</span>
+                      </div>
+
+                      {/* Notes */}
+                      <div className="notes-div">
+                        <h4>Order Notes (Optional)</h4>
+                        <textarea
+                          className="notes-textarea"
+                          placeholder="Add any notes or special instructions for the seller..."
+                          value={orderData.notes}
+                          onChange={(e) => setOrderData({ ...orderData, notes: e.target.value })}
+                        />
                       </div>
 
                       <div className="proof-of-payment-section">

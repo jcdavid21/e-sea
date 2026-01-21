@@ -5,6 +5,7 @@ import axios from "axios";
 import "./SellerRegister.css";
 import Navbar from "./Navbar";
 import TermsModal from "./TermsModal";
+import { secretQuestions } from "./SecretQuestions";
 
 const SellerRegister = () => {
   const [formData, setFormData] = useState({
@@ -12,6 +13,8 @@ const SellerRegister = () => {
     uniqueId: "",
     password: "",
     confirmPassword: "",
+    secretQuestion: "",
+    secretAnswer: "",
   });
   const [message, setMessage] = useState("");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
@@ -40,6 +43,11 @@ const SellerRegister = () => {
       return;
     }
 
+    if (formData.secretQuestion === "" || formData.secretAnswer.trim() === "") {
+      setMessage("Please select and answer a secret question.");
+      return;
+    }
+
     setMessage("Processing registration...");
 
     try {
@@ -47,6 +55,8 @@ const SellerRegister = () => {
         email: formData.email,
         unique_id: formData.uniqueId,
         password: formData.password,
+        secret_question: formData.secretQuestion,
+        secret_answer: formData.secretAnswer,
       });
 
       setMessage(res.data.message);
@@ -111,6 +121,33 @@ const SellerRegister = () => {
               value={formData.confirmPassword}
               onChange={handleChange}
               placeholder="Confirm your password"
+              required
+            />
+
+            <label htmlFor="secretQuestion">Secret Question</label>
+            <select
+              id="secretQuestion"
+              name="secretQuestion"
+              value={formData.secretQuestion}
+              onChange={handleChange}
+              required
+            >
+              <option value="">Select a secret question</option>
+              {secretQuestions.map((question, index) => (
+                <option key={index} value={question}>
+                  {question}
+                </option>
+              ))}
+            </select>
+
+            <label htmlFor="secretAnswer">Secret Answer</label>
+            <input
+              type="text"
+              id="secretAnswer"
+              name="secretAnswer"
+              value={formData.secretAnswer}
+              onChange={handleChange}
+              placeholder="Enter your secret answer"
               required
             />
 

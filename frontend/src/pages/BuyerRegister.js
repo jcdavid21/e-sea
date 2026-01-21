@@ -17,6 +17,7 @@ const BuyerRegister = () => {
     password: "",
     secretQuestion: "",
     secretAnswer: "",
+    confirmPassword: "",
   });
 
   const [message, setMessage] = useState("");
@@ -63,6 +64,11 @@ const BuyerRegister = () => {
 
     if (formData.secretAnswer.trim() === "") {
       setMessage("Please provide an answer to the secret question.");
+      return;
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      setMessage("Passwords do not match.");
       return;
     }
 
@@ -151,6 +157,15 @@ const BuyerRegister = () => {
               onChange={handleChange}
               required
               placeholder="Create a strong password"
+            />
+
+            <label>Confirm Password</label>
+            <input
+              type="password"
+              name="confirmPassword"
+              onChange={handleChange}
+              required
+              placeholder="Confirm your password"
             />
 
             <label>Secret Question</label>
