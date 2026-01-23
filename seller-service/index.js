@@ -66,7 +66,7 @@ const db = mysql.createPool({
   connectionLimit: 10,
   queueLimit: 0
 });
-
+// =============================
 // Test database connection (updated for promise version)
 db.getConnection()
   .then(connection => {
