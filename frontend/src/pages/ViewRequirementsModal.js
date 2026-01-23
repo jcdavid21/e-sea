@@ -222,7 +222,7 @@ const ViewRequirementsModal = ({ seller, onClose, onUpdate }) => {
     const file = uploadedFiles[requirementType];
     if (!file) return;
 
-    const fileUrl = `${process.env.REACT_APP_ADMIN_API_URL}${file.file_path}`;
+    const fileUrl = file.file_path.startsWith('http://') || file.file_path.startsWith('https://') ? file.file_path : null;
     console.log("👁️ Opening file:", fileUrl);
     window.open(fileUrl, '_blank');
   };

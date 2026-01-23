@@ -807,7 +807,7 @@ export default function ViewOrders() {
               <div className="proof-image-section">
                 <div className="proof-image-wrapper">
                   <img
-                    src={`${process.env.REACT_APP_SELLER_API_URL}${selectedProof}`}
+                    src={`${selectedProof.startsWith('http://') || selectedProof.startsWith('https://') ? selectedProof : ''}`}
                     alt="Proof of Payment"
                     className="proof-image"
                     onError={(e) => {
@@ -820,7 +820,7 @@ export default function ViewOrders() {
             </div>
             <div className="modal-footer">
               <a
-                href={`${process.env.REACT_APP_SELLER_API_URL}${selectedProof}`}
+                href={`${selectedProof.startsWith('http://') || selectedProof.startsWith('https://') ? selectedProof : ''}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn btn-download"

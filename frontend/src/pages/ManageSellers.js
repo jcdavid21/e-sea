@@ -73,8 +73,10 @@ function ManageSellers() {
 
   const getFileUrl = (path) => {
     if (!path) return null;
-    const normalized = path.startsWith("/") ? path : "/" + path;
-    return `${process.env.REACT_APP_SELLER_API_URL}${normalized}`;
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      return path;
+    }
+    return null;
   };
 
   const handleViewProducts = (sellerUniqueId) => {

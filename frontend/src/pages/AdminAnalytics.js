@@ -827,7 +827,8 @@ const AdminAnalytics = () => {
                 borderRadius: '6px',
                 border: '1px solid #e5e7eb',
                 fontSize: '12px',
-                cursor: 'pointer'
+                cursor: 'pointer',
+                color: '#374151',
               }}
             >
               <option value="all">All Sellers</option>

@@ -407,7 +407,7 @@ const checkExistingFeedback = async (orderId) => {
                   <img
                     src={
                       prod.image_url
-                        ? `${process.env.REACT_APP_SELLER_API_URL}/uploads/${prod.image_url}`
+                        ? `${prod.image_url.startsWith('http://') || prod.image_url.startsWith('https://') ? prod.image_url : ''}`
                         : "https://via.placeholder.com/150?text=No+Image"
                     }
                     alt={prod.product_name}
@@ -491,7 +491,7 @@ const checkExistingFeedback = async (orderId) => {
                   <img
                     src={
                       prod.image_url
-                        ? `${process.env.REACT_APP_SELLER_API_URL}/uploads/${prod.image_url}`
+                        ? `${prod.image_url.startsWith('http://') || prod.image_url.startsWith('https://') ? prod.image_url : ''}`
                         : "https://via.placeholder.com/150?text=No+Image"
                     }
                     alt={prod.name}

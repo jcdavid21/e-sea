@@ -384,9 +384,11 @@ const SellerHome = () => {
   const orderGrowth = getOrderGrowth();
 
   const getFileUrl = (path) => {
-    if (!path) return "https://via.placeholder.com/100";
-    const normalized = path.replace(/^\/+/, '').replace(/^uploads\//, '');
-    return `${process.env.REACT_APP_SELLER_API_URL}/uploads/${normalized}`;
+    if(!path) return null;
+
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      return path;
+    }
   };
 
   const handleNavigateToPriceAnalysis = () => {

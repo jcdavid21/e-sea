@@ -412,7 +412,7 @@ function AllProducts() {
                     <td>
                       {p.image_url ? (
                         <img
-                          src={`${process.env.REACT_APP_SELLER_API_URL}/uploads/${p.image_url}`}
+                          src={`${p.image_url.startsWith('http://') || p.image_url.startsWith('https://') ? p.image_url : ''}`}
                           alt={p.name}
                           className="ap-product-img"
                         />
@@ -618,7 +618,7 @@ function AllProducts() {
                   <label style={styles.label}>Current Product Image</label>
                   <div style={styles.imagePreviewBox}>
                     <img
-                      src={`${process.env.REACT_APP_SELLER_API_URL}/uploads/${editingProduct.image_url}`}
+                      src={`${editingProduct.image_url.startsWith('http://') || editingProduct.image_url.startsWith('https://') ? editingProduct.image_url : ''}`}
                       alt={editingProduct.name}
                       style={styles.previewImage}
                     />

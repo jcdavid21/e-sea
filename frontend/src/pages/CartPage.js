@@ -1002,7 +1002,7 @@ const CartPage = () => {
                 <div className="item-image">
                   {item.image_url ? (
                     <img
-                      src={`${process.env.REACT_APP_SELLER_API_URL}/uploads/${item.image_url}`}
+                      src={`${item.image_url.startsWith('http://') || item.image_url.startsWith('https://') ? item.image_url : ''}`}
                       alt={item.name}
                       onError={(e) => {
                         e.target.onerror = null;
@@ -1416,7 +1416,7 @@ const CartPage = () => {
                         {qrCode ? (
                           <div className="qr-wrapper">
                             <img
-                              src={`${process.env.REACT_APP_SELLER_API_URL}${qrCode}`}
+                              src={`${qrCode.startsWith('http://') || qrCode.startsWith('https://') ? qrCode : ''}`}
                               alt="GCash QR Code"
                               className="qr-code"
                             />

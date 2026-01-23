@@ -327,6 +327,13 @@ function SellerProfile() {
 
   const getFileUrl = (path) => {
     if (!path) return null;
+    
+    // If it's already a full URL (Cloudinary), return as-is
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      return path;
+    }
+    
+    // Legacy local files (for backward compatibility)
     const normalized = path.startsWith("/") ? path : "/" + path;
     const cacheBuster = `?t=${Date.now()}`;
     return `${process.env.REACT_APP_SELLER_API_URL}${normalized}${cacheBuster}`;

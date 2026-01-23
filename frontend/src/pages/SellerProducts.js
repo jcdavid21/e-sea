@@ -493,7 +493,7 @@ const printReport = async () => {
                       <td className="sp-td-image">
                         {p.image_url ? (
                           <img
-                            src={`${process.env.REACT_APP_SELLER_API_URL}/uploads/${p.image_url}`}
+                            src={`${p.image_url.startsWith('http://') || p.image_url.startsWith('https://') ? p.image_url : ''}`}
                             alt={p.name}
                             className="sp-product-img"
                             onError={(e) => {

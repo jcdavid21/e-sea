@@ -651,7 +651,7 @@ const totalPages = Math.ceil(filteredStockItems.length / itemsPerPage);
                           <img
                             src={
                               item.image_url
-                                ? `${process.env.REACT_APP_SELLER_API_URL}/uploads/${item.image_url}`
+                                ? `${item.name.startsWith('http://') || item.name.startsWith('https://') ? item.image_url : item.image_url}`
                                 : "https://via.placeholder.com/150?text=No+Image"
                             }
                             alt={item.name}
@@ -776,8 +776,9 @@ const totalPages = Math.ceil(filteredStockItems.length / itemsPerPage);
                   value={formData.category}
                   onChange={handleInputChange}
                   style={styles.input}
+                  className="category-select"
                 >
-                  <option value="">Select Category</option>
+                  <option value="" >Select Category</option>
                   {categories.map(cat => (
                     <option key={cat.id} value={cat.category_name}>
                       {cat.category_name}

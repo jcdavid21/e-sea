@@ -253,7 +253,7 @@ const Shop = () => {
                     <div className="shop-info">
                       {shop.logo ? (
                         <img
-                          src={`${process.env.REACT_APP_SELLER_API_URL}${shop.logo}`}
+                          src={`${shop.logo.startsWith('http://') || shop.logo.startsWith('https://') ? shop.logo : ''}`}
                           alt={`${shop.shop_name} logo`}
                           className="shop-logo"
                           onError={(e) => {

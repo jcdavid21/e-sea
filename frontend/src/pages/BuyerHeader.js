@@ -210,7 +210,7 @@ const BuyerHeader = ({ searchTerm, onSearchChange, onNavClick, currentPage }) =>
                       <img
                         src={
                           product.image_url
-                            ? `${process.env.REACT_APP_SELLER_API_URL}/uploads/${product.image_url}`
+                            ? `${product.image_url.startsWith('http://') || product.image_url.startsWith('https://') ? product.image_url : ''}`
                             : "https://via.placeholder.com/40?text=No+Image"
                         }
                         alt={product.name}

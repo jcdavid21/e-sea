@@ -87,7 +87,7 @@ function EditProductModal({ product, categories, seller_id, onClose, onUpdated }
           {(preview || product.image_url) && (
             <img
               className="preview-img"
-              src={preview || `${process.env.REACT_APP_SELLER_API_URL}/uploads/${product.image_url}`}
+              src={preview || (product.image_url.startsWith('http://') || product.image_url.startsWith('https://') ? product.image_url : '')}
               alt="preview"
             />
           )}

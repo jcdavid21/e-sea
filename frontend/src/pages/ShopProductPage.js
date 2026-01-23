@@ -113,7 +113,7 @@ const ShopProductPage = () => {
               <div className="shop-logo-con">
                 {logo ? (
                   <img
-                    src={`${process.env.REACT_APP_SELLER_API_URL}${logo}`}
+                    src={`${logo.startsWith('http://') || logo.startsWith('https://') ? logo : ''}`}
                     alt={`${shopName} Logo`}
                     className="shop-logo"
                     onError={(e) => {
@@ -147,7 +147,9 @@ const ShopProductPage = () => {
           <div className="product-list-grid">
             {filteredProducts.map((prod) => {
               const price = Number(prod.new_price ?? prod.price ?? 0);
-              const imageUrl = prod.image_url ? `${process.env.REACT_APP_SELLER_API_URL}/uploads/${prod.image_url}` : "";
+              const imageUrl = prod.image_url.startsWith('http://') || prod.image_url.startsWith('https://')
+                ? prod.image_url
+                : "";
               
               return (
                 <div key={prod.id} className="product-card bestseller-card">
