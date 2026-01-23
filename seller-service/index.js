@@ -5,6 +5,7 @@ const cors = require("cors");
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
+const cloudinary = require("cloudinary").v2;
 require("dotenv").config();
 
 const app = express();
@@ -44,17 +45,15 @@ app.use((req, res, next) => {
 // =============================
 //  File Upload Configuration
 // =============================
-const UPLOAD_DIR = path.join(__dirname, "uploads");
-if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR);
+// const UPLOAD_DIR = path.join(__dirname, "uploads");
+// if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR);
 
-app.use("/uploads", express.static(UPLOAD_DIR));
+// app.use("/uploads", express.static(UPLOAD_DIR));
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, UPLOAD_DIR),
-  filename: (req, file, cb) =>
-    cb(null, Date.now() + "-" + file.originalname.replace(/\s+/g, "_")),
+const upload = multer({ 
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
 });
-const upload = multer({ storage });
 
 
 const db = mysql.createPool({
@@ -93,6 +92,50 @@ const validateRequiredFields = (fields, requiredFields) => {
   const missing = requiredFields.filter(field => !fields[field]);
   return missing.length === 0 ? null : missing;
 };
+
+cloudinary.config({
+  cloud_name: process.env.CLOUD_NAME,
+  api_key: process.env.CLOUD_API_KEY,
+  api_secret: process.env.CLOUD_API_SECRET
+})
+
+// Helper function to upload to Cloudinary
+async function uploadToCloudinary(fileBuffer, folder = 'products') {
+  try {
+    return new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          folder: `e-sea/${folder}`,
+          resource_type: 'auto',
+          transformation: [
+            { quality: 'auto', fetch_format: 'auto' }
+          ]
+        },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result.secure_url);
+        }
+      );
+      uploadStream.end(fileBuffer);
+    });
+  } catch (err) {
+    throw new Error(`Cloudinary upload failed: ${err.message}`);
+  }
+}
+
+// Helper function to delete from Cloudinary
+async function deleteFromCloudinary(imageUrl) {
+  try {
+    if (!imageUrl || !imageUrl.includes('cloudinary.com')) return;
+    
+    const publicId = imageUrl.split('/').slice(-2).join('/').split('.')[0];
+    await cloudinary.uploader.destroy(`e-sea/${publicId}`);
+    console.log('🗑️ Deleted from Cloudinary:', publicId);
+  } catch (err) {
+    console.warn('⚠️ Could not delete from Cloudinary:', err.message);
+  }
+}
+
 
 // =============================
 //  Helper Functions
@@ -536,7 +579,6 @@ app.post("/api/seller/login", async (req, res) => {
 //  SELLER REQUIREMENTS FILE UPLOAD ROUTES
 // =============================
 
-// Upload requirement file for a seller
 app.post("/api/sellers/:seller_id/upload-requirement", upload.single("file"), async (req, res) => {
   const { seller_id } = req.params;
   const { requirement_type, uploaded_by } = req.body;
@@ -554,15 +596,15 @@ app.post("/api/sellers/:seller_id/upload-requirement", upload.single("file"), as
     return res.status(400).json({ message: "Invalid requirement type" });
   }
 
-  const filePath = "/uploads/" + req.file.filename;
-
   try {
-    // Check if seller exists
     const [seller] = await db.query("SELECT id FROM sellers WHERE id = ?", [seller_id]);
     
     if (seller.length === 0) {
       return res.status(404).json({ message: "Seller not found" });
     }
+
+    // Upload to Cloudinary
+    const cloudinaryUrl = await uploadToCloudinary(req.file.buffer, 'requirements');
 
     // Check if file already exists for this requirement type
     const [existing] = await db.query(
@@ -571,23 +613,19 @@ app.post("/api/sellers/:seller_id/upload-requirement", upload.single("file"), as
     );
 
     if (existing.length > 0) {
-      // Delete old file
-      const oldFileName = existing[0].file_path.replace('/uploads/', '');
-      const oldPath = path.join(UPLOAD_DIR, oldFileName);
-      fs.unlink(oldPath, (err) => {
-        if (err) console.warn("⚠️ Could not delete old file:", err.message);
-      });
+      // Delete old file from Cloudinary
+      await deleteFromCloudinary(existing[0].file_path);
 
       // Update existing record
       await db.query(
         "UPDATE seller_requirement_files SET file_path = ?, uploaded_by = ?, uploaded_at = NOW() WHERE id = ?",
-        [filePath, uploaded_by, existing[0].id]
+        [cloudinaryUrl, uploaded_by, existing[0].id]
       );
     } else {
       // Insert new record
       await db.query(
         "INSERT INTO seller_requirement_files (seller_id, requirement_type, file_path, uploaded_by) VALUES (?, ?, ?, ?)",
-        [seller_id, requirement_type, filePath, uploaded_by]
+        [seller_id, requirement_type, cloudinaryUrl, uploaded_by]
       );
     }
 
@@ -608,7 +646,7 @@ app.post("/api/sellers/:seller_id/upload-requirement", upload.single("file"), as
 
     res.json({
       message: "Requirement file uploaded successfully",
-      file_path: filePath,
+      file_path: cloudinaryUrl,
       requirement_type
     });
   } catch (err) {
@@ -634,7 +672,6 @@ app.get("/api/sellers/:seller_id/requirement-files", async (req, res) => {
   }
 });
 
-// Delete a requirement file
 app.delete("/api/sellers/:seller_id/requirement-files/:file_id", async (req, res) => {
   const { seller_id, file_id } = req.params;
 
@@ -648,12 +685,8 @@ app.delete("/api/sellers/:seller_id/requirement-files/:file_id", async (req, res
       return res.status(404).json({ message: "File not found" });
     }
 
-    // Delete file from filesystem
-    const fileName = file[0].file_path.replace('/uploads/', '');
-    const filePath = path.join(UPLOAD_DIR, fileName);
-    fs.unlink(filePath, (err) => {
-      if (err) console.warn("⚠️ Could not delete file:", err.message);
-    });
+    // Delete from Cloudinary
+    await deleteFromCloudinary(file[0].file_path);
 
     // Delete from database
     await db.query("DELETE FROM seller_requirement_files WHERE id = ?", [file_id]);
@@ -1269,10 +1302,15 @@ app.get("/api/seller/fish", async (req, res) => {
 app.post("/api/seller/add-fish", upload.single("image"), async (req, res) => {
   try {
     const { name, category, unit, price, stock, seller_id } = req.body;
-    const image_url = req.file ? req.file.filename : null;
+    let image_url = null;
 
     if (!name || !price || !stock || !seller_id)
       return res.status(400).json({ message: "All required fields are missing." });
+
+    // Upload to Cloudinary if image provided
+    if (req.file) {
+      image_url = await uploadToCloudinary(req.file.buffer, 'products');
+    }
 
     await db.query(
       "INSERT INTO fish_products (name, category, unit, price, previous_price, stock, image_url, seller_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
@@ -1290,7 +1328,6 @@ app.put("/api/seller/fish/:id", upload.single("image"), async (req, res) => {
   try {
     const fishId = req.params.id;
     const { name, category, unit, price, stock, seller_id, freshness } = req.body;
-    const newImage = req.file ? req.file.filename : null;
 
     const [existing] = await db.query(
       "SELECT price, image_url FROM fish_products WHERE id = ?",
@@ -1328,7 +1365,18 @@ app.put("/api/seller/fish/:id", upload.single("image"), async (req, res) => {
     if (freshness !== undefined) { fields.push("freshness = ?"); params.push(freshness); }
     if (price !== undefined) { fields.push("price = ?"); params.push(price); }
     if (stock !== undefined) { fields.push("stock = ?"); params.push(stock); }
-    if (newImage) { fields.push("image_url = ?"); params.push(newImage); }
+    
+    // Upload new image to Cloudinary if provided
+    if (req.file) {
+      const newImageUrl = await uploadToCloudinary(req.file.buffer, 'products');
+      fields.push("image_url = ?");
+      params.push(newImageUrl);
+      
+      // Delete old image from Cloudinary
+      if (oldImage) {
+        await deleteFromCloudinary(oldImage);
+      }
+    }
 
     if (fields.length === 0) {
       await db.query("ROLLBACK");
@@ -1340,13 +1388,6 @@ app.put("/api/seller/fish/:id", upload.single("image"), async (req, res) => {
     await db.query(sql, params);
 
     await db.query("COMMIT");
-
-    if (newImage && oldImage) {
-      const oldPath = path.join(UPLOAD_DIR, oldImage);
-      fs.unlink(oldPath, (err) => {
-        if (err) console.warn("⚠️ Could not delete old image:", err.message);
-      });
-    }
 
     res.json({ message: "Fish product updated successfully." });
   } catch (err) {
@@ -1367,14 +1408,14 @@ app.delete("/api/seller/fish/:id", async (req, res) => {
     if (rows.length === 0)
       return res.status(404).json({ message: "Fish not found." });
 
-    const imageFilename = rows[0].image_url;
+    const imageUrl = rows[0].image_url;
+    
+    // Delete from database
     await db.query("DELETE FROM fish_products WHERE id = ?", [fishId]);
 
-    if (imageFilename) {
-      const p = path.join(UPLOAD_DIR, imageFilename);
-      fs.unlink(p, (err) => {
-        if (err) console.warn("⚠️ Could not delete image file:", err.message);
-      });
+    // Delete from Cloudinary
+    if (imageUrl) {
+      await deleteFromCloudinary(imageUrl);
     }
 
     res.json({ message: "Fish product deleted successfully." });
@@ -1738,7 +1779,7 @@ app.get('/api/seller/security/:seller_id', async (req, res) => {
 
   try{
     const [rows] = await db.query(
-      "SELECT secret_question, secret_ans FROM seller_authentication WHERE id = ?",
+      "SELECT secret_question, secret_ans FROM seller_credentials WHERE id = ?",
       [seller_id]
     );
 
@@ -1781,8 +1822,6 @@ app.post("/api/seller/upload-logo/:seller_id", upload.single("logo"), async (req
   if (!req.file)
     return res.status(400).json({ message: "No logo uploaded" });
 
-  const filePath = "/uploads/" + req.file.filename;
-
   try {
     // Get existing logo to delete old file
     const [existing] = await db.query(
@@ -1790,13 +1829,12 @@ app.post("/api/seller/upload-logo/:seller_id", upload.single("logo"), async (req
       [seller_id]
     );
 
-    // Delete old logo file if exists
+    // Upload to Cloudinary
+    const logoUrl = await uploadToCloudinary(req.file.buffer, 'logos');
+
+    // Delete old logo from Cloudinary if exists
     if (existing.length > 0 && existing[0].logo) {
-      const oldFileName = existing[0].logo.replace('/uploads/', '');
-      const oldPath = path.join(UPLOAD_DIR, oldFileName);
-      fs.unlink(oldPath, (err) => {
-        if (err) console.warn("⚠️ Could not delete old logo:", err.message);
-      });
+      await deleteFromCloudinary(existing[0].logo);
     }
 
     // Insert or update logo
@@ -1804,14 +1842,14 @@ app.post("/api/seller/upload-logo/:seller_id", upload.single("logo"), async (req
       `INSERT INTO seller_profiles (seller_id, logo) 
        VALUES (?, ?)
        ON DUPLICATE KEY UPDATE logo = VALUES(logo)`,
-      [seller_id, filePath]
+      [seller_id, logoUrl]
     );
 
     console.log(`✅ Logo uploaded for seller: ${seller_id}`);
 
     res.json({
       message: "Logo uploaded successfully",
-      logo: filePath,
+      logo: logoUrl,
       timestamp: Date.now()
     });
   } catch (err) {
@@ -1826,8 +1864,6 @@ app.post("/api/seller/upload-qr/:seller_id", upload.single("qr"), async (req, re
   if (!req.file)
     return res.status(400).json({ message: "No QR uploaded" });
 
-  const filePath = "/uploads/" + req.file.filename;
-
   try {
     // Get existing QR to delete old file
     const [existing] = await db.query(
@@ -1835,13 +1871,12 @@ app.post("/api/seller/upload-qr/:seller_id", upload.single("qr"), async (req, re
       [seller_id]
     );
 
-    // Delete old QR file if exists
+    // Upload to Cloudinary
+    const qrUrl = await uploadToCloudinary(req.file.buffer, 'qr-codes');
+
+    // Delete old QR from Cloudinary if exists
     if (existing.length > 0 && existing[0].qr) {
-      const oldFileName = existing[0].qr.replace('/uploads/', '');
-      const oldPath = path.join(UPLOAD_DIR, oldFileName);
-      fs.unlink(oldPath, (err) => {
-        if (err) console.warn("⚠️ Could not delete old QR:", err.message);
-      });
+      await deleteFromCloudinary(existing[0].qr);
     }
 
     // Insert or update QR
@@ -1849,14 +1884,14 @@ app.post("/api/seller/upload-qr/:seller_id", upload.single("qr"), async (req, re
       `INSERT INTO seller_profiles (seller_id, qr) 
        VALUES (?, ?)
        ON DUPLICATE KEY UPDATE qr = VALUES(qr)`,
-      [seller_id, filePath]
+      [seller_id, qrUrl]
     );
 
     console.log(`✅ QR uploaded for seller: ${seller_id}`);
 
     res.json({
       message: "QR uploaded successfully",
-      qr: filePath,
+      qr: qrUrl,
       timestamp: Date.now()
     });
   } catch (err) {
@@ -1966,17 +2001,18 @@ app.post("/api/upload-payment-proof", upload.single("proof"), async (req, res) =
       return res.status(400).json({ message: "Customer information required" });
     }
 
-    const filePath = "/uploads/" + req.file.filename;
+    // Upload to Cloudinary
+    const proofUrl = await uploadToCloudinary(req.file.buffer, 'payment-proofs');
 
     console.log("✅ Proof of payment uploaded:", {
       customer: customer_name,
       contact: customer_contact,
-      file: filePath
+      file: proofUrl
     });
 
     res.json({
       message: "Proof of payment uploaded successfully",
-      proof_path: filePath
+      proof_path: proofUrl
     });
   } catch (err) {
     console.error("❌ Upload Proof Error:", err);
