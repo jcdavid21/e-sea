@@ -46,6 +46,8 @@ import Contact from "./pages/Contact";
 import SellerForgotPassword from "./pages/SellerForgotPassword";
 import BuyerForgotPassword from "./pages/BuyerForgotPassword";
 
+import BuyerOrders from "./pages/BuyerOrders";
+
 function App() {
   return (
     <BrowserRouter>
