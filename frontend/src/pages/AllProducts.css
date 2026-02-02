@@ -363,6 +363,11 @@
   }
 }
 
+select{
+  color: #0c4a6e !important;
+  font-weight: 600 !important;
+}
+
 /* Mobile Modal Adjustments */
 @media (max-width: 768px) {
   /* Ensure modal title and buttons are properly sized */
@@ -393,4 +398,13 @@
   .ap-container label {
     font-size: 12px !important;
   }
+}
+
+.ap-product-count {
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+  color: white;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
 }

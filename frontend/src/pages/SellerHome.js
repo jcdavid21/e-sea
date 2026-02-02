@@ -927,7 +927,7 @@ const SellerHome = () => {
             </ResponsiveContainer>
           ) : (
             <div className="empty-state">
-              <p><TrendingUp size={18} style={{ display: 'inline', marginRight: '8px' }} /> Update prices 3+ times to see analysis</p>
+              <p><TrendingUp size={18} style={{ display: 'inline', marginRight: '8px' }} /> Update price to see analysis</p>
             </div>
           )}
         </div>

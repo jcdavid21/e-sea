@@ -12,7 +12,8 @@ import {
   FiUser,
   FiShoppingBag,
   FiX,
-  FiEye
+  FiEye,
+  FiPrinter  // ADD THIS
 } from "react-icons/fi";
 import "./ManageFeedbacks.css";
 import Swal from "sweetalert2";
@@ -53,6 +54,8 @@ const ManageFeedbacks = () => {
       setLoading(false);
     }
   };
+
+  
 
   const filterFeedbacksData = () => {
     let filtered = [...feedbacks];
@@ -182,6 +185,249 @@ const ManageFeedbacks = () => {
     return distribution;
   };
 
+  const printFeedbacks = () => {
+  if (filteredFeedbacks.length === 0) {
+    Swal.fire({
+      icon: 'warning',
+      title: 'No Data to Print',
+      text: 'There are no feedbacks to print.',
+    });
+    return;
+  }
+
+  const printWindow = window.open('', '', 'height=800,width=1000');
+  
+  const ratingDist = getRatingDistribution();
+  const avgRating = getAverageRating();
+  
+  const printContent = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>System Feedbacks Report</title>
+        <style>
+          body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            color: #333;
+          }
+          h1 {
+            color: #1e3c72;
+            border-bottom: 3px solid #1e3c72;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+          }
+          .subtitle {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 30px;
+          }
+          .summary {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+          }
+          .summary-item {
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            border-left: 4px solid #1e3c72;
+          }
+          .summary-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            font-weight: 600;
+          }
+          .summary-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1e3c72;
+          }
+          .rating-distribution {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+          }
+          .rating-distribution h3 {
+            margin-top: 0;
+            color: #1e3c72;
+            font-size: 18px;
+          }
+          .rating-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+          }
+          .rating-bar {
+            flex: 1;
+            height: 24px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+          }
+          .rating-fill {
+            height: 100%;
+            background: #fbbf24;
+            transition: width 0.3s ease;
+          }
+          .rating-count {
+            min-width: 40px;
+            text-align: right;
+            font-weight: 600;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+          }
+          th {
+            background: #1e3c72;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-size: 12px;
+            text-transform: uppercase;
+          }
+          td {
+            padding: 12px;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 14px;
+            vertical-align: top;
+          }
+          tr:hover {
+            background: #f8f9fa;
+          }
+          .user-type-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+          }
+          .user-type-buyer {
+            background: #dbeafe;
+            color: #1e40af;
+          }
+          .user-type-seller {
+            background: #dcfce7;
+            color: #166534;
+          }
+          .stars {
+            color: #fbbf24;
+            display: inline-block;
+          }
+          .comment-cell {
+            max-width: 300px;
+            word-wrap: break-word;
+          }
+          .print-date {
+            text-align: right;
+            color: #666;
+            font-size: 12px;
+            margin-top: 30px;
+          }
+          @media print {
+            body { padding: 0; }
+            .no-print { display: none; }
+          }
+        </style>
+      </head>
+      <body>
+        <h1>System Feedbacks Report</h1>
+        <div class="subtitle">
+          Total Feedbacks: ${filteredFeedbacks.length} • Average Rating: ${avgRating} ⭐
+        </div>
+        
+        <div class="summary">
+          <div class="summary-item">
+            <div class="summary-label">Buyer Feedbacks</div>
+            <div class="summary-value">${filteredFeedbacks.filter(f => f.user_type === 'buyer').length}</div>
+          </div>
+          <div class="summary-item">
+            <div class="summary-label">Seller Feedbacks</div>
+            <div class="summary-value">${filteredFeedbacks.filter(f => f.user_type === 'seller').length}</div>
+          </div>
+          <div class="summary-item">
+            <div class="summary-label">Average Rating</div>
+            <div class="summary-value">${avgRating} / 5.0</div>
+          </div>
+          <div class="summary-item">
+            <div class="summary-label">Total Responses</div>
+            <div class="summary-value">${filteredFeedbacks.length}</div>
+          </div>
+        </div>
+
+        <div class="rating-distribution">
+          <h3>Rating Distribution</h3>
+          ${[5, 4, 3, 2, 1].map(rating => {
+            const count = ratingDist[rating];
+            const percentage = filteredFeedbacks.length > 0 ? (count / filteredFeedbacks.length * 100) : 0;
+            return `
+              <div class="rating-row">
+                <span style="width: 60px;">${rating} Stars</span>
+                <div class="rating-bar">
+                  <div class="rating-fill" style="width: ${percentage}%;"></div>
+                </div>
+                <span class="rating-count">${count}</span>
+              </div>
+            `;
+          }).join('')}
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>User ID</th>
+              <th>Type</th>
+              <th>Rating</th>
+              <th>Comment</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${filteredFeedbacks.map(feedback => `
+              <tr>
+                <td>${feedback.user_id}</td>
+                <td>
+                  <span class="user-type-badge user-type-${feedback.user_type}">
+                    ${feedback.user_type.charAt(0).toUpperCase() + feedback.user_type.slice(1)}
+                  </span>
+                </td>
+                <td>
+                  <span class="stars">${'★'.repeat(feedback.rating)}${'☆'.repeat(5 - feedback.rating)}</span>
+                  <span style="margin-left: 8px;">${feedback.rating}/5</span>
+                </td>
+                <td class="comment-cell">${feedback.comment || 'No comment provided'}</td>
+                <td>${formatDate(feedback.created_at)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+
+        <div class="print-date">
+          Report Generated: ${new Date().toLocaleString()}
+        </div>
+      </body>
+      </html>
+    `;
+
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    printWindow.focus();
+    
+    setTimeout(() => {
+      printWindow.print();
+      printWindow.close();
+    }, 250);
+  };
+
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredFeedbacks.slice(indexOfFirstItem, indexOfLastItem);
@@ -241,6 +487,10 @@ const ManageFeedbacks = () => {
           />
         </div>
         <div className="filter-actions">
+          <button className="print-btn" onClick={printFeedbacks}>
+            <FiPrinter size={18} />
+            Print Report
+          </button>
           <button className="export-btn" onClick={exportToCSV}>
             <FiDownload size={18} />
             Export CSV

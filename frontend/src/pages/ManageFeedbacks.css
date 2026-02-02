@@ -668,6 +668,19 @@
     width: 36px !important;
     height: 36px !important;
   }
+
+  .print-btn{
+    width: 100% !important;
+  }
+
+  .filter-dropdowns{
+    width: 100% !important;
+    flex-direction: column;
+  }
+
+  .filter-select{
+    width: 100% !important;
+  }
 }
 
 @media (max-width: 480px) {
@@ -704,3 +717,25 @@
     height: 32px !important;
   }
 }
+
+.print-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+}
+
+.print-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 123, 255, 0.4);
+}
+

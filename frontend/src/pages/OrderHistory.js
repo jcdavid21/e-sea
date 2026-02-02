@@ -14,7 +14,8 @@ import {
   FiChevronsLeft,
   FiChevronsRight,
   FiTruck,
-  FiAlertCircle
+  FiAlertCircle,
+  FiPrinter  // Add this
 } from "react-icons/fi";
 import "./OrderHistory.css";
 import Swal from "sweetalert2";
@@ -54,13 +55,11 @@ const OrderHistory = () => {
     try {
       const res = await axios.get(`${process.env.REACT_APP_BUYER_API_URL}/api/buyer/purchases?buyer_id=${CUSTOMER_ID}`);
       console.log("Fetched Orders:", res.data);
-      
-      // Ensure the response is an array
+
       const ordersData = Array.isArray(res.data) ? res.data : [];
       setOrders(ordersData);
     } catch (error) {
       console.error("Error fetching orders:", error);
-      // Set orders to empty array on error
       setOrders([]);
       Swal.fire({
         icon: 'error',
@@ -73,7 +72,6 @@ const OrderHistory = () => {
   };
 
   const filterOrders = () => {
-    // Ensure orders is an array before filtering
     if (!Array.isArray(orders)) {
       setFilteredOrders([]);
       return;
@@ -83,7 +81,7 @@ const OrderHistory = () => {
 
     // Status filter
     if (statusFilter !== "all") {
-      filtered = filtered.filter(order => 
+      filtered = filtered.filter(order =>
         order.status?.toLowerCase() === statusFilter.toLowerCase()
       );
     }
@@ -93,12 +91,18 @@ const OrderHistory = () => {
       const search = searchTerm.toLowerCase();
       filtered = filtered.filter(order => {
         const orderNumber = order.order_number?.toLowerCase() || "";
-        const productName = order.product_name?.toLowerCase() || "";
         const status = order.status?.toLowerCase() || "";
-        
-        return orderNumber.includes(search) || 
-               productName.includes(search) || 
-               status.includes(search);
+        const shopName = order.shop_name?.toLowerCase() || "";
+
+        // Search in items as well
+        const itemMatch = order.items?.some(item =>
+          item.product_name?.toLowerCase().includes(search)
+        );
+
+        return orderNumber.includes(search) ||
+          status.includes(search) ||
+          shopName.includes(search) ||
+          itemMatch;
       });
     }
 
@@ -106,9 +110,8 @@ const OrderHistory = () => {
   };
 
   const getStatusStats = () => {
-    // Ensure orders is an array before filtering
     const ordersArray = Array.isArray(orders) ? orders : [];
-    
+
     return {
       total: ordersArray.length,
       pending: ordersArray.filter(o => o.status === 'Pending').length,
@@ -192,13 +195,12 @@ const OrderHistory = () => {
       cancelButtonText: 'Cancel',
     }).then((result) => {
       if (result.isConfirmed) {
-        const headers = ["Order Number", "Product Name", "Quantity", "Price", "Total", "Status", "Order Date"];
+        const headers = ["Order Number", "Shop Name", "Items", "Total Amount", "Status", "Order Date"];
         const rows = filteredOrders.map(order => [
           order.order_number || '',
-          order.product_name || '',
-          order.quantity || 0,
-          `PHP ${Number(order.price || 0).toFixed(2)}`,
-          `PHP ${((Number(order.price || 0)) * (Number(order.quantity || 0))).toFixed(2)}`,
+          order.shop_name || '',
+          order.items?.map(item => `${item.product_name} (x${item.quantity})`).join('; ') || '',
+          `PHP ${Number(order.total || 0).toFixed(2)}`,
           order.status || '',
           formatDate(order.created_at)
         ]);
@@ -231,6 +233,415 @@ const OrderHistory = () => {
     });
   };
 
+  const printReceipt = (order) => {
+    const printWindow = window.open('', '_blank');
+    
+    const receiptHTML = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Receipt - ${order.order_number}</title>
+        <style>
+          @media print {
+            @page {
+              margin: 0.5cm;
+            }
+            body {
+              margin: 0;
+              padding: 20px;
+            }
+          }
+          
+          * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+          }
+          
+          body {
+            font-family: 'Arial', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            background: #fff;
+            color: #333;
+          }
+          
+          .receipt-container {
+            border: 2px solid #1e3c72;
+            border-radius: 8px;
+            padding: 30px;
+          }
+          
+          .receipt-header {
+            text-align: center;
+            border-bottom: 3px double #1e3c72;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+          }
+          
+          .company-name {
+            font-size: 28px;
+            font-weight: bold;
+            color: #1e3c72;
+            margin-bottom: 5px;
+          }
+          
+          .receipt-title {
+            font-size: 18px;
+            color: #666;
+            margin-top: 10px;
+          }
+          
+          .receipt-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 8px;
+          }
+          
+          .info-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+          }
+          
+          .info-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            color: #666;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+          }
+          
+          .info-value {
+            font-size: 14px;
+            color: #333;
+            font-weight: 500;
+          }
+          
+          .order-number {
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            color: #1e3c72;
+            font-size: 16px;
+          }
+          
+          .items-section {
+            margin-bottom: 30px;
+          }
+          
+          .section-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #1e3c72;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e0f2fe;
+          }
+          
+          .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+          }
+          
+          .items-table thead {
+            background: #1e3c72;
+            color: white;
+          }
+          
+          .items-table th {
+            padding: 12px;
+            text-align: left;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+          }
+          
+          .items-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e0f2fe;
+            font-size: 14px;
+          }
+          
+          .items-table tbody tr:last-child td {
+            border-bottom: none;
+          }
+          
+          .items-table tbody tr:nth-child(even) {
+            background: #f8fafc;
+          }
+          
+          .text-right {
+            text-align: right;
+          }
+          
+          .text-center {
+            text-align: center;
+          }
+          
+          .total-section {
+            border-top: 3px double #1e3c72;
+            padding-top: 20px;
+            margin-top: 20px;
+          }
+          
+          .total-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+          }
+          
+          .total-label {
+            font-size: 14px;
+            color: #666;
+          }
+          
+          .total-value {
+            font-size: 14px;
+            font-weight: 500;
+          }
+          
+          .grand-total {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: #1e3c72;
+            color: white;
+            border-radius: 8px;
+            margin-top: 10px;
+          }
+          
+          .grand-total-label {
+            font-size: 18px;
+            font-weight: bold;
+          }
+          
+          .grand-total-value {
+            font-size: 24px;
+            font-weight: bold;
+          }
+          
+          .payment-info {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f0f9ff;
+            border-left: 4px solid #1e3c72;
+            border-radius: 4px;
+          }
+          
+          .delivery-info {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 8px;
+          }
+          
+          .status-badge {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 50px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: capitalize;
+          }
+          
+          .status-pending {
+            background: #fef3c7;
+            color: #92400e;
+          }
+          
+          .status-preparing {
+            background: #dbeafe;
+            color: #1e40af;
+          }
+          
+          .status-ready-for-pickup {
+            background: #ede9fe;
+            color: #5b21b6;
+          }
+          
+          .status-completed {
+            background: #d1fae5;
+            color: #065f46;
+          }
+          
+          .status-cancelled {
+            background: #fee2e2;
+            color: #991b1b;
+          }
+          
+          .receipt-footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px dashed #e0e0e0;
+            text-align: center;
+            color: #666;
+            font-size: 12px;
+          }
+          
+          .proof-of-payment {
+            margin-top: 20px;
+            text-align: center;
+          }
+          
+          .proof-of-payment img {
+            max-width: 300px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            margin-top: 10px;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="receipt-container">
+          <div class="receipt-header">
+            <div class="company-name">E-SEA MARKETPLACE</div>
+            <div class="receipt-title">ORDER RECEIPT</div>
+          </div>
+          
+          <div class="receipt-info">
+            <div class="info-group">
+              <span class="info-label">Order Number</span>
+              <span class="order-number">${order.order_number}</span>
+            </div>
+            <div class="info-group">
+              <span class="info-label">Order Date</span>
+              <span class="info-value">${formatDate(order.created_at)}</span>
+            </div>
+            <div class="info-group">
+              <span class="info-label">Shop Name</span>
+              <span class="info-value">${order.shop_name || 'N/A'}</span>
+            </div>
+            <div class="info-group">
+              <span class="info-label">Status</span>
+              <span class="status-badge status-${(order.status || '').toLowerCase().replace(/\s+/g, '-')}">${order.status}</span>
+            </div>
+            ${order.customer_name ? `
+              <div class="info-group">
+                <span class="info-label">Customer Name</span>
+                <span class="info-value">${order.customer_name}</span>
+              </div>
+            ` : ''}
+            ${order.contact ? `
+              <div class="info-group">
+                <span class="info-label">Contact</span>
+                <span class="info-value">${order.contact}</span>
+              </div>
+            ` : ''}
+          </div>
+          
+          ${order.address ? `
+            <div class="delivery-info">
+              <div class="info-group">
+                <span class="info-label">Delivery Address</span>
+                <span class="info-value">${order.address}</span>
+              </div>
+            </div>
+          ` : ''}
+          
+          ${order.notes ? `
+            <div class="delivery-info" style="margin-top: 15px;">
+              <div class="info-group">
+                <span class="info-label">Order Notes</span>
+                <span class="info-value">${order.notes}</span>
+              </div>
+            </div>
+          ` : ''}
+          
+          <div class="items-section">
+            <h3 class="section-title">Order Items</h3>
+            <table class="items-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Product Name</th>
+                  <th class="text-center">Quantity</th>
+                  <th class="text-right">Unit Price</th>
+                  <th class="text-right">Subtotal</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${order.items && order.items.length > 0 ? order.items.map((item, idx) => `
+                  <tr>
+                    <td>${idx + 1}</td>
+                    <td>${item.product_name}</td>
+                    <td class="text-center">${item.quantity}</td>
+                    <td class="text-right">${formatPrice(item.price)}</td>
+                    <td class="text-right"><strong>${formatPrice(Number(item.price) * Number(item.quantity))}</strong></td>
+                  </tr>
+                `).join('') : '<tr><td colspan="5" class="text-center">No items</td></tr>'}
+              </tbody>
+            </table>
+            
+            <div class="total-section">
+              <div class="total-row">
+                <span class="total-label">Items Total:</span>
+                <span class="total-value">${formatPrice(order.items?.reduce((sum, item) => sum + (Number(item.price) * Number(item.quantity)), 0) || 0)}</span>
+              </div>
+              
+              <div class="grand-total">
+                <span class="grand-total-label">TOTAL AMOUNT</span>
+                <span class="grand-total-value">${formatPrice(order.total)}</span>
+              </div>
+            </div>
+          </div>
+          
+          ${order.payment_mode ? `
+            <div class="payment-info">
+              <div class="info-group">
+                <span class="info-label">Payment Method</span>
+                <span class="info-value">${order.payment_mode}</span>
+              </div>
+              ${order.proof_of_payment_url ? `
+                <div class="proof-of-payment">
+                  <img src="${order.proof_of_payment_url}" alt="Proof of Payment" />
+                </div>
+              ` : ''}
+            </div>
+          ` : ''}
+          
+          <div class="receipt-footer">
+            <p>Thank you for your order!</p>
+            <p style="margin-top: 10px;">This is a computer-generated receipt.</p>
+            <p style="margin-top: 5px;">Printed on ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+          </div>
+        </div>
+        
+        <script>
+          // Auto-trigger print dialog when page loads
+          window.onload = function() {
+            window.print();
+            
+            // Optional: Close the window after printing or canceling
+            window.onafterprint = function() {
+              window.close();
+            };
+          };
+        </script>
+      </body>
+      </html>
+    `;
+    
+    printWindow.document.write(receiptHTML);
+    printWindow.document.close();
+
+    // close the tab after printing or canceling
+    printWindow.onafterprint = function() {
+      printWindow.close();
+    }
+
+    
+  };
+
+  
+
   // Pagination calculations
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -251,9 +662,9 @@ const OrderHistory = () => {
   return (
     <div>
       {/* Reusable Header Component */}
-      <BuyerHeader 
+      <BuyerHeader
         searchTerm=""
-        onSearchChange={() => {}}
+        onSearchChange={() => { }}
         currentPage="orders"
       />
 
@@ -291,51 +702,54 @@ const OrderHistory = () => {
         </div>
 
         <div style={styles.filterBar}>
-          <div style={styles.searchContainer}>
-            <FiSearch size={18} />
-            <input
-              type="text"
-              placeholder="Search by order number or product name..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="search-input"
-            />
-          </div>
           <div className="filter-actions">
-            <button className="export-btn" onClick={exportToCSV}>
-              <FiDownload size={18} />
-              Export CSV
-            </button>
+            <div style={styles.searchContainer}>
+              <FiSearch size={18} style={{ color: '#666' }} />
+              <input
+                type="text"
+                placeholder="Search orders, products, shop..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="search-input"
+              />
+            </div>
+
             <div className="tab-buttons">
               <button
                 className={statusFilter === "all" ? "active" : ""}
                 onClick={() => setStatusFilter("all")}
               >
-                All ({orders.length})
+                <FiShoppingBag size={16} />
+                All Orders
               </button>
               <button
-                className={statusFilter === "pending" ? "active" : ""}
-                onClick={() => setStatusFilter("pending")}
+                className={statusFilter === "Pending" ? "active" : ""}
+                onClick={() => setStatusFilter("Pending")}
               >
                 <FiClock size={16} />
-                Pending ({stats.pending})
+                Pending
               </button>
               <button
-                className={statusFilter === "preparing" ? "active" : ""}
-                onClick={() => setStatusFilter("preparing")}
+                className={statusFilter === "Preparing" ? "active" : ""}
+                onClick={() => setStatusFilter("Preparing")}
               >
                 <FiPackage size={16} />
-                Preparing ({stats.preparing})
+                Preparing
               </button>
               <button
-                className={statusFilter === "completed" ? "active" : ""}
-                onClick={() => setStatusFilter("completed")}
+                className={statusFilter === "Completed" ? "active" : ""}
+                onClick={() => setStatusFilter("Completed")}
               >
                 <FiCheckCircle size={16} />
-                Completed ({stats.completed})
+                Completed
               </button>
             </div>
           </div>
+
+          <button className="export-btn" onClick={exportToCSV}>
+            <FiDownload size={16} />
+            Export CSV
+          </button>
         </div>
 
         <div className="table-card">
@@ -343,57 +757,70 @@ const OrderHistory = () => {
             <thead>
               <tr>
                 <th>Order Number</th>
-                <th>Product</th>
-                <th>Quantity</th>
-                <th>Price</th>
-                <th>Total</th>
-                <th>Status</th>
+                <th>Shop Name</th>
+                <th>Items</th>
                 <th>Order Date</th>
-                <th>Action</th>
+                <th>Total Amount</th>
+                <th>Status</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               {currentItems.length > 0 ? (
-                currentItems.map((order, index) => (
-                  <tr key={index}>
+                currentItems.map((order) => (
+                  <tr key={order.order_id}>
                     <td className="order-number-cell">{order.order_number}</td>
-                    <td>{order.product_name}</td>
-                    <td>{order.quantity}</td>
-                    <td>{formatPrice(order.price)}</td>
-                    <td className="total-cell">
-                      {formatPrice(Number(order.price || 0) * Number(order.quantity || 0))}
+                    <td>{order.shop_name || 'N/A'}</td>
+                    <td>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        {order.items && order.items.length > 0 ? (
+                          <>
+                            {order.items.slice(0, 2).map((item, idx) => (
+                              <div key={idx} style={{ fontSize: '0.85rem', color: '#666' }}>
+                                {item.product_name} <span style={{ fontWeight: '600', color: '#1e3c72' }}>×{item.quantity}</span>
+                              </div>
+                            ))}
+                            {order.items.length > 2 && (
+                              <div style={{ fontSize: '0.8rem', color: '#999', fontStyle: 'italic' }}>
+                                +{order.items.length - 2} more item{order.items.length - 2 > 1 ? 's' : ''}
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          <span style={{ color: '#999' }}>No items</span>
+                        )}
+                      </div>
                     </td>
+                    <td>{formatDate(order.created_at)}</td>
+                    <td className="total-cell">{formatPrice(order.total)}</td>
                     <td>
                       <span className={getStatusClass(order.status)}>
                         {getStatusIcon(order.status)}
                         {order.status}
                       </span>
                     </td>
-                    <td>{formatDate(order.created_at)}</td>
                     <td>
                       <button
                         className="view-btn"
                         onClick={() => handleViewOrder(order)}
                       >
-                        <FiEye size={16} />
-                        View
+                        <FiEye size={14} />
+                        View Details
                       </button>
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="8" className="no-data">
-                    {statusFilter !== "all" 
-                      ? `No ${statusFilter} orders found` 
-                      : "No orders found"}
+                  <td colSpan="7" className="no-data">
+                    No orders found matching your criteria.
                   </td>
                 </tr>
               )}
             </tbody>
           </table>
 
-          {filteredOrders.length > itemsPerPage && (
+          {totalPages > 1 && (
             <div style={styles.pagination}>
               <button
                 onClick={() => handlePageChange(1)}
@@ -418,7 +845,10 @@ const OrderHistory = () => {
                 <FiChevronLeft size={18} />
               </button>
               <span style={styles.paginationInfo}>
-                <strong>{currentPage}</strong> / <strong>{totalPages}</strong>
+                Page {currentPage} of {totalPages}
+                <span style={styles.paginationCount}>
+                  ({filteredOrders.length} orders)
+                </span>
               </span>
               <button
                 onClick={() => handlePageChange(currentPage + 1)}
@@ -470,6 +900,10 @@ const OrderHistory = () => {
                     <span style={styles.infoValue}>{selectedOrder.order_number}</span>
                   </div>
                   <div style={styles.infoItem}>
+                    <span style={styles.infoLabel}>Shop Name:</span>
+                    <span style={styles.infoValue}>{selectedOrder.shop_name || 'N/A'}</span>
+                  </div>
+                  <div style={styles.infoItem}>
                     <span style={styles.infoLabel}>Status:</span>
                     <span className={getStatusClass(selectedOrder.status)}>
                       {getStatusIcon(selectedOrder.status)}
@@ -484,31 +918,63 @@ const OrderHistory = () => {
               </div>
 
               <div style={styles.section}>
-                <h4 style={styles.sectionTitle}>Product Details</h4>
-                <div style={styles.infoGrid}>
-                  <div style={styles.infoItem}>
-                    <span style={styles.infoLabel}>Product Name:</span>
-                    <span style={styles.infoValue}>{selectedOrder.product_name}</span>
-                  </div>
-                  <div style={styles.infoItem}>
-                    <span style={styles.infoLabel}>Quantity:</span>
-                    <span style={styles.infoValue}>{selectedOrder.quantity}</span>
-                  </div>
-                  <div style={styles.infoItem}>
-                    <span style={styles.infoLabel}>Unit Price:</span>
-                    <span style={styles.infoValue}>{formatPrice(selectedOrder.price)}</span>
-                  </div>
-                  <div style={styles.infoItem}>
-                    <span style={styles.infoLabel}>Total Amount:</span>
-                    <span style={{...styles.infoValue, fontSize: '1.2rem', fontWeight: '700', color: '#1e3c72'}}>
-                      {formatPrice(Number(selectedOrder.price || 0) * Number(selectedOrder.quantity || 0))}
-                    </span>
-                  </div>
+                <h4 style={styles.sectionTitle}>Order Items ({selectedOrder.items?.length || 0})</h4>
+                <div style={styles.itemsList}>
+                  {selectedOrder.items && selectedOrder.items.length > 0 ? (
+                    selectedOrder.items.map((item, idx) => (
+                      <div key={idx} style={styles.itemCard}>
+                        <div style={styles.itemDetails}>
+                          <div style={styles.itemName}>{item.product_name}</div>
+                          <div style={styles.itemMeta}>
+                            Quantity: <strong>{item.quantity}</strong> × {formatPrice(item.price)}
+                          </div>
+                        </div>
+                        <div style={styles.itemTotal}>
+                          {formatPrice(Number(item.price) * Number(item.quantity))}
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p style={{ color: '#999', textAlign: 'center' }}>No items in this order</p>
+                  )}
+                </div>
+
+                <h4 style={{ ...styles.sectionTitle, marginTop: '32px' }}>Proof of Payment</h4>
+                {selectedOrder.proof_of_payment_url ? (
+                  <img
+                    src={selectedOrder.proof_of_payment_url}
+                    alt="Proof of Payment"
+                    style={{
+                      maxHeight: '400px',
+                      maxWidth: '100%',
+                      marginTop: '16px',
+                      borderRadius: '8px',
+                      border: '1px solid #e0e0e0'
+                    }}
+                  />
+                ) : (
+                  <p style={{ color: '#999', fontSize: '0.9rem', marginTop: '16px' }}>
+                    No proof of payment uploaded
+                  </p>
+                )}
+              </div>
+
+              <div style={styles.section}>
+                <div style={styles.totalSection}>
+                  <span style={styles.totalLabel}>Total Amount:</span>
+                  <span style={styles.totalAmount}>{formatPrice(selectedOrder.total)}</span>
                 </div>
               </div>
             </div>
 
             <div style={styles.modalFooter}>
+              <button
+                onClick={() => printReceipt(selectedOrder)}
+                style={styles.printButton}
+              >
+                <FiPrinter size={16} />
+                Print Receipt
+              </button>
               <button
                 onClick={() => setSelectedOrder(null)}
                 style={styles.closeButtonFooter}
@@ -576,24 +1042,11 @@ const styles = {
     color: '#666',
     marginLeft: '8px',
   },
-  modalOverlay: {
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    width: '100vw !important;',
-    height: '100vh',
-    background: 'rgba(0, 0, 0, 0.5)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 1000,
-    padding: '20px',
-  },
   modal: {
     background: '#fff',
     borderRadius: '16px',
     width: '100%',
-    maxWidth: '700px',
+    maxWidth: '800px',
     maxHeight: '90vh',
     overflow: 'hidden',
     boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
@@ -636,6 +1089,20 @@ const styles = {
     borderRadius: '4px',
     transition: 'background 0.2s ease',
   },
+  printButton: {
+    padding: '12px 32px',
+    background: 'linear-gradient(135deg, #28a745 0%, #20c997 100%)',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '8px',
+    fontSize: '0.95rem',
+    fontWeight: '600',
+    cursor: 'pointer',
+    transition: 'all 0.3s ease',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+  },
   modalBody: {
     padding: '30px',
     overflowY: 'auto',
@@ -674,6 +1141,58 @@ const styles = {
     fontWeight: '500',
     color: '#333',
   },
+  itemsList: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '12px',
+  },
+  itemCard: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: '16px',
+    background: '#f8fafc',
+    border: '2px solid #e0f2fe',
+    borderRadius: '8px',
+  },
+  itemDetails: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '4px',
+  },
+  itemName: {
+    fontSize: '1rem',
+    fontWeight: '600',
+    color: '#333',
+  },
+  itemMeta: {
+    fontSize: '0.85rem',
+    color: '#666',
+  },
+  itemTotal: {
+    fontSize: '1.1rem',
+    fontWeight: '700',
+    color: '#1e3c72',
+  },
+  totalSection: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: '20px',
+    background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
+    borderRadius: '8px',
+    border: '2px solid #bae6fd',
+  },
+  totalLabel: {
+    fontSize: '1.2rem',
+    fontWeight: '600',
+    color: '#1e3c72',
+  },
+  totalAmount: {
+    fontSize: '1.5rem',
+    fontWeight: '700',
+    color: '#1e3c72',
+  },
   modalFooter: {
     padding: '20px 30px',
     borderTop: '1px solid #e0e0e0',
@@ -692,13 +1211,13 @@ const styles = {
     cursor: 'pointer',
     transition: 'all 0.3s ease',
   },
-  filterBar:{
+  filterBar: {
     display: 'flex',
     flexWrap: 'wrap',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: '16px',
-    padding: '16px 24px !important;',
+    padding: '16px 24px',
     background: 'white',
     borderRadius: '12px',
     marginBottom: '20px',

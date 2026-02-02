@@ -8,7 +8,8 @@ import {
   FaStore, 
   FaBell, 
   FaUser, 
-  FaSearch 
+  FaSearch,
+  FaHistory 
 } from "react-icons/fa";
 import { getCartCount } from "../utils/cartUtils";
 import "./BuyerDashboard.css";
@@ -270,6 +271,14 @@ const BuyerHeader = ({ searchTerm, onSearchChange, onNavClick, currentPage }) =>
         >
           <FaStore />
           <span>Shop</span>
+        </div>
+
+        <div 
+          className={`nav-item ${location.pathname === "/buyer/orders" ? "active" : ""}`}
+          onClick={() => navigate("/buyer/orders")}
+        >
+          <FaHistory />
+          <span>Orders</span>
         </div>
 
         <div 

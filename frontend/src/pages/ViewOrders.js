@@ -16,7 +16,8 @@ import {
   FiXCircle,
   FiTruck,
   FiAlertCircle,
-  FiPrinter
+  FiPrinter,
+  FiSearch
 } from "react-icons/fi";
 import Swal from "sweetalert2";
 
@@ -316,6 +317,342 @@ export default function ViewOrders() {
     };
   };
 
+  // Print All Orders Function
+  const printAllOrders = () => {
+    const ordersToExport = getFilteredOrders();
+
+    if (ordersToExport.length === 0) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'No Orders',
+        text: 'No orders available to print',
+        confirmButtonColor: '#1e3c72'
+      });
+      return;
+    }
+
+    const printWindow = window.open('', '', 'height=800,width=1000');
+
+    const totalRevenue = ordersToExport.reduce((sum, order) => sum + Number(order.total || 0), 0);
+    const statusCounts = {
+      'Pending': ordersToExport.filter(o => o.status === 'Pending').length,
+      'Preparing': ordersToExport.filter(o => o.status === 'Preparing').length,
+      'Ready for Pickup': ordersToExport.filter(o => o.status === 'Ready for Pickup').length,
+      'Completed': ordersToExport.filter(o => o.status === 'Completed').length,
+      'Cancelled': ordersToExport.filter(o => o.status === 'Cancelled').length,
+    };
+
+    const printContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Orders Report</title>
+      <style>
+        body {
+          font-family: Arial, sans-serif;
+          padding: 20px;
+          color: #333;
+        }
+        h1 {
+          color: #1e3c72;
+          border-bottom: 3px solid #1e3c72;
+          padding-bottom: 10px;
+          margin-bottom: 10px;
+        }
+        .subtitle {
+          color: #666;
+          font-size: 14px;
+          margin-bottom: 30px;
+        }
+        .summary {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 20px;
+          margin-bottom: 30px;
+          padding: 20px;
+          background: #f8f9fa;
+          border-radius: 8px;
+        }
+        .summary-item {
+          padding: 15px;
+          background: white;
+          border-radius: 8px;
+          border-left: 4px solid #1e3c72;
+        }
+        .summary-label {
+          font-size: 12px;
+          color: #666;
+          margin-bottom: 5px;
+          text-transform: uppercase;
+          font-weight: 600;
+        }
+        .summary-value {
+          font-size: 24px;
+          font-weight: bold;
+          color: #1e3c72;
+        }
+        .status-summary {
+          display: grid;
+          grid-template-columns: repeat(5, 1fr);
+          gap: 15px;
+          margin-bottom: 30px;
+          padding: 20px;
+          background: #f8f9fa;
+          border-radius: 8px;
+        }
+        .status-item {
+          text-align: center;
+          padding: 10px;
+          background: white;
+          border-radius: 8px;
+        }
+        .status-count {
+          font-size: 20px;
+          font-weight: bold;
+          margin-bottom: 5px;
+        }
+        .status-label {
+          font-size: 11px;
+          color: #666;
+        }
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          margin-top: 20px;
+        }
+        th {
+          background: #1e3c72;
+          color: white;
+          padding: 12px;
+          text-align: left;
+          font-size: 11px;
+          text-transform: uppercase;
+        }
+        td {
+          padding: 10px 12px;
+          border-bottom: 1px solid #e0e0e0;
+          font-size: 13px;
+        }
+        tr:hover {
+          background: #f8f9fa;
+        }
+        .status-badge {
+          padding: 4px 8px;
+          border-radius: 4px;
+          font-size: 11px;
+          font-weight: 600;
+          display: inline-block;
+        }
+        .status-Pending { background: #fff3cd; color: #856404; }
+        .status-Preparing { background: #cfe2ff; color: #084298; }
+        .status-Ready { background: #d1e7dd; color: #0f5132; }
+        .status-Completed { background: #d1e7dd; color: #0f5132; }
+        .status-Cancelled { background: #f8d7da; color: #842029; }
+        .print-date {
+          text-align: right;
+          color: #666;
+          font-size: 12px;
+          margin-top: 30px;
+        }
+        @media print {
+          body { padding: 0; }
+          .no-print { display: none; }
+        }
+      </style>
+    </head>
+    <body>
+      <h1>Orders Report</h1>
+      <div class="subtitle">
+        ${filterStatus !== 'All' ? `Filtered by: ${filterStatus} • ` : ''}Total Orders: ${ordersToExport.length}
+      </div>
+      
+      <div class="summary">
+        <div class="summary-item">
+          <div class="summary-label">Total Orders</div>
+          <div class="summary-value">${ordersToExport.length}</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-label">Total Revenue</div>
+          <div class="summary-value">₱${totalRevenue.toFixed(2)}</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-label">Average Order Value</div>
+          <div class="summary-value">₱${ordersToExport.length > 0 ? (totalRevenue / ordersToExport.length).toFixed(2) : '0.00'}</div>
+        </div>
+      </div>
+
+      <div class="status-summary">
+        <div class="status-item">
+          <div class="status-count" style="color: #856404;">${statusCounts['Pending']}</div>
+          <div class="status-label">Pending</div>
+        </div>
+        <div class="status-item">
+          <div class="status-count" style="color: #084298;">${statusCounts['Preparing']}</div>
+          <div class="status-label">Preparing</div>
+        </div>
+        <div class="status-item">
+          <div class="status-count" style="color: #0f5132;">${statusCounts['Ready for Pickup']}</div>
+          <div class="status-label">Ready</div>
+        </div>
+        <div class="status-item">
+          <div class="status-count" style="color: #0f5132;">${statusCounts['Completed']}</div>
+          <div class="status-label">Completed</div>
+        </div>
+        <div class="status-item">
+          <div class="status-count" style="color: #842029;">${statusCounts['Cancelled']}</div>
+          <div class="status-label">Cancelled</div>
+        </div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Order ID</th>
+            <th>Customer</th>
+            <th>Contact</th>
+            <th>Date</th>
+            <th>Items</th>
+            <th>Total</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${ordersToExport.map(order => `
+            <tr>
+              <td>#${order.orderId}</td>
+              <td>${order.customerName}</td>
+              <td>${order.contact}</td>
+              <td>${new Date(order.orderDate).toLocaleDateString()}</td>
+              <td>${order.items ? order.items.length : 0} item(s)</td>
+              <td>₱${Number(order.total).toFixed(2)}</td>
+              <td>
+                <span class="status-badge status-${order.status?.replace(/\s+/g, '') || 'Pending'}">
+                  ${order.status || 'Pending'}
+                </span>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+
+      <div class="print-date">
+        Report Generated: ${new Date().toLocaleString()}
+      </div>
+    </body>
+    </html>
+  `;
+
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    printWindow.focus();
+
+    setTimeout(() => {
+      printWindow.print();
+      printWindow.close();
+    }, 250);
+  };
+
+  // Export to CSV Function
+  const exportToCSV = () => {
+    const ordersToExport = getFilteredOrders();
+
+    if (ordersToExport.length === 0) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'No Orders',
+        text: 'No orders available to export',
+        confirmButtonColor: '#1e3c72'
+      });
+      return;
+    }
+
+    Swal.fire({
+      title: 'Export to CSV',
+      text: `Export ${ordersToExport.length} order(s) to CSV?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, Export',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#1e3c72',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        const headers = ['Order ID', 'Customer Name', 'Contact', 'Address', 'Order Date', 'Items', 'Total Amount', 'Payment Mode', 'Status', 'Notes'];
+
+        const rows = ordersToExport.map(order => {
+          const itemsList = order.items ? order.items.map(item =>
+            `${item.productName} (${item.quantity}kg @ ₱${item.price})`
+          ).join('; ') : 'No items';
+
+          return [
+            order.orderId,
+            order.customerName,
+            order.contact,
+            order.address || 'N/A',
+            new Date(order.orderDate).toLocaleString(),
+            itemsList,
+            Number(order.total).toFixed(2),
+            order.paymentMode || 'Gcash QR',
+            order.status || 'Pending',
+            order.notes || 'N/A'
+          ];
+        });
+
+        let csvContent = headers.join(',') + '\n';
+        rows.forEach(row => {
+          csvContent += row.map(cell => `"${cell}"`).join(',') + '\n';
+        });
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+
+        const fileName = `orders_${filterStatus !== 'All' ? filterStatus.toLowerCase() : 'all'}_${new Date().toISOString().split('T')[0]}.csv`;
+
+        link.setAttribute('href', url);
+        link.setAttribute('download', fileName);
+        link.style.visibility = 'hidden';
+
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        Swal.fire({
+          icon: 'success',
+          title: 'Exported!',
+          text: 'Orders exported successfully',
+          confirmButtonColor: '#1e3c72',
+          timer: 2000,
+          timerProgressBar: true
+        });
+      }
+    });
+  };
+
+  // Helper function to get filtered orders
+  const getFilteredOrders = () => {
+    let filtered = orders;
+
+    // Apply status filter
+    if (filterStatus !== "All") {
+      filtered = filtered.filter(order =>
+        (order.status || "Pending") === filterStatus
+      );
+    }
+
+    // Apply search filter
+    if (searchQuery.trim()) {
+      const search = searchQuery.toLowerCase();
+      filtered = filtered.filter(order => {
+        const orderId = order.orderId?.toString().toLowerCase() || "";
+        const customerName = order.customerName?.toLowerCase() || "";
+        const contact = order.contact?.toLowerCase() || "";
+        return orderId.includes(search) || customerName.includes(search) || contact.includes(search);
+      });
+    }
+
+    return filtered;
+  };
+
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
@@ -494,28 +831,45 @@ export default function ViewOrders() {
         </div>
       ) : (
         <>
+          {/* Filters Section */}
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '15px' }}>
+            <button className="btn " onClick={printAllOrders} style={{background: '#285fa7', color: 'white' }}>
+              <FiPrinter size={16} />
+              Print Report
+            </button>
+            <button className="btn" onClick={exportToCSV} style={{ background: '#28a745', color: 'white' }}>
+              <FiDownload size={16} />
+              Export CSV
+            </button>
+          </div>
+
           <div className="filters-section">
-            <div className="search-box">
-              <FiPackage className="search-icon" />
+            <div className="search-container" style={{ marginBottom: "20px" }}>
+              <FiSearch className="search-icon" size={18} />
               <input
                 type="text"
-                placeholder="Search by Order ID, Customer, or Contact..."
+                placeholder="Search by Order ID, Customer Name, or Contact..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="search-input"
               />
               {searchQuery && (
-                <button onClick={() => setSearchQuery("")} className="clear-search">
-                  <FiX />
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="clear-search"
+                  title="Clear search"
+                >
+                  <FiX size={18} />
                 </button>
               )}
             </div>
 
+            {/* Status Filters */}
             {isMobile ? (
               <select
-                className="status-select-mobile"
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
+                className="status-select-mobile"
               >
                 <option value="All">All Orders</option>
                 {STATUS_OPTIONS.map((status) => (
@@ -527,19 +881,19 @@ export default function ViewOrders() {
             ) : (
               <div className="status-filters">
                 <button
-                  className={`filter-btn ${filterStatus === "All" ? "active" : ""}`}
                   onClick={() => setFilterStatus("All")}
+                  className={`filter-btn ${filterStatus === "All" ? "active" : ""}`}
                 >
                   All Orders
                 </button>
                 {STATUS_OPTIONS.map((status) => (
                   <button
                     key={status}
-                    className={`filter-btn ${filterStatus === status ? "active" : ""}`}
                     onClick={() => setFilterStatus(status)}
+                    className={`filter-btn ${filterStatus === status ? "active" : ""}`}
                   >
                     {STATUS_ICONS[status]}
-                    <span>{status}</span>
+                    {status}
                   </button>
                 ))}
               </div>

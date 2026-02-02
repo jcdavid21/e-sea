@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import Swal from 'sweetalert2';
-import { FiEdit2, FiSave, FiX, FiPackage, FiImage, FiChevronLeft, FiChevronRight, FiChevronsLeft, FiChevronsRight, FiAlertCircle, FiChevronDown, FiTrash2 } from "react-icons/fi";
+import { FiEdit2, FiSave, FiX, FiPackage, FiImage, FiChevronLeft, FiChevronRight, FiChevronsLeft, FiChevronsRight, FiAlertCircle, FiChevronDown, FiTrash2, FiPrinter, FiDownload } from "react-icons/fi";
 import "./AllProducts.css";
 
 function AllProducts() {
@@ -52,6 +52,8 @@ function AllProducts() {
       setLoading(false);
     }
   };
+
+
 
   const filteredProducts = products.filter((p) => {
     const matchesCategory = selectedCategory === "All" || p.category === selectedCategory;
@@ -285,6 +287,348 @@ function AllProducts() {
     }
   };
 
+  // Print Products Function
+  const printProducts = () => {
+    if (filteredProducts.length === 0) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'No Products',
+        text: 'No products available to print',
+        confirmButtonColor: '#1e3c72'
+      });
+      return;
+    }
+
+    const printWindow = window.open('', '', 'height=800,width=1000');
+
+    const totalValue = filteredProducts.reduce((sum, p) => sum + (p.stock * p.price), 0);
+    const totalStock = filteredProducts.reduce((sum, p) => sum + parseFloat(p.stock || 0), 0);
+    const avgPrice = filteredProducts.length > 0
+      ? filteredProducts.reduce((sum, p) => sum + parseFloat(p.price || 0), 0) / filteredProducts.length
+      : 0;
+
+    // Get category breakdown
+    const categoryBreakdown = {};
+    filteredProducts.forEach(p => {
+      if (!categoryBreakdown[p.category]) {
+        categoryBreakdown[p.category] = { count: 0, stock: 0, value: 0 };
+      }
+      categoryBreakdown[p.category].count++;
+      categoryBreakdown[p.category].stock += parseFloat(p.stock || 0);
+      categoryBreakdown[p.category].value += (p.stock * p.price);
+    });
+
+    const printContent = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>Products Inventory Report</title>
+        <style>
+          body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            color: #333;
+          }
+          h1 {
+            color: #1e3c72;
+            border-bottom: 3px solid #1e3c72;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+          }
+          .subtitle {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 30px;
+          }
+          .summary {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+          }
+          .summary-item {
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            border-left: 4px solid #1e3c72;
+          }
+          .summary-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            font-weight: 600;
+          }
+          .summary-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1e3c72;
+          }
+          .category-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+          }
+          .category-section h3 {
+            margin-top: 0;
+            color: #1e3c72;
+            font-size: 18px;
+          }
+          .category-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+          }
+          .category-card {
+            padding: 12px;
+            background: white;
+            border-radius: 8px;
+            border-left: 3px solid #28a745;
+          }
+          .category-name {
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #1e3c72;
+          }
+          .category-stat {
+            font-size: 12px;
+            color: #666;
+            margin: 4px 0;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+          }
+          th {
+            background: #1e3c72;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-size: 11px;
+            text-transform: uppercase;
+          }
+          td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 13px;
+          }
+          tr:hover {
+            background: #f8f9fa;
+          }
+          .stock-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            display: inline-block;
+          }
+          .stock-high { background: #d1e7dd; color: #0f5132; }
+          .stock-medium { background: #fff3cd; color: #856404; }
+          .stock-low { background: #f8d7da; color: #842029; }
+          .freshness-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            display: inline-block;
+          }
+          .freshness-Fresh { background: #d1e7dd; color: #0f5132; }
+          .freshness-Moderate { background: #fff3cd; color: #856404; }
+          .freshness-Low { background: #f8d7da; color: #842029; }
+          .print-date {
+            text-align: right;
+            color: #666;
+            font-size: 12px;
+            margin-top: 30px;
+          }
+          @media print {
+            body { padding: 0; }
+            .no-print { display: none; }
+          }
+        </style>
+      </head>
+      <body>
+        <h1>Products Inventory Report</h1>
+        <div class="subtitle">
+          ${selectedCategory !== 'All' ? `Filtered by: ${selectedCategory} • ` : ''}Total Products: ${filteredProducts.length}
+        </div>
+        
+        <div class="summary">
+          <div class="summary-item">
+            <div class="summary-label">Total Products</div>
+            <div class="summary-value">${filteredProducts.length}</div>
+          </div>
+          <div class="summary-item">
+            <div class="summary-label">Total Stock</div>
+            <div class="summary-value">${totalStock.toFixed(2)} kg</div>
+          </div>
+          <div class="summary-item">
+            <div class="summary-label">Total Value</div>
+            <div class="summary-value">₱${totalValue.toFixed(2)}</div>
+          </div>
+          <div class="summary-item">
+            <div class="summary-label">Avg Price</div>
+            <div class="summary-value">₱${avgPrice.toFixed(2)}/kg</div>
+          </div>
+        </div>
+
+        <div class="category-section">
+          <h3>Category Breakdown</h3>
+          <div class="category-grid">
+            ${Object.entries(categoryBreakdown).map(([category, stats]) => `
+              <div class="category-card">
+                <div class="category-name">${category}</div>
+                <div class="category-stat">${stats.count} product(s)</div>
+                <div class="category-stat">${stats.stock.toFixed(2)} kg total</div>
+                <div class="category-stat">₱${stats.value.toFixed(2)} value</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Product Name</th>
+              <th>Category</th>
+              <th>Stock (kg)</th>
+              <th>Price (₱/kg)</th>
+              <th>Value (₱)</th>
+              <th>Freshness</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${filteredProducts.map(product => {
+      const stock = parseFloat(product.stock || 0);
+      const stockClass = stock > 20 ? 'high' : stock > 5 ? 'medium' : 'low';
+      const value = stock * parseFloat(product.price || 0);
+
+      return `
+                <tr>
+                  <td><strong>${product.name}</strong></td>
+                  <td>${product.category}</td>
+                  <td>
+                    <span class="stock-badge stock-${stockClass}">
+                      ${stock.toFixed(2)} kg
+                    </span>
+                  </td>
+                  <td>₱${parseFloat(product.price || 0).toFixed(2)}</td>
+                  <td>₱${value.toFixed(2)}</td>
+                  <td>
+                    <span class="freshness-badge freshness-${product.freshness || 'Fresh'}">
+                      ${product.freshness || 'Fresh'}
+                    </span>
+                  </td>
+                </tr>
+              `;
+    }).join('')}
+          </tbody>
+        </table>
+
+        <div class="print-date">
+          Report Generated: ${new Date().toLocaleString()}
+        </div>
+      </body>
+      </html>
+    `;
+
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    printWindow.focus();
+
+    setTimeout(() => {
+      printWindow.print();
+      printWindow.close();
+    }, 250);
+  };
+
+  // Export to CSV Function
+  const exportToCSV = () => {
+    if (filteredProducts.length === 0) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'No Products',
+        text: 'No products available to export',
+        confirmButtonColor: '#1e3c72'
+      });
+      return;
+    }
+
+    Swal.fire({
+      title: 'Export to CSV',
+      text: `Export ${filteredProducts.length} product(s) to CSV?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, Export',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#1e3c72',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        const headers = [
+          'Product Name',
+          'Category',
+          'Stock (kg)',
+          'Price (₱/kg)',
+          'Previous Price (₱/kg)',
+          'Total Value (₱)',
+          'Freshness',
+          'Last Updated'
+        ];
+
+        const rows = filteredProducts.map(product => {
+          const stock = parseFloat(product.stock || 0);
+          const price = parseFloat(product.price || 0);
+          const totalValue = stock * price;
+
+          return [
+            product.name,
+            product.category,
+            stock.toFixed(2),
+            price.toFixed(2),
+            product.previous_price ? parseFloat(product.previous_price).toFixed(2) : 'N/A',
+            totalValue.toFixed(2),
+            product.freshness || 'Fresh',
+            product.updated_at ? new Date(product.updated_at).toLocaleString() : 'N/A'
+          ];
+        });
+
+        let csvContent = headers.join(',') + '\n';
+        rows.forEach(row => {
+          csvContent += row.map(cell => `"${cell}"`).join(',') + '\n';
+        });
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+
+        const fileName = `products_${selectedCategory !== 'All' ? selectedCategory.toLowerCase() : 'all'}_${new Date().toISOString().split('T')[0]}.csv`;
+
+        link.setAttribute('href', url);
+        link.setAttribute('download', fileName);
+        link.style.visibility = 'hidden';
+
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        Swal.fire({
+          icon: 'success',
+          title: 'Exported!',
+          text: 'Products exported successfully',
+          confirmButtonColor: '#1e3c72',
+          timer: 2000,
+          timerProgressBar: true
+        });
+      }
+    });
+  };
+
   if (loading) {
     return (
       <div className="ap-container">
@@ -304,9 +648,41 @@ function AllProducts() {
           <h2 style={styles.title}>All Products</h2>
           <p style={styles.subtitle}>View and manage your product catalog</p>
         </div>
-        <div className="ap-product-count">
-          {filteredProducts.length}{" "}
-          {filteredProducts.length === 1 ? "Product" : "Products"}
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <div className="ap-product-count">
+            {filteredProducts.length}{" "}
+            {filteredProducts.length === 1 ? "Product" : "Products"}
+          </div>
+          <button
+            onClick={printProducts}
+            style={{
+              ...styles.editButton,
+              background: '#007bff',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}
+            onMouseEnter={(e) => e.target.style.background = '#0056b3'}
+            onMouseLeave={(e) => e.target.style.background = '#007bff'}
+          >
+            <FiPrinter size={18} />
+            Print
+          </button>
+          <button
+            onClick={exportToCSV}
+            style={{
+              ...styles.editButton,
+              background: '#28a745',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}
+            onMouseEnter={(e) => e.target.style.background = '#218838'}
+            onMouseLeave={(e) => e.target.style.background = '#28a745'}
+          >
+            <FiDownload size={18} />
+            Export CSV
+          </button>
         </div>
       </div>
 
@@ -430,10 +806,10 @@ function AllProducts() {
                     <td>
                       <span style={{
                         ...styles.categoryBadge,
-                        background: p.freshness === 'Fresh' ? '#d4edda' : 
-                                   p.freshness === 'Chilled' ? '#d1ecf1' : '#cfe2ff',
-                        color: p.freshness === 'Fresh' ? '#155724' : 
-                               p.freshness === 'Chilled' ? '#0c5460' : '#084298',
+                        background: p.freshness === 'Fresh' ? '#d4edda' :
+                          p.freshness === 'Chilled' ? '#d1ecf1' : '#cfe2ff',
+                        color: p.freshness === 'Fresh' ? '#155724' :
+                          p.freshness === 'Chilled' ? '#0c5460' : '#084298',
                       }}>
                         {p.freshness || 'Fresh'}
                       </span>
@@ -446,7 +822,7 @@ function AllProducts() {
 
                     <td>
                       {p.previous_price &&
-                      p.previous_price !== p.price
+                        p.previous_price !== p.price
                         ? `₱${Number(p.previous_price).toFixed(2)}`
                         : "-"}
                     </td>
@@ -826,7 +1202,7 @@ const styles = {
     cursor: 'pointer',
     transition: 'background 0.3s ease',
   },
-  
+
   saveButton: {
     display: 'inline-flex',
     alignItems: 'center',
@@ -977,25 +1353,25 @@ const styles = {
     boxShadow: '0 4px 12px rgba(30, 60, 114, 0.3)',
   },
   actionButtons: {
-  display: 'flex',
-  gap: '8px',
-  justifyContent: 'center',
-  alignItems: 'center',
-},
-deleteButton: {
-  display: 'inline-flex',
-  alignItems: 'center',
-  gap: '8px',
-  padding: '10px 20px',
-  background: '#dc3545',
-  color: '#fff',
-  border: 'none',
-  borderRadius: '8px',
-  fontSize: '0.9rem',
-  fontWeight: '600',
-  cursor: 'pointer',
-  transition: 'all 0.3s ease',
-},
+    display: 'flex',
+    gap: '8px',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  deleteButton: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '8px',
+    padding: '10px 20px',
+    background: '#dc3545',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '8px',
+    fontSize: '0.9rem',
+    fontWeight: '600',
+    cursor: 'pointer',
+    transition: 'all 0.3s ease',
+  },
 };
 
 const styleSheet = document.createElement("style");

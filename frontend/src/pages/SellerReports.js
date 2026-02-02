@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  FiDownload, 
-  FiCalendar, 
-  FiTrendingUp, 
-  FiDollarSign, 
+import {
+  FiDownload,
+  FiCalendar,
+  FiTrendingUp,
+  FiDollarSign,
   FiShoppingCart,
   FiPackage,
   FiBarChart2,
@@ -11,7 +11,8 @@ import {
   FiChevronLeft,
   FiChevronRight,
   FiChevronsLeft,
-  FiChevronsRight
+  FiChevronsRight,
+  FiPrinter  // ADD THIS
 } from 'react-icons/fi';
 import Swal from 'sweetalert2';
 import './SellerReports.css';
@@ -40,14 +41,14 @@ function Reports() {
     const year = today.getFullYear();
     const month = today.getMonth();
     const day = today.getDate();
-    
+
     // Calculate ISO week number
     const tempDate = new Date(year, month, day);
     tempDate.setHours(0, 0, 0, 0);
     tempDate.setDate(tempDate.getDate() + 3 - (tempDate.getDay() + 6) % 7);
     const week1 = new Date(tempDate.getFullYear(), 0, 4);
     const weekNumber = 1 + Math.round(((tempDate.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
-    
+
     setSelectedWeek(`${year}-W${String(weekNumber).padStart(2, '0')}`);
   }, []);
 
@@ -83,13 +84,13 @@ function Reports() {
         `${process.env.REACT_APP_SELLER_API_URL}/api/orders?seller_id=${encodeURIComponent(seller_id)}&limit=10000`
       );
       const data = await res.json();
-      
+
       // Extract orders array and filter only completed orders (like SellerHome)
       const allOrders = (data.orders || []).filter(order => order.status === 'Completed');
-      
+
       // Filter orders based on report type and date
       let filteredOrders = [];
-      
+
       if (reportType === 'all') {
         // Show all completed orders
         filteredOrders = allOrders;
@@ -104,7 +105,7 @@ function Reports() {
           const [year, week] = selectedWeek.split('-W');
           const weekStart = getDateOfISOWeek(parseInt(week), parseInt(year));
           const weekEnd = getWeekEndDate(weekStart);
-          
+
           filteredOrders = allOrders.filter(order => {
             const orderDate = new Date(order.orderDate);
             return orderDate >= weekStart && orderDate <= weekEnd;
@@ -115,11 +116,11 @@ function Reports() {
         const [year, month] = selectedMonth.split('-');
         filteredOrders = allOrders.filter(order => {
           const orderDate = new Date(order.orderDate);
-          return orderDate.getFullYear() === parseInt(year) && 
-                 (orderDate.getMonth() + 1) === parseInt(month);
+          return orderDate.getFullYear() === parseInt(year) &&
+            (orderDate.getMonth() + 1) === parseInt(month);
         });
       }
-      
+
       // Process orders to create report data
       const reportItems = [];
       filteredOrders.forEach(order => {
@@ -138,7 +139,7 @@ function Reports() {
           });
         }
       });
-      
+
       setReportData(reportItems);
       calculateSummary(reportItems);
     } catch (err) {
@@ -235,12 +236,11 @@ function Reports() {
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
-    
-    const fileName = `sales_report_${reportType}_${
-      reportType === 'daily' ? selectedDate : 
-      reportType === 'weekly' ? selectedWeek : 
-      selectedMonth
-    }.csv`;
+
+    const fileName = `sales_report_${reportType}_${reportType === 'daily' ? selectedDate :
+        reportType === 'weekly' ? selectedWeek :
+          selectedMonth
+      }.csv`;
 
     link.setAttribute('href', url);
     link.setAttribute('download', fileName);
@@ -257,6 +257,172 @@ function Reports() {
       timer: 2000,
       timerProgressBar: true
     });
+  };
+
+  const printReport = () => {
+    if (!reportData || reportData.length === 0) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'No Data',
+        text: 'No data available to print',
+        confirmButtonColor: '#1e3c72'
+      });
+      return;
+    }
+
+    const printWindow = window.open('', '', 'height=800,width=1000');
+
+    const printContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>${getReportTitle()}</title>
+      <style>
+        body {
+          font-family: Arial, sans-serif;
+          padding: 20px;
+          color: #333;
+        }
+        h1 {
+          color: #1e3c72;
+          border-bottom: 3px solid #1e3c72;
+          padding-bottom: 10px;
+          margin-bottom: 20px;
+        }
+        .summary {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 15px;
+          margin-bottom: 30px;
+          padding: 20px;
+          background: #f8f9fa;
+          border-radius: 8px;
+        }
+        .summary-item {
+          text-align: center;
+        }
+        .summary-label {
+          font-size: 12px;
+          color: #666;
+          margin-bottom: 5px;
+        }
+        .summary-value {
+          font-size: 24px;
+          font-weight: bold;
+          color: #1e3c72;
+        }
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          margin-top: 20px;
+        }
+        th {
+          background: #1e3c72;
+          color: white;
+          padding: 12px;
+          text-align: left;
+          font-size: 12px;
+          text-transform: uppercase;
+        }
+        td {
+          padding: 10px 12px;
+          border-bottom: 1px solid #e0e0e0;
+          font-size: 14px;
+        }
+        tr:hover {
+          background: #f8f9fa;
+        }
+        .footer {
+          margin-top: 30px;
+          padding-top: 20px;
+          border-top: 2px solid #1e3c72;
+          display: flex;
+          justify-content: space-between;
+          font-weight: bold;
+        }
+        .print-date {
+          text-align: right;
+          color: #666;
+          font-size: 12px;
+          margin-top: 20px;
+        }
+        @media print {
+          body { padding: 0; }
+          .no-print { display: none; }
+        }
+      </style>
+    </head>
+    <body>
+      <h1>${getReportTitle()}</h1>
+      
+      <div class="summary">
+        <div class="summary-item">
+          <div class="summary-label">Total Sales</div>
+          <div class="summary-value">₱${summary.totalSales.toFixed(2)}</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-label">Total Orders</div>
+          <div class="summary-value">${summary.totalOrders}</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-label">Total Products</div>
+          <div class="summary-value">${summary.totalProducts} kg</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-label">Avg Order Value</div>
+          <div class="summary-value">₱${summary.averageOrderValue.toFixed(2)}</div>
+        </div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Order #</th>
+            <th>Date</th>
+            <th>Customer</th>
+            <th>Product</th>
+            <th>Quantity (kg)</th>
+            <th>Price (₱/kg)</th>
+            <th>Total (₱)</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${reportData.map(row => `
+            <tr>
+              <td>#${row.id}</td>
+              <td>${new Date(row.order_date).toLocaleDateString()}</td>
+              <td>${row.customer_name}</td>
+              <td>${row.product_name}</td>
+              <td>${row.quantity}</td>
+              <td>₱${parseFloat(row.price).toFixed(2)}</td>
+              <td>₱${parseFloat(row.item_total).toFixed(2)}</td>
+              <td>${row.status}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+
+      <div class="footer">
+        <div>Total Records: ${reportData.length}</div>
+        <div>Total Amount: ₱${summary.totalSales.toFixed(2)}</div>
+      </div>
+
+      <div class="print-date">
+        Printed on: ${new Date().toLocaleString()}
+      </div>
+    </body>
+    </html>
+  `;
+
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    printWindow.focus();
+
+    setTimeout(() => {
+      printWindow.print();
+      printWindow.close();
+    }, 250);
   };
 
   const getReportTitle = () => {
@@ -284,15 +450,26 @@ function Reports() {
           <h2 style={styles.title}>Sales Reports</h2>
           <p style={styles.subtitle}>Track and analyze your sales performance</p>
         </div>
-        <button
-          onClick={downloadCSV}
-          style={styles.downloadButton}
-          onMouseEnter={(e) => e.target.style.background = '#218838'}
-          onMouseLeave={(e) => e.target.style.background = '#28a745'}
-        >
-          <FiDownload size={18} />
-          Download CSV
-        </button>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <button
+            onClick={printReport}
+            style={styles.printButton}
+            onMouseEnter={(e) => e.target.style.background = '#0056b3'}
+            onMouseLeave={(e) => e.target.style.background = '#007bff'}
+          >
+            <FiPrinter size={18} />
+            Print Report
+          </button>
+          <button
+            onClick={downloadCSV}
+            style={styles.downloadButton}
+            onMouseEnter={(e) => e.target.style.background = '#218838'}
+            onMouseLeave={(e) => e.target.style.background = '#28a745'}
+          >
+            <FiDownload size={18} />
+            Download CSV
+          </button>
+        </div>
       </div>
 
       {/* Report Type Selector */}
@@ -555,14 +732,14 @@ function Reports() {
               >
                 <FiChevronLeft size={18} />
               </button>
-              
+
               <div style={styles.paginationInfo}>
                 <span style={styles.pageText}>Page</span>
                 <span style={styles.pageNumber}>{currentPage}</span>
                 <span style={styles.pageText}>of</span>
                 <span style={styles.pageNumber}>{totalPages}</span>
               </div>
-              
+
               <button
                 onClick={() => handlePageChange(currentPage + 1)}
                 disabled={currentPage === totalPages}
@@ -902,6 +1079,21 @@ const styles = {
     background: 'white',
     cursor: 'pointer',
     outline: 'none',
+  },
+  printButton: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '8px',
+    padding: '12px 24px',
+    background: '#007bff',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '8px',
+    fontSize: '0.95rem',
+    fontWeight: '600',
+    cursor: 'pointer',
+    transition: 'all 0.3s ease',
+    boxShadow: '0 4px 12px rgba(0, 123, 255, 0.3)',
   },
 };
 

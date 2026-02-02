@@ -59,6 +59,7 @@ const totalPages = Math.ceil(filteredStockItems.length / itemsPerPage);
     category: "",
     stock: "",
     price: "",
+    freshness: "Fresh",
     image: null
   });
 
@@ -130,6 +131,7 @@ const totalPages = Math.ceil(filteredStockItems.length / itemsPerPage);
       category: item.category,
       stock: item.stock.toString(),
       price: item.price.toString(),
+      freshness: item.freshness || "Fresh",
       image: null
     });
     setShowModal(true);
@@ -147,6 +149,7 @@ const totalPages = Math.ceil(filteredStockItems.length / itemsPerPage);
       category: "",
       stock: "",
       price: "",
+      freshness: "Fresh",
       image: null
     });
     if (fileInputRef.current) fileInputRef.current.value = "";
@@ -159,6 +162,7 @@ const totalPages = Math.ceil(filteredStockItems.length / itemsPerPage);
       category: categories.length > 0 ? categories[0].category_name : "",
       stock: "",
       price: "",
+      freshness: "Fresh",
       image: null
     });
     setImagePreview(null);
@@ -251,6 +255,15 @@ const totalPages = Math.ceil(filteredStockItems.length / itemsPerPage);
       });
       return;
     }
+    if (!formData.freshness) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Invalid Input',
+        text: 'Please select freshness',
+        confirmButtonColor: '#1e3c72'
+      });
+      return;
+    }
     if (isNaN(newStock) || newStock < 0) {
       Swal.fire({
         icon: 'warning',
@@ -284,6 +297,7 @@ const totalPages = Math.ceil(filteredStockItems.length / itemsPerPage);
       formDataToSend.append('name', formData.name);
       formDataToSend.append('category', formData.category);
       formDataToSend.append('unit', 'kg');
+      formDataToSend.append('freshness', formData.freshness);
       formDataToSend.append('stock', newStock);
       formDataToSend.append('price', newPrice);
       formDataToSend.append('seller_id', seller_id);
@@ -302,21 +316,20 @@ const totalPages = Math.ceil(filteredStockItems.length / itemsPerPage);
           title: 'Success',
           text: data.message,
           confirmButtonColor: '#1e3c72',
-          timer: 2000,
-          timerProgressBar: true
+          timer: 2000
         });
-        await loadStock();
+        loadStock();
         closeModal();
       } else {
         Swal.fire({
           icon: 'error',
           title: 'Error',
-          text: data.message || "Error adding product",
+          text: data.message,
           confirmButtonColor: '#1e3c72'
         });
       }
     } catch (err) {
-      console.error("Failed to add product:", err);
+      console.error("Error adding fish product:", err);
       Swal.fire({
         icon: 'error',
         title: 'Error',
@@ -326,48 +339,61 @@ const totalPages = Math.ceil(filteredStockItems.length / itemsPerPage);
     }
   };
 
-  const updateStock = async () => {
+  const updateFishProduct = async () => {
     const newStock = parseFloat(formData.stock);
     const newPrice = parseFloat(formData.price);
 
     if (!formData.name.trim()) {
-      showAlert("Product name is required", "error");
+      Swal.fire({
+        icon: 'warning',
+        title: 'Invalid Input',
+        text: 'Product name is required',
+        confirmButtonColor: '#1e3c72'
+      });
+      return;
+    }
+    if (!formData.category) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Invalid Input',
+        text: 'Please select a category',
+        confirmButtonColor: '#1e3c72'
+      });
+      return;
+    }
+    if (!formData.freshness) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Invalid Input',
+        text: 'Please select freshness',
+        confirmButtonColor: '#1e3c72'
+      });
       return;
     }
     if (isNaN(newStock) || newStock < 0) {
-      showAlert("Please enter a valid stock amount", "error");
+      Swal.fire({
+        icon: 'warning',
+        title: 'Invalid Input',
+        text: 'Please enter a valid stock amount',
+        confirmButtonColor: '#1e3c72'
+      });
       return;
     }
     if (isNaN(newPrice) || newPrice <= 0) {
-      showAlert("Please enter a valid price", "error");
+      Swal.fire({
+        icon: 'warning',
+        title: 'Invalid Input',
+        text: 'Please enter a valid price',
+        confirmButtonColor: '#1e3c72'
+      });
       return;
     }
-
-    const priceChanged = newPrice !== parseFloat(editingItem.price);
-
-    const result = await Swal.fire({
-      title: `Update ${formData.name}?`,
-      html: `
-        <div style="text-align: left; padding: 10px;">
-          <p><strong>Stock:</strong> ${editingItem.stock}kg → ${newStock}kg</p>
-          <p><strong>Price:</strong> ₱${parseFloat(editingItem.price).toFixed(2)} → ₱${newPrice.toFixed(2)}</p>
-          ${priceChanged ? '<p style="color: #ffc107; margin-top: 10px;">⚠️ Price change will be recorded in Price Analysis</p>' : ''}
-        </div>
-      `,
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonColor: '#28a745',
-      cancelButtonColor: '#dc3545',
-      confirmButtonText: 'Yes, update it!',
-      cancelButtonText: 'Cancel'
-    });
-
-    if (!result.isConfirmed) return;
 
     try {
       const formDataToSend = new FormData();
       formDataToSend.append('name', formData.name);
       formDataToSend.append('category', formData.category);
+      formDataToSend.append('freshness', formData.freshness);
       formDataToSend.append('stock', newStock);
       formDataToSend.append('price', newPrice);
       formDataToSend.append('seller_id', seller_id);
@@ -386,23 +412,31 @@ const totalPages = Math.ceil(filteredStockItems.length / itemsPerPage);
       const data = await res.json();
 
       if (res.ok) {
-        if (priceChanged) {
-          showAlert(
-            `${data.message} Price change recorded in Price Analysis!`,
-            "success"
-          );
-        } else {
-          showAlert(data.message, "success");
-        }
-
-        await loadStock();
+        Swal.fire({
+          icon: 'success',
+          title: 'Success',
+          text: data.message,
+          confirmButtonColor: '#1e3c72',
+          timer: 2000
+        });
+        loadStock();
         closeModal();
       } else {
-        showAlert(data.message || "Error updating product", "error");
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: data.message,
+          confirmButtonColor: '#1e3c72'
+        });
       }
     } catch (err) {
-      console.error("Failed to update stock:", err);
-      showAlert("Error updating stock", "error");
+      console.error("Error updating fish product:", err);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Error updating product',
+        confirmButtonColor: '#1e3c72'
+      });
     }
   };
 
@@ -410,7 +444,7 @@ const totalPages = Math.ceil(filteredStockItems.length / itemsPerPage);
     if (showAddModal) {
       await addFishProduct();
     } else {
-      await updateStock();
+      await updateFishProduct();
     }
   };
 
@@ -626,6 +660,7 @@ const totalPages = Math.ceil(filteredStockItems.length / itemsPerPage);
             <tr>
               <th style={styles.th}>Product</th>
               <th style={styles.th}>Category</th>
+              <th style={styles.th}>Freshness</th>
               <th style={styles.th}>Stock Status</th>
               <th style={styles.th}>Stock (kg)</th>
               <th style={styles.th}>Price (₱/kg)</th>
@@ -635,7 +670,7 @@ const totalPages = Math.ceil(filteredStockItems.length / itemsPerPage);
           <tbody>
             {stockItems.length === 0 ? (
               <tr>
-                <td colSpan="6" style={styles.noData}>
+                <td colSpan="7" style={styles.noData}>
                   <FiPackage size={48} color="#ccc" />
                   <p>No products yet. Add products to manage stock.</p>
                 </td>
@@ -643,6 +678,11 @@ const totalPages = Math.ceil(filteredStockItems.length / itemsPerPage);
             ) : (
               currentItemsFiltered.map((item) => {
                 const stockStatus = getStockStatus(item.stock);
+                const freshnessBadgeColor = 
+                  item.freshness === 'Fresh' ? '#28a745' :
+                  item.freshness === 'Chilled' ? '#17a2b8' :
+                  item.freshness === 'Frozen' ? '#007bff' : '#6c757d';
+                
                 return (
                   <tr key={item.id} style={styles.tr}>
                     <td style={styles.td}>
@@ -667,6 +707,16 @@ const totalPages = Math.ceil(filteredStockItems.length / itemsPerPage);
                     </td>
                     <td style={styles.td}>
                       <span style={styles.categoryBadge}>{item.category || "N/A"}</span>
+                    </td>
+                    <td style={styles.td}>
+                      <span style={{ 
+                        ...styles.statusBadge, 
+                        background: freshnessBadgeColor + '20', 
+                        color: freshnessBadgeColor,
+                        fontWeight: '600'
+                      }}>
+                        {item.freshness || 'Fresh'}
+                      </span>
                     </td>
                     <td style={styles.td}>
                       <span style={{ ...styles.statusBadge, background: stockStatus.color + '20', color: stockStatus.color }}>
@@ -770,6 +820,22 @@ const totalPages = Math.ceil(filteredStockItems.length / itemsPerPage);
               </div>
 
               <div style={styles.formGroup}>
+                <label style={styles.label}>Freshness *</label>
+                <select
+                  name="freshness"
+                  value={formData.freshness}
+                  onChange={handleInputChange}
+                  style={styles.input}
+                  className="category-select"
+                  required
+                >
+                  <option value="Fresh">Fresh</option>
+                  <option value="Chilled">Chilled</option>
+                  <option value="Frozen">Frozen</option>
+                </select>
+              </div>
+
+              <div style={styles.formGroup}>
                 <label style={styles.label}>Category</label>
                 <select
                   name="category"
@@ -785,6 +851,7 @@ const totalPages = Math.ceil(filteredStockItems.length / itemsPerPage);
                     </option>
                   ))}
                 </select>
+                
 
                 <button
                   type="button"
