@@ -61,7 +61,7 @@ const db = mysql.createPool({
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DATABASE_NAME,
-  port: process.env.DB_PORT,
+  // port: process.env.DB_PORT,
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0
@@ -99,7 +99,7 @@ cloudinary.config({
   api_secret: process.env.CLOUD_API_SECRET
 })
 
-// Helper function to upload to Cloudinary
+
 async function uploadToCloudinary(fileBuffer, folder = 'products') {
   try {
     return new Promise((resolve, reject) => {
@@ -516,7 +516,7 @@ app.get('/api/seller-feedback/:seller_id', async (req, res) => {
   }
 });
 
-// Get seller ratings analytics for admin
+
 app.get('/api/admin/seller-ratings', async (req, res) => {
   try {
     const sql = `
@@ -543,7 +543,7 @@ app.get('/api/admin/seller-ratings', async (req, res) => {
     
     res.json(results);
   } catch (error) {
-    console.error('❌ Error fetching seller ratings:', error);
+    console.error('Error fetching seller ratings:', error);
     res.status(500).json({ error: 'Failed to fetch seller ratings' });
   }
 });
@@ -1281,14 +1281,25 @@ app.delete("/api/seller/categories/:id", async (req, res) => {
 
 app.get("/api/seller/fish", async (req, res) => {
   try {
-    const { seller_id } = req.query;
+    const { seller_id, freshness } = req.query;
     let sql = "SELECT * FROM fish_products";
     const params = [];
+    const conditions = [];
 
     if (seller_id) {
-      sql += " WHERE seller_id = ?";
+      conditions.push("seller_id = ?");
       params.push(seller_id);
     }
+
+    if (freshness) {
+      conditions.push("freshness = ?");
+      params.push(freshness);
+    }
+
+    if (conditions.length > 0) {
+      sql += " WHERE " + conditions.join(" AND ");
+    }
+
     sql += " ORDER BY created_at DESC";
 
     const [rows] = await db.query(sql, params);
@@ -1301,11 +1312,18 @@ app.get("/api/seller/fish", async (req, res) => {
 
 app.post("/api/seller/add-fish", upload.single("image"), async (req, res) => {
   try {
-    const { name, category, unit, price, stock, seller_id } = req.body;
+    const { name, category, unit, price, stock, seller_id, freshness } = req.body;
     let image_url = null;
 
     if (!name || !price || !stock || !seller_id)
       return res.status(400).json({ message: "All required fields are missing." });
+
+    // Validate freshness
+    const validFreshness = ['Fresh', 'Chilled', 'Frozen'];
+    const freshnessValue = freshness || 'Fresh';
+    if (!validFreshness.includes(freshnessValue)) {
+      return res.status(400).json({ message: "Invalid freshness value. Must be Fresh, Chilled, or Frozen." });
+    }
 
     // Upload to Cloudinary if image provided
     if (req.file) {
@@ -1313,8 +1331,8 @@ app.post("/api/seller/add-fish", upload.single("image"), async (req, res) => {
     }
 
     await db.query(
-      "INSERT INTO fish_products (name, category, unit, price, previous_price, stock, image_url, seller_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-      [name, category || "Freshwater", unit || "kg", price, null, stock, image_url, seller_id]
+      "INSERT INTO fish_products (name, category, unit, freshness, price, previous_price, stock, image_url, seller_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      [name, category || "Freshwater", unit || "kg", freshnessValue, price, null, stock, image_url, seller_id]
     );
 
     res.json({ message: "Fish product added successfully!" });
@@ -1425,8 +1443,6 @@ app.delete("/api/seller/fish/:id", async (req, res) => {
   }
 });
 
-
-
 app.put("/api/seller/fish/:id/stock", async (req, res) => {
   try {
     const fishId = req.params.id;
@@ -1469,9 +1485,9 @@ app.get("/api/seller/price-analysis/:productId", async (req, res) => {
       return res.status(400).json({ message: "Product ID and Seller ID required" });
     }
 
-    // Get current product details
+    // Get current product details including freshness
     const [product] = await db.query(
-      "SELECT name, price FROM fish_products WHERE id = ? AND seller_id = ?",
+      "SELECT name, price, freshness FROM fish_products WHERE id = ? AND seller_id = ?",
       [productId, seller_id]
     );
 
@@ -1481,6 +1497,16 @@ app.get("/api/seller/price-analysis/:productId", async (req, res) => {
 
     const currentPrice = Number(product[0].price);
     const productName = product[0].name;
+    const quality = (product[0].freshness || 'Fresh').toLowerCase(); // freshness from DB: Fresh, Chilled, or Frozen
+
+    // Quality-based deduction factors
+    const qualityFactors = {
+      'fresh': 1.00,    // 100% - No deduction
+      'chilled': 0.90,  // -10% deduction
+      'frozen': 0.75    // -25% deduction
+    };
+
+    const qualityFactor = qualityFactors[quality] || 1.00;
 
     // Get price history
     const [history] = await db.query(
@@ -1531,7 +1557,20 @@ app.get("/api/seller/price-analysis/:productId", async (req, res) => {
       const maxPrice = Math.max(...uniquePrices);
 
       // ========================================
-      // GENERATE SUGGESTIONS BASED ON SMA
+      // APPLY QUALITY-BASED ADJUSTMENTS
+      // ========================================
+      
+      const adjustedSma3 = sma3 * qualityFactor;
+      const adjustedSma5 = sma5 * qualityFactor;
+      const adjustedSmaAll = smaAll * qualityFactor;
+      const adjustedMinPrice = minPrice * qualityFactor;
+      const adjustedMaxPrice = maxPrice * qualityFactor;
+
+      // Calculate quality deduction percentage for display
+      const qualityDeduction = ((1 - qualityFactor) * 100).toFixed(0);
+
+      // ========================================
+      // GENERATE SUGGESTIONS BASED ON QUALITY-ADJUSTED SMA
       // ========================================
 
       suggestions = [
@@ -1539,55 +1578,55 @@ app.get("/api/seller/price-analysis/:productId", async (req, res) => {
           label: "Current Market Price",
           price: parseFloat(currentPrice.toFixed(2)),
           margin: 0,
-          description: "Your active selling price"
+          description: `Your active selling price (${quality})`
         },
         {
           label: "SMA-3 (Short-term Trend)",
-          price: parseFloat(sma3.toFixed(2)),
+          price: parseFloat(adjustedSma3.toFixed(2)),
           margin: 0,
-          description: "Average of last 3 prices - follows recent trends"
+          description: `Average of last 3 prices - adjusted for ${quality} quality (-${qualityDeduction}%)`
         },
         {
           label: "SMA-5 (Medium-term Trend)",
-          price: parseFloat(sma5.toFixed(2)),
+          price: parseFloat(adjustedSma5.toFixed(2)),
           margin: 0,
-          description: "Average of last 5 prices - balanced approach"
+          description: `Average of last 5 prices - adjusted for ${quality} quality (-${qualityDeduction}%)`
         },
         {
           label: "SMA-All (Long-term Average)",
-          price: parseFloat(smaAll.toFixed(2)),
+          price: parseFloat(adjustedSmaAll.toFixed(2)),
           margin: 0,
-          description: "Average of all historical prices - stable pricing"
+          description: `Average of all historical prices - adjusted for ${quality} quality (-${qualityDeduction}%)`
         },
         {
           label: "Conservative (SMA-3 + 3%)",
-          price: parseFloat((sma3 * 1.03).toFixed(2)),
+          price: parseFloat((adjustedSma3 * 1.03).toFixed(2)),
           margin: 3,
-          description: "Short-term average with small markup"
+          description: `Short-term average with small markup (${quality})`
         },
         {
           label: "Balanced (SMA-5 + 5%)",
-          price: parseFloat((sma5 * 1.05).toFixed(2)),
+          price: parseFloat((adjustedSma5 * 1.05).toFixed(2)),
           margin: 5,
-          description: "Medium-term average with standard markup"
+          description: `Medium-term average with standard markup (${quality})`
         },
         {
           label: "Premium (SMA-All + 7%)",
-          price: parseFloat((smaAll * 1.07).toFixed(2)),
+          price: parseFloat((adjustedSmaAll * 1.07).toFixed(2)),
           margin: 7,
-          description: "Long-term average with premium markup"
+          description: `Long-term average with premium markup (${quality})`
         },
         {
           label: "Minimum Recommended",
-          price: parseFloat(minPrice.toFixed(2)),
+          price: parseFloat(adjustedMinPrice.toFixed(2)),
           margin: 0,
-          description: "Lowest historical price"
+          description: `Lowest historical price - adjusted for ${quality} quality`
         },
         {
           label: "Maximum Recommended",
-          price: parseFloat(maxPrice.toFixed(2)),
+          price: parseFloat(adjustedMaxPrice.toFixed(2)),
           margin: 0,
-          description: "Highest historical price"
+          description: `Highest historical price - adjusted for ${quality} quality`
         }
       ];
 
@@ -1609,8 +1648,8 @@ app.get("/api/seller/price-analysis/:productId", async (req, res) => {
         // Keep current price, min, max, and 3 SMA-based suggestions
         const mustKeep = suggestions.filter(s =>
           s.price === currentPrice ||
-          s.price === minPrice ||
-          s.price === maxPrice ||
+          s.price === adjustedMinPrice ||
+          s.price === adjustedMaxPrice ||
           s.label.includes('SMA')
         );
         suggestions = mustKeep.slice(0, 6);
@@ -1620,6 +1659,8 @@ app.get("/api/seller/price-analysis/:productId", async (req, res) => {
     res.json({
       productName,
       currentPrice,
+      quality,
+      qualityFactor,
       totalUpdates,
       canGenerateSuggestions,
       history: history.map(h => ({
@@ -1629,11 +1670,13 @@ app.get("/api/seller/price-analysis/:productId", async (req, res) => {
         change_date: h.change_date
       })),
       suggestions,
-      algorithm: "Simple Moving Average (SMA)",
+      algorithm: "Simple Moving Average (SMA) with Quality Adjustment",
       metadata: canGenerateSuggestions ? {
         sma3: parseFloat(suggestions.find(s => s.label.includes('SMA-3'))?.price || 0),
         sma5: parseFloat(suggestions.find(s => s.label.includes('SMA-5'))?.price || 0),
-        smaAll: parseFloat(suggestions.find(s => s.label.includes('SMA-All'))?.price || 0)
+        smaAll: parseFloat(suggestions.find(s => s.label.includes('SMA-All'))?.price || 0),
+        qualityDeduction: `${((1 - qualityFactor) * 100).toFixed(0)}%`,
+        qualityType: quality
       } : null
     });
 
@@ -2268,6 +2311,40 @@ app.get("/api/orders", async (req, res) => {
     });
   } catch (err) {
     console.error("Fetch Orders Error:", err);
+    res.status(500).json({ message: "Server error fetching orders" });
+  }
+});
+
+app.get("/api/buyer/get_orders", async (req, res) => {
+  const buyerId = req.query.buyer_id;
+  if (!buyerId) {
+    return res.status(400).json({ error: "buyer_id is required" });
+  }
+
+  const sql = `
+    SELECT 
+      o.id AS order_id,
+      CONCAT('ORD-', LPAD(o.id, 6, '0')) AS order_number,
+      o.customer_name, o.address, o.contact, o.notes,
+      o.total, o.payment_mode, o.paid, o.proof_of_payment,
+      o.order_date AS created_at, o.status,
+      o.delivery_latitude, o.delivery_longitude, o.distance_km,
+      o.seller_id, s.shop_name,
+      oi.id AS item_id, oi.product_id, oi.quantity, oi.price,
+      fp.name AS product_name, fp.image_url
+    FROM orders o
+    LEFT JOIN order_items oi ON o.id = oi.order_id
+    LEFT JOIN fish_products fp ON oi.product_id = fp.id
+    LEFT JOIN sellers s ON o.seller_id = s.unique_id
+    WHERE o.customer_id = ?
+    ORDER BY o.id DESC, oi.id ASC
+  `;
+
+  try {
+    const [result] = await db.query(sql, [buyerId]);
+    res.json(result);
+  } catch (err) {
+    console.error("Fetch Buyer Orders Error:", err);
     res.status(500).json({ message: "Server error fetching orders" });
   }
 });
@@ -2985,47 +3062,87 @@ app.get("/api/buyer/purchases", async (req, res) => {
 
     console.log(`🔍 Searching for purchases using customer_id: ${notificationCustomerId}`);
 
-    // ✅ FIXED: Added seller_id and shop_name to the SELECT
     const sql = `
-      SELECT DISTINCT
-        oi.id AS purchase_id,
-        oi.product_id,
-        fp.name AS product_name,
-        oi.price,
-        oi.quantity,
-        o.order_date AS created_at,
+      SELECT 
         o.id AS order_id,
-        o.seller_id,
         CONCAT('ORD-', LPAD(o.id, 6, '0')) AS order_number,
+        o.order_date AS created_at,
         o.status,
-        fp.image_url,
-        fp.freshness,
-        fp.previous_price,
+        o.total,
+        o.seller_id,
+        o.proof_of_payment,
+        o.payment_mode,
+        o.customer_name,
+        o.address,
+        o.contact,
+        o.notes,
         s.shop_name,
-        0 AS rating
+        GROUP_CONCAT(
+          CONCAT(
+            '{"product_id":', oi.product_id, 
+            ',"product_name":"', COALESCE(fp.name, 'Unknown Product'), 
+            '","quantity":', oi.quantity, 
+            ',"price":', oi.price,
+            ',"image_url":"', COALESCE(fp.image_url, ''), 
+            '","freshness":"', COALESCE(fp.freshness, ''), 
+            '","previous_price":', COALESCE(fp.previous_price, 0), 
+            '}'
+          ) 
+          SEPARATOR ','
+        ) AS items_json
       FROM orders o
       INNER JOIN order_items oi ON o.id = oi.order_id
       LEFT JOIN fish_products fp ON oi.product_id = fp.id
       LEFT JOIN sellers s ON o.seller_id = s.unique_id
       WHERE o.customer_id = ?
-      ORDER BY o.order_date DESC, oi.id ASC
-      LIMIT 10
+      GROUP BY o.id, o.order_date, o.status, o.total, o.seller_id, o.proof_of_payment, o.payment_mode, o.customer_name, o.address, o.contact, o.notes, s.shop_name
+      ORDER BY o.order_date DESC
+      LIMIT 50
     `;
 
     const [results] = await db.query(sql, [notificationCustomerId]);
 
-    console.log(`✅ Found ${results.length} purchases`);
+    // Parse the JSON string of items for each order
+    const ordersWithItems = results.map(order => {
+      let items = [];
+      try {
+        items = JSON.parse(`[${order.items_json}]`);
+      } catch (e) {
+        console.error('Error parsing items for order', order.order_id, e);
+        items = [];
+      }
+      
+      return {
+        order_id: order.order_id,
+        order_number: order.order_number,
+        created_at: order.created_at,
+        status: order.status,
+        total: order.total,
+        seller_id: order.seller_id,
+        shop_name: order.shop_name,
+        proof_of_payment_url: order.proof_of_payment,
+        payment_mode: order.payment_mode,
+        customer_name: order.customer_name,
+        address: order.address,
+        contact: order.contact,
+        notes: order.notes,
+        items: items,
+        item_count: items.length
+      };
+    });
+
+    console.log(`✅ Found ${ordersWithItems.length} orders`);
     
-    // Log first purchase to verify seller_id is included
-    if (results.length > 0) {
-      console.log('Sample purchase with seller_id:', {
-        order_id: results[0].order_id,
-        seller_id: results[0].seller_id,
-        shop_name: results[0].shop_name
+    if (ordersWithItems.length > 0) {
+      console.log('Sample order with items:', {
+        order_id: ordersWithItems[0].order_id,
+        seller_id: ordersWithItems[0].seller_id,
+        shop_name: ordersWithItems[0].shop_name,
+        item_count: ordersWithItems[0].items.length
       });
     }
 
-    return res.status(200).json(results);
+    return res.status(200).json(ordersWithItems);
   } catch (err) {
     console.error("❌ Error fetching purchases:", err);
     return res.status(500).json({
@@ -3034,6 +3151,8 @@ app.get("/api/buyer/purchases", async (req, res) => {
     });
   }
 });
+
+
 app.get("/api/buyer/orders", async (req, res) => {
   const { buyer_id } = req.query;
 
