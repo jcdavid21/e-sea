@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Jan 18, 2026 at 09:30 AM
+-- Generation Time: Feb 02, 2026 at 06:08 PM
 -- Server version: 10.4.28-MariaDB
 -- PHP Version: 8.0.28
 
@@ -68,7 +68,7 @@ CREATE TABLE `buyer_authentication` (
 
 INSERT INTO `buyer_authentication` (`id`, `email`, `contact`, `last_name`, `first_name`, `middle_name`, `username`, `password_hash`, `secret_question`, `secret_ans`, `created_at`) VALUES
 (1, 'catherinegraceclosa@gmail.com', '09517397968', 'Closa', 'Kathrine', 'Belarmino', 'kathrine', '$2b$10$5bQ9uzzQi1MB9L.1gmEBxebSi9T9tNsjo0M5sWQ330wA46ER7HMUO', NULL, NULL, '2025-11-12 04:58:33'),
-(2, 'kian@gmail.com', '09090909090', 'Portes', 'Kian Andrei', 'P.', 'kian', '$2b$10$NtIRFQ24DzD73uzV6CiIhebPim/nLCL1ooE3BkcISdp3S/h6.1nGm', NULL, NULL, '2025-11-15 15:57:15'),
+(2, 'kian@gmail.com', '09090909090', 'Portes', 'Kian Andrei', 'P.', 'kian', '$2b$10$NtIRFQ24DzD73uzV6CiIhebPim/nLCL1ooE3BkcISdp3S/h6.1nGm', 'What is your favorite team?', '$2b$10$OzCcu2wmG31ONG.iqz1Quen3fpb74.JxhgKs9MyLc3uLpu6yahD7.', '2025-11-15 15:57:15'),
 (3, 'cath@gmail.com', '09517397968', 'Closa', 'Kath', 'Belarmino', 'kath', '$2b$10$AvhHgAeLVLBMKYCDxvya..eDRrp/GXVYroyr7PrnfteQ1jMIvjb82', NULL, NULL, '2025-11-26 07:58:33'),
 (4, 'kian123@gmail.com', '09090909090', 'Portes', 'Kian Andrei', 'P.', 'kians', '$2b$10$R0EWusYrt7hJb3Owm98m0uP.E7FR.3Z3itONvUXrpeEwa6mVsFAQi', NULL, NULL, '2025-11-27 12:58:45'),
 (5, 'kian12345@gmail.com', '09876543212', 'Portes', 'Kian', 'Andrei', 'Kianp', '$2b$10$BdwId/3SCI2Deg6GwFusFuaoMNy7pXE8w6jcMXS7fM0fSAj.MYEW.', NULL, NULL, '2025-11-28 08:39:22'),
@@ -95,10 +95,8 @@ CREATE TABLE `buyer_notifications` (
 --
 
 INSERT INTO `buyer_notifications` (`id`, `customer_id`, `order_id`, `seller_id`, `message`, `is_read`, `created_at`) VALUES
-(2, 'KianAndreiPortes09090909090', 5, 'SELLER-QS2594', 'Your order #5 status has been updated to: Completed', 2, '2026-01-01 11:44:05'),
-(3, 'KianAndreiPortes09090909090', 5, 'SELLER-QS2594', 'Your order #5 status has been updated to: Preparing', 1, '2026-01-02 11:00:07'),
-(4, 'KianAndreiPortes09090909090', 5, 'SELLER-QS2594', 'Your order #5 status has been updated to: Ready for Pickup', 1, '2026-01-02 11:00:14'),
-(5, 'KianAndreiPortes09090909090', 5, 'SELLER-QS2594', 'Your order #5 status has been updated to: Completed', 1, '2026-01-02 11:00:18');
+(6, 'KianAndreiPortes09090909090', 7, 'SELLER-QS2594', 'Your order #7 status has been updated to: Preparing', 1, '2026-02-02 09:00:21'),
+(7, 'KianAndreiPortes09090909090', 7, 'SELLER-QS2594', 'Your order #7 status has been updated to: Completed', 1, '2026-02-02 09:00:29');
 
 -- --------------------------------------------------------
 
@@ -160,7 +158,7 @@ CREATE TABLE `fish_products` (
   `image_url` varchar(255) DEFAULT NULL,
   `seller_id` varchar(50) NOT NULL,
   `created_at` timestamp NULL DEFAULT current_timestamp(),
-  `freshness` enum('Fresh','Chilled','Frozen') NOT NULL
+  `freshness` enum('Fresh','Chilled','Frozen') DEFAULT 'Fresh'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -168,10 +166,10 @@ CREATE TABLE `fish_products` (
 --
 
 INSERT INTO `fish_products` (`id`, `name`, `category`, `unit`, `price`, `previous_price`, `stock`, `image_url`, `seller_id`, `created_at`, `freshness`) VALUES
-(1, 'Fish', 'Crustaceans', 'kg', 120.00, NULL, 99, '1767267626891-dora.jpg', 'SELLER-QS2594', '2026-01-01 11:40:26', 'Fresh'),
-(2, 'Fish', 'Crustaceans', 'kg', 110.00, NULL, 99, '1767367469258-java.jpeg', 'SELLER-SG6500', '2026-01-02 15:24:29', 'Fresh'),
-(3, 'Bangus', 'Freshwater', 'kg', 110.00, 129.95, 100, '1767368462701-393104384_664723282257606_3464021594448408428_n.png', 'SELLER-QS2594', '2026-01-02 15:41:02', 'Fresh'),
-(4, 'Bangus', 'Freshwater', 'kg', 90.00, NULL, 100, '1767368495907-400821614_239719562466036_172886338250717399_n.png', 'SELLER-SG6500', '2026-01-02 15:41:35', 'Fresh');
+(7, 'Fishda', 'Crustaceans', 'kg', 100.00, NULL, 47, 'https://res.cloudinary.com/dyqlhrzjn/image/upload/v1769158317/e-sea/products/qlolkzas6x0pzs0zeita.jpg', 'SELLER-QS2594', '2026-01-23 08:51:57', 'Fresh'),
+(8, 'Fish2', 'Crustaceans', 'kg', 120.00, NULL, 49, 'https://res.cloudinary.com/dyqlhrzjn/image/upload/v1770038407/e-sea/products/bdxnabrkg37til3cgcl4.jpg', 'SELLER-QS2594', '2026-02-02 13:20:08', 'Fresh'),
+(9, 'Fish3', 'Crustaceans', 'kg', 90.00, 95.00, 50, 'https://res.cloudinary.com/dyqlhrzjn/image/upload/v1770046058/e-sea/products/t6za1qk0wimdxdqphttz.png', 'SELLER-QS2594', '2026-02-02 15:27:39', 'Chilled'),
+(10, 'Fish3', 'Crustaceans', 'kg', 90.00, 95.00, 120, 'https://res.cloudinary.com/dyqlhrzjn/image/upload/v1770046090/e-sea/products/jyqoyeiztvwgftt9ai7d.png', 'SELLER-QS2594', '2026-02-02 15:28:11', 'Fresh');
 
 -- --------------------------------------------------------
 
@@ -203,7 +201,9 @@ CREATE TABLE `orders` (
 --
 
 INSERT INTO `orders` (`id`, `seller_id`, `customer_name`, `address`, `delivery_latitude`, `delivery_longitude`, `distance_km`, `contact`, `customer_id`, `notes`, `total`, `payment_mode`, `paid`, `proof_of_payment`, `order_date`, `status`) VALUES
-(5, 'SELLER-QS2594', 'Juancarlo David', 'Loraine Street', 14.74737789, 121.04683423, NULL, '0956535041', 'KianAndreiPortes09090909090', '', 120.00, 'Gcash QR', 1, '/uploads/1767267763942-eef3949c-5ce1-4c0d-ae91-db71d20b3e61.jpeg', '2026-01-01 11:42:43', 'Completed');
+(7, 'SELLER-QS2594', 'Juan Carlo David', 'Mahogany Street, Barangay 177, Zone 15, Camarin, District 1, Caloocan, Northern Manila District, Metro Manila, 1423, Philippines', 14.74562150, 121.05225910, 0.10, '09565535401', 'KianAndreiPortes09090909090', '', 100.00, 'Gcash QR', 1, 'https://res.cloudinary.com/dyqlhrzjn/image/upload/v1769161940/e-sea/payment-proofs/voufb0mpisuyjmavglmd.png', '2026-01-23 09:52:19', 'Completed'),
+(8, 'SELLER-QS2594', 'Jc', 'Barangay 177, Zone 15, Camarin, District 1, Caloocan, Northern Manila District, Metro Manila, 1423, Philippines', 14.74737025, 121.04686736, 1.08, '09565535401', 'KianAndreiPortes09090909090', '', 100.00, 'Gcash QR', 1, 'https://res.cloudinary.com/dyqlhrzjn/image/upload/v1770036018/e-sea/payment-proofs/kkjp031wxwhozth6ej2s.jpg', '2026-02-02 12:40:19', 'Pending'),
+(9, 'SELLER-QS2594', 'Juan carlo David', 'Barangay 177, Zone 15, Camarin, District 1, Caloocan, Northern Manila District, Metro Manila, 1423, Philippines', 14.74736904, 121.04687185, 1.08, '09565535401', 'KianAndreiPortes09090909090', 'Pabili', 220.00, 'Gcash QR', 1, 'https://res.cloudinary.com/dyqlhrzjn/image/upload/v1770038500/e-sea/payment-proofs/iaystru8oapfcbxaaacz.jpg', '2026-02-02 13:21:40', 'Pending');
 
 -- --------------------------------------------------------
 
@@ -224,7 +224,13 @@ CREATE TABLE `order_items` (
 --
 
 INSERT INTO `order_items` (`id`, `order_id`, `product_id`, `quantity`, `price`) VALUES
-(5, 5, 1, 1, 120.00);
+(5, 5, 1, 1, 120.00),
+(6, 6, 1, 1, 120.00),
+(7, 6, 3, 1, 110.00),
+(8, 7, 7, 1, 100.00),
+(9, 8, 7, 1, 100.00),
+(10, 9, 8, 1, 120.00),
+(11, 9, 7, 1, 100.00);
 
 -- --------------------------------------------------------
 
@@ -247,7 +253,12 @@ CREATE TABLE `price_history` (
 
 INSERT INTO `price_history` (`id`, `product_id`, `seller_id`, `old_price`, `new_price`, `change_date`) VALUES
 (18, 3, 'SELLER-QS2594', 120.00, 129.95, '2026-01-04 09:01:02'),
-(19, 3, 'SELLER-QS2594', 129.95, 110.00, '2026-01-04 09:01:20');
+(19, 3, 'SELLER-QS2594', 129.95, 110.00, '2026-01-04 09:01:20'),
+(23, 5, 'SELLER-QS2594', 135.00, 120.00, '2026-01-21 12:25:37'),
+(29, 9, 'SELLER-QS2594', 100.00, 95.00, '2026-02-02 16:17:58'),
+(30, 9, 'SELLER-QS2594', 95.00, 90.00, '2026-02-02 16:18:06'),
+(32, 10, 'SELLER-QS2594', 100.00, 95.00, '2026-02-02 16:25:13'),
+(33, 10, 'SELLER-QS2594', 95.00, 90.00, '2026-02-02 16:25:19');
 
 -- --------------------------------------------------------
 
@@ -300,7 +311,7 @@ CREATE TABLE `seller_credentials` (
 --
 
 INSERT INTO `seller_credentials` (`id`, `unique_id`, `email`, `password_hash`, `secret_question`, `secret_ans`, `date_registered`) VALUES
-(1, 'SELLER-QS2594', 'jcdavid@gmail.com', '$2b$10$rDresWzufPw.kSLVqmSofep997jy94Gb7dvHMjLezdPsukS5q3sBO', 'What is your favorite team?', 'lakers', '2025-12-20 03:20:02'),
+(1, 'SELLER-QS2594', 'jcdavid@gmail.com', '$2b$10$/gLew3NLpSLZPLfwS7TR2eGbdK6S/AjFIYLwUC/BGaMjw.kK1cq7u', 'What is your favorite team?', '$2b$10$0r4LpM./KQd6dMp3zAPnX.0TCiLosrSgoAOz0PoKgkt3QXHCHg0ZK', '2025-12-20 03:20:02'),
 (2, 'SELLER-SG6500', 'josh@gmail.com', '$2b$10$A6SoH/jFH2Lq2iVwxQ/ezeruC8jGe/r/Lzs1qrHZzxduDgvMxhZFa', NULL, NULL, '2026-01-02 15:22:40');
 
 -- --------------------------------------------------------
@@ -369,7 +380,11 @@ CREATE TABLE `seller_notifications` (
 
 INSERT INTO `seller_notifications` (`id`, `seller_id`, `message`, `type`, `is_read`, `created_at`) VALUES
 (1, 'SELLER-QS2594', 'You have a new order (#5) from Juancarlo David.', 'order', 0, '2026-01-01 11:42:43'),
-(2, 'SELLER-QS2594', 'Kian Andrei Portes gave you 5★ for order #5: \"Malinis\"', 'info', 0, '2026-01-05 13:39:39');
+(2, 'SELLER-QS2594', 'Kian Andrei Portes gave you 5★ for order #5: \"Malinis\"', 'info', 0, '2026-01-05 13:39:39'),
+(3, 'SELLER-QS2594', 'You have a new order (#6) from Juan Carlo David.', 'order', 0, '2026-01-21 13:05:34'),
+(4, 'SELLER-QS2594', 'You have a new order (#7) from Juan Carlo David.', 'order', 0, '2026-01-23 09:52:19'),
+(5, 'SELLER-QS2594', 'You have a new order (#8) from Jc.', 'order', 0, '2026-02-02 12:40:19'),
+(6, 'SELLER-QS2594', 'You have a new order (#9) from Juan carlo David.', 'order', 0, '2026-02-02 13:21:40');
 
 -- --------------------------------------------------------
 
@@ -391,7 +406,7 @@ CREATE TABLE `seller_profiles` (
 --
 
 INSERT INTO `seller_profiles` (`id`, `seller_id`, `logo`, `qr`, `created_at`, `updated_at`) VALUES
-(1, 'SELLER-QS2594', '/uploads/1767364636103-Golden-crowned_flying_fox.jpg', '/uploads/1767267719717-solo-parent-id.jpg', '2026-01-01 11:41:59', '2026-01-02 14:37:16');
+(1, 'SELLER-QS2594', 'https://res.cloudinary.com/dyqlhrzjn/image/upload/v1769156920/e-sea/logos/onza2u75q0lh5pcb4qpp.jpg', 'https://res.cloudinary.com/dyqlhrzjn/image/upload/v1769157020/e-sea/qr-codes/fpnm5xhias9gjpkncb5h.png', '2026-01-01 11:41:59', '2026-01-23 08:30:22');
 
 -- --------------------------------------------------------
 
@@ -437,13 +452,13 @@ INSERT INTO `store_hours` (`id`, `seller_id`, `day_of_week`, `is_open`, `open_ti
 (47, 'SELLER-SG6500', 'Friday', 1, '09:00:00', '00:00:00', '2026-01-02 15:23:42', '2026-01-02 15:23:42'),
 (48, 'SELLER-SG6500', 'Saturday', 1, '00:00:00', '17:00:00', '2026-01-02 15:23:42', '2026-01-02 15:23:42'),
 (49, 'SELLER-SG6500', 'Sunday', 1, '09:00:00', '17:00:00', '2026-01-02 15:23:42', '2026-01-02 15:23:42'),
-(50, 'SELLER-QS2594', 'Monday', 1, '09:00:00', '17:00:00', '2026-01-04 11:53:54', '2026-01-04 11:53:54'),
-(51, 'SELLER-QS2594', 'Tuesday', 1, '09:00:00', '17:00:00', '2026-01-04 11:53:54', '2026-01-04 11:53:54'),
-(52, 'SELLER-QS2594', 'Wednesday', 1, '09:00:00', '17:00:00', '2026-01-04 11:53:54', '2026-01-04 11:53:54'),
-(53, 'SELLER-QS2594', 'Thursday', 1, '09:00:00', '22:00:00', '2026-01-04 11:53:54', '2026-01-04 11:53:54'),
-(54, 'SELLER-QS2594', 'Friday', 1, '09:00:00', '00:00:00', '2026-01-04 11:53:54', '2026-01-04 11:53:54'),
-(55, 'SELLER-QS2594', 'Saturday', 1, '09:00:00', '17:00:00', '2026-01-04 11:53:54', '2026-01-04 11:53:54'),
-(56, 'SELLER-QS2594', 'Sunday', 1, '09:00:00', '22:00:00', '2026-01-04 11:53:54', '2026-01-04 11:53:54');
+(64, 'SELLER-QS2594', 'Monday', 1, '09:00:00', '22:00:00', '2026-02-02 12:37:31', '2026-02-02 12:37:31'),
+(65, 'SELLER-QS2594', 'Tuesday', 1, '09:00:00', '17:00:00', '2026-02-02 12:37:31', '2026-02-02 12:37:31'),
+(66, 'SELLER-QS2594', 'Wednesday', 1, '09:00:00', '00:00:00', '2026-02-02 12:37:31', '2026-02-02 12:37:31'),
+(67, 'SELLER-QS2594', 'Thursday', 1, '09:00:00', '22:00:00', '2026-02-02 12:37:31', '2026-02-02 12:37:31'),
+(68, 'SELLER-QS2594', 'Friday', 1, '09:00:00', '00:00:00', '2026-02-02 12:37:31', '2026-02-02 12:37:31'),
+(69, 'SELLER-QS2594', 'Saturday', 1, '09:00:00', '17:00:00', '2026-02-02 12:37:31', '2026-02-02 12:37:31'),
+(70, 'SELLER-QS2594', 'Sunday', 1, '09:00:00', '22:00:00', '2026-02-02 12:37:31', '2026-02-02 12:37:31');
 
 -- --------------------------------------------------------
 
@@ -601,7 +616,7 @@ ALTER TABLE `buyer_authentication`
 -- AUTO_INCREMENT for table `buyer_notifications`
 --
 ALTER TABLE `buyer_notifications`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `fish_categories`
@@ -613,25 +628,25 @@ ALTER TABLE `fish_categories`
 -- AUTO_INCREMENT for table `fish_products`
 --
 ALTER TABLE `fish_products`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT for table `orders`
 --
 ALTER TABLE `orders`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT for table `order_items`
 --
 ALTER TABLE `order_items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT for table `price_history`
 --
 ALTER TABLE `price_history`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=34;
 
 --
 -- AUTO_INCREMENT for table `sellers`
@@ -661,13 +676,13 @@ ALTER TABLE `seller_locations`
 -- AUTO_INCREMENT for table `seller_notifications`
 --
 ALTER TABLE `seller_notifications`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `seller_profiles`
 --
 ALTER TABLE `seller_profiles`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `seller_requirement_files`
@@ -679,7 +694,7 @@ ALTER TABLE `seller_requirement_files`
 -- AUTO_INCREMENT for table `store_hours`
 --
 ALTER TABLE `store_hours`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=57;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=71;
 
 --
 -- AUTO_INCREMENT for table `system_feedback`
