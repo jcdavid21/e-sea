@@ -3034,6 +3034,164 @@ app.put("/api/buyer/profile/:buyer_id", async (req, res) => {
 });
 
 // =============================
+// CART MANAGEMENT ENDPOINTS
+// =============================
+
+// Get cart items for a buyer
+app.get("/api/cart/:buyer_id", async (req, res) => {
+  const { buyer_id } = req.params;
+
+  try {
+    const sql = `
+      SELECT 
+        c.id as cart_id,
+        c.quantity,
+        c.created_at,
+        fp.id,
+        fp.name,
+        fp.category,
+        fp.price,
+        fp.previous_price,
+        fp.stock,
+        fp.image_url,
+        fp.freshness,
+        fp.seller_id,
+        s.shop_name
+      FROM cart c
+      INNER JOIN fish_products fp ON c.product_id = fp.id
+      LEFT JOIN sellers s ON fp.seller_id = s.unique_id
+      WHERE c.buyer_id = ?
+      ORDER BY c.created_at DESC
+    `;
+
+    const [results] = await db.query(sql, [buyer_id]);
+    return res.status(200).json(results);
+  } catch (err) {
+    console.error("❌ Error fetching cart:", err);
+    return res.status(500).json({ message: "Error fetching cart", error: err.message });
+  }
+});
+
+// Add item to cart
+app.post("/api/cart/add", async (req, res) => {
+  const { buyer_id, product_id, quantity } = req.body;
+
+  if (!buyer_id || !product_id) {
+    return res.status(400).json({ message: "buyer_id and product_id are required" });
+  }
+
+  try {
+    // Check if item already exists in cart
+    const [existing] = await db.query(
+      "SELECT * FROM cart WHERE buyer_id = ? AND product_id = ?",
+      [buyer_id, product_id]
+    );
+
+    if (existing.length > 0) {
+      // Update quantity
+      const newQuantity = existing[0].quantity + (quantity || 1);
+      await db.query(
+        "UPDATE cart SET quantity = ?, updated_at = NOW() WHERE buyer_id = ? AND product_id = ?",
+        [newQuantity, buyer_id, product_id]
+      );
+      
+      return res.status(200).json({ 
+        message: "Cart updated successfully",
+        quantity: newQuantity
+      });
+    } else {
+      // Insert new item
+      await db.query(
+        "INSERT INTO cart (buyer_id, product_id, quantity) VALUES (?, ?, ?)",
+        [buyer_id, product_id, quantity || 1]
+      );
+      
+      return res.status(201).json({ message: "Item added to cart successfully" });
+    }
+  } catch (err) {
+    console.error("❌ Error adding to cart:", err);
+    return res.status(500).json({ message: "Error adding to cart", error: err.message });
+  }
+});
+
+// Update cart item quantity
+app.put("/api/cart/update", async (req, res) => {
+  const { buyer_id, product_id, quantity } = req.body;
+
+  if (!buyer_id || !product_id || quantity === undefined) {
+    return res.status(400).json({ message: "buyer_id, product_id, and quantity are required" });
+  }
+
+  try {
+    if (quantity <= 0) {
+      // Remove item if quantity is 0 or negative
+      await db.query(
+        "DELETE FROM cart WHERE buyer_id = ? AND product_id = ?",
+        [buyer_id, product_id]
+      );
+      return res.status(200).json({ message: "Item removed from cart" });
+    }
+
+    await db.query(
+      "UPDATE cart SET quantity = ?, updated_at = NOW() WHERE buyer_id = ? AND product_id = ?",
+      [quantity, buyer_id, product_id]
+    );
+
+    return res.status(200).json({ message: "Cart updated successfully" });
+  } catch (err) {
+    console.error("❌ Error updating cart:", err);
+    return res.status(500).json({ message: "Error updating cart", error: err.message });
+  }
+});
+
+// Remove item from cart
+app.delete("/api/cart/remove/:buyer_id/:product_id", async (req, res) => {
+  const { buyer_id, product_id } = req.params;
+
+  try {
+    await db.query(
+      "DELETE FROM cart WHERE buyer_id = ? AND product_id = ?",
+      [buyer_id, product_id]
+    );
+
+    return res.status(200).json({ message: "Item removed from cart" });
+  } catch (err) {
+    console.error("❌ Error removing from cart:", err);
+    return res.status(500).json({ message: "Error removing from cart", error: err.message });
+  }
+});
+
+// Clear entire cart
+app.delete("/api/cart/clear/:buyer_id", async (req, res) => {
+  const { buyer_id } = req.params;
+
+  try {
+    await db.query("DELETE FROM cart WHERE buyer_id = ?", [buyer_id]);
+    return res.status(200).json({ message: "Cart cleared successfully" });
+  } catch (err) {
+    console.error("❌ Error clearing cart:", err);
+    return res.status(500).json({ message: "Error clearing cart", error: err.message });
+  }
+});
+
+// Get cart count
+app.get("/api/cart/count/:buyer_id", async (req, res) => {
+  const { buyer_id } = req.params;
+
+  try {
+    const [result] = await db.query(
+      "SELECT SUM(quantity) as total FROM cart WHERE buyer_id = ?",
+      [buyer_id]
+    );
+
+    return res.status(200).json({ count: result[0].total || 0 });
+  } catch (err) {
+    console.error("❌ Error getting cart count:", err);
+    return res.status(500).json({ message: "Error getting cart count", error: err.message });
+  }
+});
+
+// =============================
 //  BUYER PURCHASE HISTORY ROUTES
 // =============================
 
