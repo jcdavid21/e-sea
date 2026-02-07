@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Feb 02, 2026 at 06:08 PM
+-- Generation Time: Feb 07, 2026 at 10:27 AM
 -- Server version: 10.4.28-MariaDB
 -- PHP Version: 8.0.28
 
@@ -115,6 +115,28 @@ CREATE TABLE `buyer_purchases` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `cart`
+--
+
+CREATE TABLE `cart` (
+  `id` int(11) NOT NULL,
+  `buyer_id` int(11) NOT NULL,
+  `product_id` int(11) NOT NULL,
+  `quantity` int(11) NOT NULL DEFAULT 1,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `cart`
+--
+
+INSERT INTO `cart` (`id`, `buyer_id`, `product_id`, `quantity`, `created_at`, `updated_at`) VALUES
+(1, 2, 7, 1, '2026-02-07 09:11:14', '2026-02-07 09:11:14');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `fish_categories`
 --
 
@@ -168,7 +190,7 @@ CREATE TABLE `fish_products` (
 INSERT INTO `fish_products` (`id`, `name`, `category`, `unit`, `price`, `previous_price`, `stock`, `image_url`, `seller_id`, `created_at`, `freshness`) VALUES
 (7, 'Fishda', 'Crustaceans', 'kg', 100.00, NULL, 47, 'https://res.cloudinary.com/dyqlhrzjn/image/upload/v1769158317/e-sea/products/qlolkzas6x0pzs0zeita.jpg', 'SELLER-QS2594', '2026-01-23 08:51:57', 'Fresh'),
 (8, 'Fish2', 'Crustaceans', 'kg', 120.00, NULL, 49, 'https://res.cloudinary.com/dyqlhrzjn/image/upload/v1770038407/e-sea/products/bdxnabrkg37til3cgcl4.jpg', 'SELLER-QS2594', '2026-02-02 13:20:08', 'Fresh'),
-(9, 'Fish3', 'Crustaceans', 'kg', 90.00, 95.00, 50, 'https://res.cloudinary.com/dyqlhrzjn/image/upload/v1770046058/e-sea/products/t6za1qk0wimdxdqphttz.png', 'SELLER-QS2594', '2026-02-02 15:27:39', 'Chilled'),
+(9, 'Fish3', 'Crustaceans', 'kg', 90.00, 95.00, 46, 'https://res.cloudinary.com/dyqlhrzjn/image/upload/v1770046058/e-sea/products/t6za1qk0wimdxdqphttz.png', 'SELLER-QS2594', '2026-02-02 15:27:39', 'Chilled'),
 (10, 'Fish3', 'Crustaceans', 'kg', 90.00, 95.00, 120, 'https://res.cloudinary.com/dyqlhrzjn/image/upload/v1770046090/e-sea/products/jyqoyeiztvwgftt9ai7d.png', 'SELLER-QS2594', '2026-02-02 15:28:11', 'Fresh');
 
 -- --------------------------------------------------------
@@ -203,7 +225,8 @@ CREATE TABLE `orders` (
 INSERT INTO `orders` (`id`, `seller_id`, `customer_name`, `address`, `delivery_latitude`, `delivery_longitude`, `distance_km`, `contact`, `customer_id`, `notes`, `total`, `payment_mode`, `paid`, `proof_of_payment`, `order_date`, `status`) VALUES
 (7, 'SELLER-QS2594', 'Juan Carlo David', 'Mahogany Street, Barangay 177, Zone 15, Camarin, District 1, Caloocan, Northern Manila District, Metro Manila, 1423, Philippines', 14.74562150, 121.05225910, 0.10, '09565535401', 'KianAndreiPortes09090909090', '', 100.00, 'Gcash QR', 1, 'https://res.cloudinary.com/dyqlhrzjn/image/upload/v1769161940/e-sea/payment-proofs/voufb0mpisuyjmavglmd.png', '2026-01-23 09:52:19', 'Completed'),
 (8, 'SELLER-QS2594', 'Jc', 'Barangay 177, Zone 15, Camarin, District 1, Caloocan, Northern Manila District, Metro Manila, 1423, Philippines', 14.74737025, 121.04686736, 1.08, '09565535401', 'KianAndreiPortes09090909090', '', 100.00, 'Gcash QR', 1, 'https://res.cloudinary.com/dyqlhrzjn/image/upload/v1770036018/e-sea/payment-proofs/kkjp031wxwhozth6ej2s.jpg', '2026-02-02 12:40:19', 'Pending'),
-(9, 'SELLER-QS2594', 'Juan carlo David', 'Barangay 177, Zone 15, Camarin, District 1, Caloocan, Northern Manila District, Metro Manila, 1423, Philippines', 14.74736904, 121.04687185, 1.08, '09565535401', 'KianAndreiPortes09090909090', 'Pabili', 220.00, 'Gcash QR', 1, 'https://res.cloudinary.com/dyqlhrzjn/image/upload/v1770038500/e-sea/payment-proofs/iaystru8oapfcbxaaacz.jpg', '2026-02-02 13:21:40', 'Pending');
+(9, 'SELLER-QS2594', 'Juan carlo David', 'Barangay 177, Zone 15, Camarin, District 1, Caloocan, Northern Manila District, Metro Manila, 1423, Philippines', 14.74736904, 121.04687185, 1.08, '09565535401', 'KianAndreiPortes09090909090', 'Pabili', 220.00, 'Gcash QR', 1, 'https://res.cloudinary.com/dyqlhrzjn/image/upload/v1770038500/e-sea/payment-proofs/iaystru8oapfcbxaaacz.jpg', '2026-02-02 13:21:40', 'Pending'),
+(10, 'SELLER-QS2594', 'Jc David', 'Barangay 177, Zone 15, Camarin, District 1, Caloocan, Northern Manila District, Metro Manila, 1423, Philippines', 14.74737682, 121.04686432, 1.08, '09565535401', 'KianAndreiPortes09090909090', '', 360.00, 'Gcash QR', 1, 'https://res.cloudinary.com/dyqlhrzjn/image/upload/v1770455567/e-sea/payment-proofs/fo7gvf61koo84ppp7sjp.jpg', '2026-02-07 09:12:48', 'Pending');
 
 -- --------------------------------------------------------
 
@@ -230,7 +253,8 @@ INSERT INTO `order_items` (`id`, `order_id`, `product_id`, `quantity`, `price`) 
 (8, 7, 7, 1, 100.00),
 (9, 8, 7, 1, 100.00),
 (10, 9, 8, 1, 120.00),
-(11, 9, 7, 1, 100.00);
+(11, 9, 7, 1, 100.00),
+(12, 10, 9, 4, 90.00);
 
 -- --------------------------------------------------------
 
@@ -384,7 +408,8 @@ INSERT INTO `seller_notifications` (`id`, `seller_id`, `message`, `type`, `is_re
 (3, 'SELLER-QS2594', 'You have a new order (#6) from Juan Carlo David.', 'order', 0, '2026-01-21 13:05:34'),
 (4, 'SELLER-QS2594', 'You have a new order (#7) from Juan Carlo David.', 'order', 0, '2026-01-23 09:52:19'),
 (5, 'SELLER-QS2594', 'You have a new order (#8) from Jc.', 'order', 0, '2026-02-02 12:40:19'),
-(6, 'SELLER-QS2594', 'You have a new order (#9) from Juan carlo David.', 'order', 0, '2026-02-02 13:21:40');
+(6, 'SELLER-QS2594', 'You have a new order (#9) from Juan carlo David.', 'order', 0, '2026-02-02 13:21:40'),
+(7, 'SELLER-QS2594', 'You have a new order (#10) from Jc David.', 'order', 0, '2026-02-07 09:12:48');
 
 -- --------------------------------------------------------
 
@@ -452,13 +477,13 @@ INSERT INTO `store_hours` (`id`, `seller_id`, `day_of_week`, `is_open`, `open_ti
 (47, 'SELLER-SG6500', 'Friday', 1, '09:00:00', '00:00:00', '2026-01-02 15:23:42', '2026-01-02 15:23:42'),
 (48, 'SELLER-SG6500', 'Saturday', 1, '00:00:00', '17:00:00', '2026-01-02 15:23:42', '2026-01-02 15:23:42'),
 (49, 'SELLER-SG6500', 'Sunday', 1, '09:00:00', '17:00:00', '2026-01-02 15:23:42', '2026-01-02 15:23:42'),
-(64, 'SELLER-QS2594', 'Monday', 1, '09:00:00', '22:00:00', '2026-02-02 12:37:31', '2026-02-02 12:37:31'),
-(65, 'SELLER-QS2594', 'Tuesday', 1, '09:00:00', '17:00:00', '2026-02-02 12:37:31', '2026-02-02 12:37:31'),
-(66, 'SELLER-QS2594', 'Wednesday', 1, '09:00:00', '00:00:00', '2026-02-02 12:37:31', '2026-02-02 12:37:31'),
-(67, 'SELLER-QS2594', 'Thursday', 1, '09:00:00', '22:00:00', '2026-02-02 12:37:31', '2026-02-02 12:37:31'),
-(68, 'SELLER-QS2594', 'Friday', 1, '09:00:00', '00:00:00', '2026-02-02 12:37:31', '2026-02-02 12:37:31'),
-(69, 'SELLER-QS2594', 'Saturday', 1, '09:00:00', '17:00:00', '2026-02-02 12:37:31', '2026-02-02 12:37:31'),
-(70, 'SELLER-QS2594', 'Sunday', 1, '09:00:00', '22:00:00', '2026-02-02 12:37:31', '2026-02-02 12:37:31');
+(71, 'SELLER-QS2594', 'Monday', 1, '09:00:00', '22:00:00', '2026-02-07 09:10:46', '2026-02-07 09:10:46'),
+(72, 'SELLER-QS2594', 'Tuesday', 1, '09:00:00', '17:00:00', '2026-02-07 09:10:46', '2026-02-07 09:10:46'),
+(73, 'SELLER-QS2594', 'Wednesday', 1, '09:00:00', '00:00:00', '2026-02-07 09:10:46', '2026-02-07 09:10:46'),
+(74, 'SELLER-QS2594', 'Thursday', 1, '09:00:00', '22:00:00', '2026-02-07 09:10:46', '2026-02-07 09:10:46'),
+(75, 'SELLER-QS2594', 'Friday', 1, '09:00:00', '00:00:00', '2026-02-07 09:10:46', '2026-02-07 09:10:46'),
+(76, 'SELLER-QS2594', 'Saturday', 1, '09:00:00', '00:00:00', '2026-02-07 09:10:46', '2026-02-07 09:10:46'),
+(77, 'SELLER-QS2594', 'Sunday', 1, '09:00:00', '22:00:00', '2026-02-07 09:10:46', '2026-02-07 09:10:46');
 
 -- --------------------------------------------------------
 
@@ -503,6 +528,14 @@ ALTER TABLE `buyer_authentication`
 --
 ALTER TABLE `buyer_notifications`
   ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `cart`
+--
+ALTER TABLE `cart`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `unique_cart_item` (`buyer_id`,`product_id`),
+  ADD KEY `product_id` (`product_id`);
 
 --
 -- Indexes for table `fish_categories`
@@ -619,6 +652,12 @@ ALTER TABLE `buyer_notifications`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
+-- AUTO_INCREMENT for table `cart`
+--
+ALTER TABLE `cart`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
 -- AUTO_INCREMENT for table `fish_categories`
 --
 ALTER TABLE `fish_categories`
@@ -634,13 +673,13 @@ ALTER TABLE `fish_products`
 -- AUTO_INCREMENT for table `orders`
 --
 ALTER TABLE `orders`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT for table `order_items`
 --
 ALTER TABLE `order_items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT for table `price_history`
@@ -676,7 +715,7 @@ ALTER TABLE `seller_locations`
 -- AUTO_INCREMENT for table `seller_notifications`
 --
 ALTER TABLE `seller_notifications`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `seller_profiles`
@@ -694,7 +733,7 @@ ALTER TABLE `seller_requirement_files`
 -- AUTO_INCREMENT for table `store_hours`
 --
 ALTER TABLE `store_hours`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=71;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=78;
 
 --
 -- AUTO_INCREMENT for table `system_feedback`
@@ -705,6 +744,13 @@ ALTER TABLE `system_feedback`
 --
 -- Constraints for dumped tables
 --
+
+--
+-- Constraints for table `cart`
+--
+ALTER TABLE `cart`
+  ADD CONSTRAINT `cart_ibfk_1` FOREIGN KEY (`buyer_id`) REFERENCES `buyer_authentication` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `cart_ibfk_2` FOREIGN KEY (`product_id`) REFERENCES `fish_products` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `seller_locations`
