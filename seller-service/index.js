@@ -42,9 +42,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// =============================
-//  File Upload Configuration
-// =============================
 // const UPLOAD_DIR = path.join(__dirname, "uploads");
 // if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR);
 
