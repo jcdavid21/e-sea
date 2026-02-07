@@ -27,8 +27,8 @@ const BuyerHeader = ({ searchTerm, onSearchChange, onNavClick, currentPage }) =>
   const [notifCount, setNotifCount] = useState(0);
 
   // Update cart count
-  const updateCartCount = () => {
-    const count = getCartCount();
+  const updateCartCount = async () => {
+    const count = await getCartCount();
     setCartCount(count);
   };
 

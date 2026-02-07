@@ -55,7 +55,11 @@ const BuyerDashboard = () => {
     const totalOrders = purchases.length;
     const activeOrders = purchases.filter(p => p.status === 'Pending' || p.status === 'Preparing').length;
     const completedOrders = purchases.filter(p => p.status === 'Completed').length;
-    const totalSpent = purchases.reduce((sum, p) => sum + (Number(p.price) * Number(p.quantity)), 0);
+    const totalSpent = purchases.reduce((sum, p) => {
+      const price = parseFloat(p.price) || 0;
+      const quantity = parseInt(p.quantity) || 0;
+      return sum + (price * quantity);
+    }, 0);
     
     setStats({
       totalOrders,
@@ -96,7 +100,32 @@ const BuyerDashboard = () => {
       
       const data = await res.json();
       
-      const uniquePurchases = data.reduce((acc, current) => {
+      // Flatten orders with items into individual purchase records
+      const flattenedPurchases = [];
+      data.forEach(order => {
+        if (order.items && order.items.length > 0) {
+          order.items.forEach(item => {
+            flattenedPurchases.push({
+              order_id: order.order_id,
+              order_number: order.order_number,
+              created_at: order.created_at,
+              status: order.status,
+              seller_id: order.seller_id,
+              shop_name: order.shop_name,
+              // Item-specific fields
+              product_id: item.product_id,
+              product_name: item.product_name,
+              quantity: item.quantity,
+              price: item.price,
+              image_url: item.image_url,
+              freshness: item.freshness,
+              previous_price: item.previous_price
+            });
+          });
+        }
+      });
+      
+      const uniquePurchases = flattenedPurchases.reduce((acc, current) => {
         const exists = acc.find(
           item => item.order_id === current.order_id && 
                   item.product_id === current.product_id

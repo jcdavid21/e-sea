@@ -1,9 +1,9 @@
 /**
- * Cart Utilities
- * Handles user-specific cart storage
- * Uses sessionStorage for customer_id (tab-specific)
- * Uses localStorage for cart data (persistent)
+ * Cart Utilities - Database Version
+ * Handles cart storage in MySQL database
  */
+
+const API_URL = process.env.REACT_APP_BUYER_API_URL;
 
 /**
  * Dispatch custom event to notify components of cart updates
@@ -13,92 +13,55 @@ const dispatchCartUpdate = () => {
 };
 
 /**
- * Get the current logged-in customer ID from sessionStorage (tab-specific)
+ * Get the current logged-in customer ID from sessionStorage
  * @returns {string|null} Customer ID or null if not logged in
  */
 export const getCustomerId = () => {
-  // ✅ Use sessionStorage for tab-specific customer ID
   const customerId = sessionStorage.getItem("customer_id");
   
   if (!customerId) {
     console.warn("⚠️ No customer_id found in sessionStorage");
-    console.warn("   User might not be logged in this tab");
     return null;
   }
   
-  console.log("✅ Customer ID (from sessionStorage):", customerId);
   return customerId;
 };
 
 /**
- * Get the cart key for the current user
- * @returns {string} Cart key like "cart_1", "cart_2", etc.
+ * Get cart items for the current user from database
+ * @returns {Promise<Array>} Array of cart items
  */
-const getCartKey = () => {
+export const getCart = async () => {
   const customerId = getCustomerId();
   
   if (!customerId) {
-    console.warn("⚠️ Using guest cart (not logged in)");
-    return "cart_guest";
-  }
-  
-  return `cart_${customerId}`;
-};
-
-/**
- * Get cart items for the current user
- * @returns {Array} Array of cart items
- */
-export const getCart = () => {
-  const cartKey = getCartKey();
-  // ✅ Cart data stays in localStorage for persistence
-  const cartData = localStorage.getItem(cartKey);
-  
-  if (!cartData) {
-    console.log("📦 No cart found for key:", cartKey);
+    console.warn("⚠️ User not logged in");
     return [];
   }
-  
-  try {
-    const cart = JSON.parse(cartData);
-    console.log(`📦 Loaded ${cart.length} items from ${cartKey}`);
-    return Array.isArray(cart) ? cart : [];
-  } catch (error) {
-    console.error("❌ Error parsing cart data:", error);
-    return [];
-  }
-};
 
-/**
- * Save cart items for the current user
- * @param {Array} cart - Array of cart items to save
- */
-export const saveCart = (cart) => {
-  const cartKey = getCartKey();
-  
-  if (!Array.isArray(cart)) {
-    console.error("❌ Invalid cart data: must be an array");
-    return;
-  }
-  
   try {
-    // ✅ Cart data stays in localStorage for persistence
-    localStorage.setItem(cartKey, JSON.stringify(cart));
-    console.log(`✅ Saved ${cart.length} items to ${cartKey}`);
+    const response = await fetch(`${API_URL}/api/cart/${customerId}`);
     
-    // Dispatch event to update cart count in header
-    dispatchCartUpdate();
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    console.log(`📦 Loaded ${data.length} items from database cart`);
+    return data;
   } catch (error) {
-    console.error("❌ Error saving cart:", error);
+    console.error("❌ Error fetching cart:", error);
+    return [];
   }
 };
 
 /**
- * Add item to cart for the current user
+ * Add item to cart in database
  * @param {Object} item - Product item to add
  * @param {number} quantity - Quantity to add (default: 1)
+ * @returns {Promise<boolean>} Success status
  */
-export const addToCart = (item, quantity = 1) => {
+export const addToCart = async (item, quantity = 1) => {
   const customerId = getCustomerId();
   
   if (!customerId) {
@@ -106,104 +69,207 @@ export const addToCart = (item, quantity = 1) => {
     alert("Please login first to add items to cart");
     return false;
   }
-  
-  const cart = getCart();
-  const existingIndex = cart.findIndex(cartItem => cartItem.id === item.id);
-  
-  if (existingIndex !== -1) {
-    // Item exists, update quantity
-    cart[existingIndex].quantity += quantity;
-    console.log(`📦 Updated quantity for item ${item.id}`);
-  } else {
-    // New item, add to cart
-    cart.push({ ...item, quantity });
-    console.log(`📦 Added new item ${item.id} to cart`);
+
+  try {
+    const response = await fetch(`${API_URL}/api/cart/add`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        buyer_id: customerId,
+        product_id: item.id,
+        quantity: quantity
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log(`✅ ${data.message}`);
+    
+    // Dispatch event to update cart count
+    dispatchCartUpdate();
+    
+    return true;
+  } catch (error) {
+    console.error("❌ Error adding to cart:", error);
+    alert("Failed to add item to cart");
+    return false;
   }
+};
+
+/**
+ * Update cart item quantity in database
+ * @param {number} productId - ID of product to update
+ * @param {number} quantity - New quantity
+ * @returns {Promise<boolean>} Success status
+ */
+export const updateCartQuantity = async (productId, quantity) => {
+  const customerId = getCustomerId();
   
-  saveCart(cart);
-  return true;
+  if (!customerId) {
+    return false;
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/api/cart/update`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        buyer_id: customerId,
+        product_id: productId,
+        quantity: quantity
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    dispatchCartUpdate();
+    return true;
+  } catch (error) {
+    console.error("❌ Error updating cart:", error);
+    return false;
+  }
 };
 
 /**
  * Remove item from cart
  * @param {number} productId - ID of product to remove
+ * @returns {Promise<boolean>} Success status
  */
-export const removeFromCart = (productId) => {
-  const cart = getCart();
-  const updatedCart = cart.filter(item => item.id !== productId);
-  saveCart(updatedCart);
-  console.log(`🗑️ Removed item ${productId} from cart`);
+export const removeFromCart = async (productId) => {
+  const customerId = getCustomerId();
+  
+  if (!customerId) {
+    return false;
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/api/cart/remove/${customerId}/${productId}`, {
+      method: 'DELETE'
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    console.log(`🗑️ Removed item ${productId} from cart`);
+    dispatchCartUpdate();
+    return true;
+  } catch (error) {
+    console.error("❌ Error removing from cart:", error);
+    return false;
+  }
 };
 
 /**
  * Clear entire cart for current user
+ * @returns {Promise<boolean>} Success status
  */
-export const clearCart = () => {
-  const cartKey = getCartKey();
-  localStorage.removeItem(cartKey);
-  console.log(`🧹 Cleared cart: ${cartKey}`);
+export const clearCart = async () => {
+  const customerId = getCustomerId();
   
-  // Dispatch event to update cart count
-  dispatchCartUpdate();
+  if (!customerId) {
+    return false;
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/api/cart/clear/${customerId}`, {
+      method: 'DELETE'
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    console.log(`🧹 Cleared cart for user ${customerId}`);
+    dispatchCartUpdate();
+    return true;
+  } catch (error) {
+    console.error("❌ Error clearing cart:", error);
+    return false;
+  }
 };
 
 /**
  * Get cart item count for current user
- * @returns {number} Total number of items in cart
+ * @returns {Promise<number>} Total number of items in cart
  */
-export const getCartCount = () => {
-  const cart = getCart();
-  return cart.reduce((total, item) => total + (item.quantity || 1), 0);
-};
-
-/**
- * Migrate old cart data (if any) to user-specific storage
- * Call this after login to preserve any items added before login
- */
-export const migrateOldCart = () => {
+export const getCartCount = async () => {
   const customerId = getCustomerId();
   
   if (!customerId) {
-    console.warn("⚠️ Cannot migrate cart: No customer ID");
+    return 0;
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/api/cart/count/${customerId}`);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    return data.count || 0;
+  } catch (error) {
+    console.error("❌ Error getting cart count:", error);
+    return 0;
+  }
+};
+
+/**
+ * Save cart - This is now a no-op since cart is automatically saved to DB
+ * Kept for backwards compatibility
+ */
+export const saveCart = () => {
+  console.log("ℹ️ Cart is automatically saved to database");
+};
+
+/**
+ * Migrate old localStorage cart to database
+ * Call this after login
+ */
+export const migrateOldCart = async () => {
+  const customerId = getCustomerId();
+  
+  if (!customerId) {
     return;
   }
-  
-  // Check for old cart (before user-specific implementation)
-  const oldCart = localStorage.getItem("cart");
-  const guestCart = localStorage.getItem("cart_guest");
-  
-  if (oldCart || guestCart) {
-    try {
-      const existingCart = getCart();
-      const oldItems = JSON.parse(oldCart || guestCart || "[]");
-      
-      if (oldItems.length > 0) {
-        console.log(`🔄 Migrating ${oldItems.length} items from old cart`);
-        
-        // Merge old items with existing user cart
-        const mergedCart = [...existingCart];
-        
-        oldItems.forEach(oldItem => {
-          const existingIndex = mergedCart.findIndex(item => item.id === oldItem.id);
-          if (existingIndex !== -1) {
-            // Item exists, add quantities
-            mergedCart[existingIndex].quantity += oldItem.quantity || 1;
-          } else {
-            // New item, add to cart
-            mergedCart.push(oldItem);
-          }
-        });
-        
-        saveCart(mergedCart);
-        
-        // Clean up old cart data
-        localStorage.removeItem("cart");
-        localStorage.removeItem("cart_guest");
-        
-        console.log("✅ Cart migration complete");
-      }
-    } catch (error) {
-      console.error("❌ Error migrating cart:", error);
+
+  try {
+    // Check for old cart in localStorage
+    const oldCartKey = `cart_${customerId}`;
+    const oldCart = localStorage.getItem(oldCartKey) || localStorage.getItem("cart");
+    
+    if (!oldCart) {
+      return;
     }
+
+    const oldItems = JSON.parse(oldCart);
+    
+    if (oldItems.length > 0) {
+      console.log(`🔄 Migrating ${oldItems.length} items from localStorage to database`);
+      
+      // Add each item to database cart
+      for (const item of oldItems) {
+        await addToCart(item, item.quantity || 1);
+      }
+      
+      // Clear old localStorage cart
+      localStorage.removeItem(oldCartKey);
+      localStorage.removeItem("cart");
+      localStorage.removeItem("cart_guest");
+      
+      console.log("✅ Cart migration complete");
+    }
+  } catch (error) {
+    console.error("❌ Error migrating cart:", error);
   }
 };

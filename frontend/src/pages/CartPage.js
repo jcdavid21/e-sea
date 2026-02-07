@@ -9,7 +9,7 @@ import {
 } from 'react-icons/fa';
 
 // Import cart utilities
-import { getCart, saveCart, getCustomerId } from "../utils/cartUtils";
+import { getCart, removeFromCart as removeFromCartDB, updateCartQuantity, getCustomerId } from "../utils/cartUtils";
 
 // Calculate distance between two coordinates (Haversine formula)
 function calculateDistance(lat1, lon1, lat2, lon2) {
@@ -428,7 +428,7 @@ const CartPage = () => {
     }
 
     try {
-      const savedCart = getCart();
+      const savedCart = await getCart();
 
       console.log("🛒 Loading cart for customer:", CUSTOMER_ID);
       console.log("🛒 Cart data:", savedCart);
@@ -630,14 +630,14 @@ const CartPage = () => {
     }
   };
 
-  const removeFromCart = (id) => {
+  const removeFromCart = async (id) => {
+    await removeFromCartDB(id);
     const updated = cart.filter((item) => item.id !== id);
     setCart(updated);
-    saveCart(updated);
     setSelectedItems((prev) => prev.filter((i) => i !== id));
   };
 
-  const updateQuantity = (id, newQty) => {
+  const updateQuantity = async (id, newQty) => {
     const updated = cart.map((item) => {
       if (item.id === id) {
         // Parse the input and handle invalid values
@@ -664,7 +664,7 @@ const CartPage = () => {
       return item;
     });
     setCart(updated);
-    saveCart(updated);
+    await updateCartQuantity(id, newQty);
   };
 
   const incrementQuantity = (id) => {
@@ -887,11 +887,15 @@ const CartPage = () => {
         confirmButtonColor: '#3085d6'
       });
 
+      // Remove ordered items from database cart
+      for (const itemId of selectedItems) {
+        await removeFromCartDB(itemId);
+      }
+
       const remainingCart = cart.filter(
         (item) => !selectedItems.includes(item.id)
       );
       setCart(remainingCart);
-      saveCart(remainingCart);
 
       setSelectedItems([]);
       setShowCheckoutModal(false);
