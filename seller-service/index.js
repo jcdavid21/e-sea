@@ -61,7 +61,13 @@ const db = mysql.createPool({
   port: process.env.DB_PORT,
   waitForConnections: true,
   connectionLimit: 10,
-  queueLimit: 0
+  queueLimit: 0,
+  // Add these new options to handle connection issues
+  connectTimeout: 60000, // 60 seconds
+  acquireTimeout: 60000,
+  timeout: 60000,
+  enableKeepAlive: true,
+  keepAliveInitialDelay: 0
 });
 // =============================
 // Test database connection (updated for promise version)
