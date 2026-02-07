@@ -3061,7 +3061,19 @@ app.get("/api/cart/:buyer_id", async (req, res) => {
       ORDER BY c.created_at DESC
     `;
 
-    const [results] = await db.query(sql, [buyer_id]);
+    let results;
+    try {
+      [results] = await db.query(sql, [buyer_id]);
+    } catch (dbErr) {
+      if (dbErr.code === 'PROTOCOL_CONNECTION_LOST') {
+        console.log('🔄 Retrying after connection lost...');
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        [results] = await db.query(sql, [buyer_id]);
+      } else {
+        throw dbErr;
+      }
+    }
+
     return res.status(200).json(results);
   } catch (err) {
     console.error("❌ Error fetching cart:", err);
