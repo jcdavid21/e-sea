@@ -549,7 +549,7 @@ const AdminAnalytics = () => {
           style={{ cursor: 'pointer' }}
         >
           <div className="stat-icon-wrapper">
-            <FaMoneyBillWave className="stat-icon" size={48} />
+            <FaMoneyBillWave className="stat-icon" size={22} />
           </div>
           <div className="stat-content">
             <p className="stat-label">Total Revenue</p>
@@ -564,7 +564,7 @@ const AdminAnalytics = () => {
           style={{ cursor: 'pointer' }}
         >
           <div className="stat-icon-wrapper">
-            <FaStore className="stat-icon" size={48} />
+            <FaStore className="stat-icon" size={22} />
           </div>
           <div className="stat-content">
             <p className="stat-label">Active Sellers</p>
@@ -579,7 +579,7 @@ const AdminAnalytics = () => {
           style={{ cursor: 'pointer' }}
         >
           <div className="stat-icon-wrapper">
-            <FaShoppingCart className="stat-icon" size={48} />
+            <FaShoppingCart className="stat-icon" size={22} />
           </div>
           <div className="stat-content">
             <p className="stat-label">Total Orders</p>
@@ -594,7 +594,7 @@ const AdminAnalytics = () => {
           style={{ cursor: 'pointer' }}
         >
           <div className="stat-icon-wrapper">
-            <FaFish className="stat-icon" size={48} />
+            <FaFish className="stat-icon" size={22} />
           </div>
           <div className="stat-content">
             <p className="stat-label">Fish Varieties</p>
@@ -1746,7 +1746,7 @@ const AdminAnalytics = () => {
             ))
           ) : (
             <div className="empty-pending">
-              <div className="empty-icon"><FaTrophy size={48} color="#0891b2" /></div>
+              <div className="empty-icon"><FaTrophy size={22} color="#0891b2" /></div>
               <h4>No Product Data</h4>
               <p>No sales data available yet</p>
             </div>
