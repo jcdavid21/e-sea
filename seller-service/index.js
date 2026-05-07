@@ -2236,12 +2236,16 @@ app.get("/api/orders", async (req, res) => {
       oi.quantity,
       oi.price,
       f.name AS product_name
-    FROM orders o
+    FROM (
+      SELECT id FROM orders
+      WHERE seller_id = ?
+      ORDER BY id DESC
+      LIMIT ? OFFSET ?
+    ) AS paginated_orders
+    JOIN orders o ON o.id = paginated_orders.id
     LEFT JOIN order_items oi ON o.id = oi.order_id
     LEFT JOIN fish_products f ON oi.product_id = f.id
-    WHERE o.seller_id = ? 
     ORDER BY o.id DESC
-    LIMIT ? OFFSET ?
   `;
 
   const countSql = `SELECT COUNT(DISTINCT o.id) as total FROM orders o WHERE o.seller_id = ?`;
