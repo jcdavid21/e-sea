@@ -134,6 +134,19 @@ async function deleteFromCloudinary(imageUrl) {
 }
 
 
+// Add AFTER line 36
+// Log request body for debugging
+app.use((req, res, next) => {
+  if (req.path.includes('/cart')) {
+    console.log('\n🛒🛒🛒 CART REQUEST DETECTED 🛒🛒🛒');
+    console.log('Method:', req.method);
+    console.log('Path:', req.path);
+    console.log('Body:', req.body);
+    console.log('🛒🛒🛒 END CART REQUEST 🛒🛒🛒\n');
+  }
+  next();
+});
+
 // =============================
 //  Helper Functions
 // =============================
@@ -3083,94 +3096,43 @@ app.get("/api/cart/:buyer_id", async (req, res) => {
 
 // Add item to cart
 app.post("/api/cart/add", async (req, res) => {
-  console.log("🛒 === CART ADD REQUEST START ===");
-  console.log("📦 Request body:", req.body);
-  
   const { buyer_id, product_id, quantity } = req.body;
-  
-  console.log("🔍 Extracted values:");
-  console.log("   - buyer_id:", buyer_id, "(type:", typeof buyer_id, ")");
-  console.log("   - product_id:", product_id, "(type:", typeof product_id, ")");
-  console.log("   - quantity:", quantity, "(type:", typeof quantity, ")");
 
   if (!buyer_id || !product_id) {
-    console.log("❌ Validation failed: Missing required fields");
     return res.status(400).json({ message: "buyer_id and product_id are required" });
   }
 
   try {
-    console.log("🔎 Checking if item exists in cart...");
-    console.log("   Query: SELECT * FROM cart WHERE buyer_id = ? AND product_id = ?");
-    console.log("   Params:", [buyer_id, product_id]);
-    
     // Check if item already exists in cart
     const [existing] = await db.query(
       "SELECT * FROM cart WHERE buyer_id = ? AND product_id = ?",
       [buyer_id, product_id]
     );
-    
-    console.log("📊 Existing cart items found:", existing.length);
-    if (existing.length > 0) {
-      console.log("   Existing item:", existing[0]);
-    }
 
     if (existing.length > 0) {
       // Update quantity
       const newQuantity = existing[0].quantity + (quantity || 1);
-      console.log("🔄 Item exists - Updating quantity");
-      console.log("   Old quantity:", existing[0].quantity);
-      console.log("   Adding:", quantity || 1);
-      console.log("   New quantity:", newQuantity);
-      console.log("   Query: UPDATE cart SET quantity = ?, updated_at = NOW() WHERE buyer_id = ? AND product_id = ?");
-      console.log("   Params:", [newQuantity, buyer_id, product_id]);
-      
       await db.query(
         "UPDATE cart SET quantity = ?, updated_at = NOW() WHERE buyer_id = ? AND product_id = ?",
         [newQuantity, buyer_id, product_id]
       );
       
-      console.log("✅ Cart updated successfully");
       return res.status(200).json({ 
         message: "Cart updated successfully",
         quantity: newQuantity
       });
     } else {
       // Insert new item
-      console.log("➕ Item doesn't exist - Inserting new item");
-      console.log("   Query: INSERT INTO cart (buyer_id, product_id, quantity) VALUES (?, ?, ?)");
-      console.log("   Params:", [buyer_id, product_id, quantity || 1]);
-      
-      const [result] = await db.query(
+      await db.query(
         "INSERT INTO cart (buyer_id, product_id, quantity) VALUES (?, ?, ?)",
         [buyer_id, product_id, quantity || 1]
       );
       
-      console.log("✅ Item added to cart successfully");
-      console.log("   Insert ID:", result.insertId);
-      console.log("   Affected rows:", result.affectedRows);
-      
       return res.status(201).json({ message: "Item added to cart successfully" });
     }
   } catch (err) {
-    console.error("❌ ====== ERROR ADDING TO CART ======");
-    console.error("Error name:", err.name);
-    console.error("Error message:", err.message);
-    console.error("Error code:", err.code);
-    console.error("Error errno:", err.errno);
-    console.error("SQL State:", err.sqlState);
-    console.error("SQL Message:", err.sqlMessage);
-    console.error("Full error:", err);
-    console.error("Stack trace:", err.stack);
-    console.error("====================================");
-    
-    return res.status(500).json({ 
-      message: "Error adding to cart", 
-      error: err.message,
-      errorCode: err.code,
-      sqlMessage: err.sqlMessage
-    });
-  } finally {
-    console.log("🛒 === CART ADD REQUEST END ===\n");
+    console.error("❌ Error adding to cart:", err);
+    return res.status(500).json({ message: "Error adding to cart", error: err.message });
   }
 });
 
