@@ -549,11 +549,11 @@ const AdminAnalytics = () => {
           style={{ cursor: 'pointer' }}
         >
           <div className="stat-icon-wrapper">
-            <FaMoneyBillWave className="stat-icon" size={22} />
+            <FaMoneyBillWave  size={32} />
           </div>
           <div className="stat-content">
             <p className="stat-label">Total Revenue</p>
-            <h2 className="stat-value">₱{analytics.totalRevenue.toLocaleString()}</h2>
+            <h2 style={{ fontSize: '24px;', margin: 0 }}>₱{analytics.totalRevenue.toLocaleString()}</h2>
             <p className="stat-subtext">From completed orders</p>
           </div>
         </div>
@@ -564,11 +564,11 @@ const AdminAnalytics = () => {
           style={{ cursor: 'pointer' }}
         >
           <div className="stat-icon-wrapper">
-            <FaStore className="stat-icon" size={22} />
+            <FaStore  size={32} />
           </div>
           <div className="stat-content">
             <p className="stat-label">Active Sellers</p>
-            <h2 className="stat-value">{analytics.activeSellers}</h2>
+            <h2 style={{ fontSize: '24px;', margin: 0 }}>{analytics.activeSellers}</h2>
             <p className="stat-subtext">Approved and registered</p>
           </div>
         </div>
@@ -577,13 +577,13 @@ const AdminAnalytics = () => {
           className="stat-card stat-products"
           onClick={() => window.location.href = '/admin/dashboard?tab=reports'}
           style={{ cursor: 'pointer' }}
-        >
+        > 
           <div className="stat-icon-wrapper">
-            <FaShoppingCart className="stat-icon" size={22} />
+            <FaShoppingCart size={32} />
           </div>
           <div className="stat-content">
             <p className="stat-label">Total Orders</p>
-            <h2 className="stat-value">{analytics.totalOrders}</h2>
+            <h2 style={{ fontSize: '24px;', margin: 0 }}>{analytics.totalOrders}</h2>
             <p className="stat-subtext">All time orders</p>
           </div>
         </div>
@@ -594,11 +594,11 @@ const AdminAnalytics = () => {
           style={{ cursor: 'pointer' }}
         >
           <div className="stat-icon-wrapper">
-            <FaFish className="stat-icon" size={22} />
+            <FaFish size={32} />
           </div>
           <div className="stat-content">
             <p className="stat-label">Fish Varieties</p>
-            <h2 className="stat-value">{analytics.fishVarieties}</h2>
+            <h2 style={{ fontSize: '24px;', margin: 0 }}>{analytics.fishVarieties}</h2>
             <p className="stat-subtext">Unique products</p>
           </div>
         </div>

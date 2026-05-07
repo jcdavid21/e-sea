@@ -134,19 +134,6 @@ async function deleteFromCloudinary(imageUrl) {
 }
 
 
-// Add AFTER line 36
-// Log request body for debugging
-app.use((req, res, next) => {
-  if (req.path.includes('/cart')) {
-    console.log('\n🛒🛒🛒 CART REQUEST DETECTED 🛒🛒🛒');
-    console.log('Method:', req.method);
-    console.log('Path:', req.path);
-    console.log('Body:', req.body);
-    console.log('🛒🛒🛒 END CART REQUEST 🛒🛒🛒\n');
-  }
-  next();
-});
-
 // =============================
 //  Helper Functions
 // =============================
@@ -3166,56 +3153,6 @@ app.put("/api/cart/update", async (req, res) => {
   }
 });
 
-// Add this BEFORE app.listen()
-
-// Log ALL incoming requests
-app.use((req, res, next) => {
-  console.log(`\n🔔 INCOMING REQUEST: ${req.method} ${req.path}`);
-  console.log(`   Origin: ${req.headers.origin}`);
-  console.log(`   Content-Type: ${req.headers['content-type']}`);
-  if (req.body && Object.keys(req.body).length > 0) {
-    console.log(`   Body:`, req.body);
-  }
-  next();
-});
-
-// Catch unhandled errors
-app.use((err, req, res, next) => {
-  console.error('\n❌❌❌ UNHANDLED ERROR ❌❌❌');
-  console.error('Path:', req.path);
-  console.error('Method:', req.method);
-  console.error('Error:', err);
-  console.error('Stack:', err.stack);
-  res.status(500).json({ error: 'Internal server error', message: err.message });
-});
-
-
-// Add this test endpoint
-app.get("/api/test-db", async (req, res) => {
-  console.log("🧪 Testing database connection...");
-  try {
-    const [result] = await db.query("SELECT 1 + 1 AS solution");
-    console.log("✅ Database connected! Result:", result);
-    
-    // Test if cart table exists
-    const [tables] = await db.query("SHOW TABLES LIKE 'cart'");
-    console.log("📊 Cart table exists:", tables.length > 0);
-    
-    return res.json({ 
-      success: true, 
-      dbWorks: true,
-      cartTableExists: tables.length > 0,
-      result: result 
-    });
-  } catch (err) {
-    console.error("❌ Database test failed:", err);
-    return res.status(500).json({ 
-      success: false, 
-      error: err.message,
-      code: err.code 
-    });
-  }
-});
 // Remove item from cart
 app.delete("/api/cart/remove/:buyer_id/:product_id", async (req, res) => {
   const { buyer_id, product_id } = req.params;

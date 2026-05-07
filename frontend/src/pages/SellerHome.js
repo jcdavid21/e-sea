@@ -466,11 +466,11 @@ const SellerHome = () => {
           style={{ cursor: 'pointer' }}
         >
           <div className="stat-icon-wrapper">
-            <Fish className="stat-icon" size={24} />
+            <Fish  size={32} />
           </div>
           <div className="stat-content">
             <p className="stat-label">Total Products</p>
-            <h2 className="stat-value">{products.length}</h2>
+            <h2 style={{ fontSize: '24px', margin: 0 }}>{products.length}</h2>
             <p className="stat-subtext">{getLowStockProducts().length} low stock items</p>
           </div>
         </div>
@@ -481,11 +481,11 @@ const SellerHome = () => {
           style={{ cursor: 'pointer' }}
         >
           <div className="stat-icon-wrapper">
-            <Package className="stat-icon" size={24} />
+            <Package  size={32} />
           </div>
           <div className="stat-content">
             <p className="stat-label">Total Orders</p>
-            <h2 className="stat-value">{orders.length}</h2>
+            <h2 style={{ fontSize: '24px', margin: 0 }}>{orders.length}</h2>
             <p className="stat-subtext">
               {orderGrowth > 0 ? <TrendingUp size={14} /> : orderGrowth < 0 ? <TrendingDown size={14} /> : <Minus size={14} />}
               {orderGrowth}% vs last week
@@ -499,11 +499,11 @@ const SellerHome = () => {
           style={{ cursor: 'pointer' }}
         >
           <div className="stat-icon-wrapper">
-            <DollarSign className="stat-icon" size={24} />
+            <DollarSign  size={32} />
           </div>
           <div className="stat-content">
             <p className="stat-label">Revenue</p>
-            <h2 className="stat-value">₱{getTotalRevenue().toLocaleString()}</h2>
+            <h2 style={{ fontSize: '24px', margin: 0 }}>₱{getTotalRevenue().toLocaleString()}</h2>
             <p className="stat-subtext">From completed orders</p>
           </div>
         </div>
@@ -518,11 +518,11 @@ const SellerHome = () => {
           }}
         >
           <div className="stat-icon-wrapper">
-            <Clock className="stat-icon" size={24} />
+            <Clock  size={32} />
           </div>
           <div className="stat-content">
             <p className="stat-label">Pending Orders</p>
-            <h2 className="stat-value">{pendingOrders.length}</h2>
+            <h2 style={{ fontSize: '24px', margin: 0 }}>{pendingOrders.length}</h2>
             <p className="stat-subtext">₱{getPendingRevenue().toLocaleString()} pending</p>
           </div>
         </div>

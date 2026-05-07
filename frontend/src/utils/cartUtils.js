@@ -87,6 +87,8 @@ export const addToCart = async (item, quantity = 1) => {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
+    console.log(`✅ Added item ${item.id} to cart with quantity ${quantity}`);
+    
     const data = await response.json();
     console.log(`✅ ${data.message}`);
     
