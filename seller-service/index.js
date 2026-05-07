@@ -2240,16 +2240,7 @@ app.get("/api/orders", async (req, res) => {
     LEFT JOIN order_items oi ON o.id = oi.order_id
     LEFT JOIN fish_products f ON oi.product_id = f.id
     WHERE o.seller_id = ? 
-    ORDER BY 
-      CASE o.status
-        WHEN 'Pending' THEN 1
-        WHEN 'Preparing' THEN 2
-        WHEN 'Ready for Pickup' THEN 3
-        WHEN 'Completed' THEN 4
-        WHEN 'Cancelled' THEN 5
-        ELSE 6
-      END,
-      o.id ASC
+    ORDER BY o.id DESC
     LIMIT ? OFFSET ?
   `;
 
