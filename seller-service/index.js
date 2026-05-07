@@ -2249,7 +2249,7 @@ app.get("/api/orders", async (req, res) => {
         WHEN 'Cancelled' THEN 5
         ELSE 6
       END,
-      o.id DESC
+      o.id ASC
     LIMIT ? OFFSET ?
   `;
 
