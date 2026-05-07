@@ -2247,7 +2247,6 @@ app.get("/api/orders", async (req, res) => {
   const countSql = `SELECT COUNT(DISTINCT o.id) as total FROM orders o WHERE o.seller_id = ?`;
 
   try {
-    console.log("Running SQL:", sql);
   const [result] = await db.query(sql, [sellerId, limit, offset]);
     const [countResult] = await db.query(countSql, [sellerId]);
 
