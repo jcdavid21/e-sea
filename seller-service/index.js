@@ -2288,7 +2288,7 @@ app.get("/api/orders", async (req, res) => {
       }
     });
 
-    const orders = Object.values(ordersMap);
+    const orders = Object.values(ordersMap).sort((a, b) => b.orderId - a.orderId);
     const totalOrders = countResult[0].total;
     const totalPages = Math.ceil(totalOrders / limit);
 
