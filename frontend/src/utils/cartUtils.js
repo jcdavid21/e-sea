@@ -71,7 +71,7 @@ export const addToCart = async (item, quantity = 1) => {
   }
 
   try {
-    const response = await fetch(`${API_URL}/api/cart/add`, {
+    const response = await fetch(`${API_URL || process.env.REACT_APP_BUYER_API_URL}/api/cart/add`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
